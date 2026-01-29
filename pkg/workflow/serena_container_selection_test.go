@@ -19,14 +19,14 @@ func TestSelectSerenaContainer(t *testing.T) {
 			serenaTool: map[string]any{
 				"mode": "docker",
 			},
-			expectedContainer: constants.DefaultSerenaMCPServerContainer,
+			expectedContainer: string(constants.DefaultSerenaMCPServerContainer),
 		},
 		{
 			name: "supported languages - uses default",
 			serenaTool: map[string]any{
 				"langs": []any{"go", "typescript"},
 			},
-			expectedContainer: constants.DefaultSerenaMCPServerContainer,
+			expectedContainer: string(constants.DefaultSerenaMCPServerContainer),
 		},
 		{
 			name: "all supported languages - uses default",
@@ -37,21 +37,21 @@ func TestSelectSerenaContainer(t *testing.T) {
 					"python":     map[string]any{},
 				},
 			},
-			expectedContainer: constants.DefaultSerenaMCPServerContainer,
+			expectedContainer: string(constants.DefaultSerenaMCPServerContainer),
 		},
 		{
 			name: "unsupported language - still uses default",
 			serenaTool: map[string]any{
 				"langs": []any{"unsupported-lang"},
 			},
-			expectedContainer: constants.DefaultSerenaMCPServerContainer,
+			expectedContainer: string(constants.DefaultSerenaMCPServerContainer),
 		},
 		{
 			name: "SerenaToolConfig with short syntax",
 			serenaTool: &SerenaToolConfig{
 				ShortSyntax: []string{"go", "rust"},
 			},
-			expectedContainer: constants.DefaultSerenaMCPServerContainer,
+			expectedContainer: string(constants.DefaultSerenaMCPServerContainer),
 		},
 		{
 			name: "SerenaToolConfig with detailed languages",
@@ -61,7 +61,7 @@ func TestSelectSerenaContainer(t *testing.T) {
 					"java":   {},
 				},
 			},
-			expectedContainer: constants.DefaultSerenaMCPServerContainer,
+			expectedContainer: string(constants.DefaultSerenaMCPServerContainer),
 		},
 	}
 
@@ -82,13 +82,13 @@ func TestSerenaLanguageSupport(t *testing.T) {
 	}
 
 	// Test that default container has languages defined
-	defaultLangs := constants.SerenaLanguageSupport[constants.DefaultSerenaMCPServerContainer]
+	defaultLangs := constants.SerenaLanguageSupport[string(constants.DefaultSerenaMCPServerContainer)]
 	if len(defaultLangs) == 0 {
 		t.Error("Default Serena container has no supported languages defined")
 	}
 
 	// Test that Oraios container has languages defined
-	oraiosLangs := constants.SerenaLanguageSupport[constants.OraiosSerenaContainer]
+	oraiosLangs := constants.SerenaLanguageSupport[string(constants.OraiosSerenaContainer)]
 	if len(oraiosLangs) == 0 {
 		t.Error("Oraios Serena container has no supported languages defined")
 	}

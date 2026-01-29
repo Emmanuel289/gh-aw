@@ -64,7 +64,7 @@ func TestExtractHTTPMCPDomains(t *testing.T) {
 					"allowed_domains": []string{"github.com"},
 				},
 			},
-			expected: []string{constants.GitHubCopilotMCPDomain, "mcp.tavily.com"},
+			expected: []string{string(constants.GitHubCopilotMCPDomain), "mcp.tavily.com"},
 		},
 		{
 			name: "github MCP in remote mode",
@@ -73,7 +73,7 @@ func TestExtractHTTPMCPDomains(t *testing.T) {
 					"mode": "remote",
 				},
 			},
-			expected: []string{constants.GitHubCopilotMCPDomain},
+			expected: []string{string(constants.GitHubCopilotMCPDomain)},
 		},
 		{
 			name: "github MCP in local mode (no domain extraction)",

@@ -95,7 +95,7 @@ func TestMCPGatewayMountsInDockerCommand(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gatewayConfig := &MCPGatewayRuntimeConfig{
-				Container: constants.DefaultMCPGatewayContainer,
+				Container: string(constants.DefaultMCPGatewayContainer),
 				Version:   string(constants.DefaultMCPGatewayVersion),
 				Mounts:    tt.mounts,
 			}

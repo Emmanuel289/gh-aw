@@ -29,7 +29,7 @@ func TestEnsureDefaultMCPGatewayConfig(t *testing.T) {
 			validate: func(t *testing.T, wd *WorkflowData) {
 				require.NotNil(t, wd.SandboxConfig, "SandboxConfig should be created")
 				require.NotNil(t, wd.SandboxConfig.MCP, "MCP config should be created")
-				assert.Equal(t, constants.DefaultMCPGatewayContainer, wd.SandboxConfig.MCP.Container, "Container should be default")
+				assert.Equal(t, string(constants.DefaultMCPGatewayContainer), wd.SandboxConfig.MCP.Container, "Container should be default")
 				assert.Equal(t, string(constants.DefaultMCPGatewayVersion), wd.SandboxConfig.MCP.Version, "Version should be default")
 				assert.Equal(t, int(DefaultMCPGatewayPort), wd.SandboxConfig.MCP.Port, "Port should be default")
 				assert.Len(t, wd.SandboxConfig.MCP.Mounts, 3, "Should have 3 default mounts")
@@ -46,7 +46,7 @@ func TestEnsureDefaultMCPGatewayConfig(t *testing.T) {
 				},
 			},
 			validate: func(t *testing.T, wd *WorkflowData) {
-				assert.Equal(t, constants.DefaultMCPGatewayContainer, wd.SandboxConfig.MCP.Container, "Container should be filled with default")
+				assert.Equal(t, string(constants.DefaultMCPGatewayContainer), wd.SandboxConfig.MCP.Container, "Container should be filled with default")
 				assert.Equal(t, "v1.0.0", wd.SandboxConfig.MCP.Version, "Version should be preserved")
 				assert.Equal(t, 8080, wd.SandboxConfig.MCP.Port, "Port should be preserved")
 			},

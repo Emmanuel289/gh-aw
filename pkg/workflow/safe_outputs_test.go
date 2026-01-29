@@ -648,12 +648,12 @@ func TestFormatSafeOutputsRunsOn(t *testing.T) {
 		{
 			name:           "nil safe outputs returns default",
 			safeOutputs:    nil,
-			expectedRunsOn: "runs-on: " + constants.DefaultActivationJobRunnerImage,
+			expectedRunsOn: "runs-on: " + string(constants.DefaultActivationJobRunnerImage),
 		},
 		{
 			name:           "empty runs-on returns default",
 			safeOutputs:    &SafeOutputsConfig{RunsOn: ""},
-			expectedRunsOn: "runs-on: " + constants.DefaultActivationJobRunnerImage,
+			expectedRunsOn: "runs-on: " + string(constants.DefaultActivationJobRunnerImage),
 		},
 		{
 			name:           "custom runs-on",
