@@ -27,7 +27,7 @@ func TestValidateMainWorkflowFrontmatterWithSchema(t *testing.T) {
 				"permissions":     "read-all",
 				"run-name":        "Test Run",
 				"runs-on":         "ubuntu-latest",
-				"timeout_minutes": 30,
+				"timeout-minutes": 30,
 				"concurrency":     "test",
 				"env":             map[string]string{"TEST": "value"},
 				"if":              "true",
@@ -848,7 +848,7 @@ func TestValidateMainWorkflowFrontmatterWithSchema(t *testing.T) {
 			name: "missing required on field with other valid fields",
 			frontmatter: map[string]any{
 				"engine":          "copilot",
-				"timeout_minutes": 30,
+				"timeout-minutes": 30,
 				"permissions": map[string]any{
 					"issues": "write",
 				},
