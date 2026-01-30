@@ -687,8 +687,10 @@ var PriorityJobFields = []string{"name", "runs-on", "needs", "if", "permissions"
 var PriorityWorkflowFields = []string{"on", "permissions", "if", "network", "imports", "safe-outputs", "steps"}
 
 // IgnoredFrontmatterFields are fields that should be silently ignored during frontmatter validation
-// NOTE: This is now empty as description and applyTo are properly validated by the schema
-var IgnoredFrontmatterFields = []string{}
+// but are still processed by the compiler for backwards compatibility
+var IgnoredFrontmatterFields = []string{
+	"timeout_minutes", // Deprecated: Use timeout-minutes instead. Filtered from schema validation but still accepted by runtime.
+}
 
 // SharedWorkflowForbiddenFields lists fields that cannot be used in shared/included workflows.
 // These fields are only allowed in main workflows (workflows with an 'on' trigger field).
