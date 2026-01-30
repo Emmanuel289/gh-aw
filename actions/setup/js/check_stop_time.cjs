@@ -1,9 +1,21 @@
 // @ts-check
 /// <reference types="@actions/github-script" />
 
+/**
+ * Validates date format and returns true if valid
+ * @param {Date} date - Date to validate
+ * @returns {boolean} True if date is valid
+ */
+function isValidDate(date) {
+  return !isNaN(date.getTime());
+}
+
+/**
+ * Checks if workflow execution should stop based on configured stop time
+ * @returns {Promise<void>}
+ */
 async function main() {
-  const stopTime = process.env.GH_AW_STOP_TIME;
-  const workflowName = process.env.GH_AW_WORKFLOW_NAME;
+  const { GH_AW_STOP_TIME: stopTime, GH_AW_WORKFLOW_NAME: workflowName } = process.env;
 
   if (!stopTime) {
     core.setFailed("Configuration error: GH_AW_STOP_TIME not specified.");
@@ -17,10 +29,9 @@ async function main() {
 
   core.info(`Checking stop-time limit: ${stopTime}`);
 
-  // Parse the stop time (format: "YYYY-MM-DD HH:MM:SS")
   const stopTimeDate = new Date(stopTime);
 
-  if (isNaN(stopTimeDate.getTime())) {
+  if (!isValidDate(stopTimeDate)) {
     core.setFailed(`Invalid stop-time format: ${stopTime}. Expected format: YYYY-MM-DD HH:MM:SS`);
     return;
   }
