@@ -20,7 +20,7 @@ Use AgenticImport for one-time migrations requiring adaptation:
 
 ## How It Works
 
-The `create-agentic-agent` migrates workflows through these steps:
+The `agentic-workflows` agent migrates workflows through these steps:
 
 1. **Analyze source** - Read and understand the source workflow's purpose and logic
 2. **Identify dependencies** - Detect repository-specific configuration, secrets, tools, and permissions
@@ -32,7 +32,7 @@ The `create-agentic-agent` migrates workflows through these steps:
 
 The `release.md` workflow migration from `githubnext/gh-aw` to `githubnext/gh-aw-mcpg`:
 
-```yaml wrap title="Prompt for create-agentic-agent"
+```yaml wrap title="Prompt for agentic-workflows"
 Migrate the release.md workflow from githubnext/gh-aw to this repository.
 
 The workflow should:
