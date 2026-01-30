@@ -12,8 +12,8 @@ func TestGetMainWorkflowDeprecatedFields(t *testing.T) {
 		t.Fatalf("GetMainWorkflowDeprecatedFields() error = %v", err)
 	}
 
-	// Check that timeout_minutes is NOT in the list (it was removed from schema)
-	// The field is now handled via IgnoredFrontmatterFields for backwards compatibility
+	// Check that timeout_minutes is NOT in the list (it was removed from schema completely)
+	// Users should use the timeout-minutes-migration codemod to migrate their workflows
 	found := false
 	for _, field := range deprecatedFields {
 		if field.Name == "timeout_minutes" {

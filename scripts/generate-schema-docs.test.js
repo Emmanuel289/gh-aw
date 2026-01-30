@@ -129,9 +129,9 @@ allPassed &= assertNotContains(output, "timeout_minutes:", "Deprecated field tim
 
 allPassed &= assertContains(output, "timeout-minutes:", "Non-deprecated field timeout-minutes should be in output");
 
-// Verify the schema does NOT have the deprecated field (it was removed for schema cleanup)
+// Verify the schema does NOT have the deprecated field (it was removed completely)
 if (schema.properties && !schema.properties.timeout_minutes) {
-  console.log("✓ PASS: Schema does not have timeout_minutes field (removed for cleanup)");
+  console.log("✓ PASS: Schema does not have timeout_minutes field (removed completely)");
 } else {
   console.error("❌ FAIL: Schema should NOT have timeout_minutes field");
   allPassed = false;

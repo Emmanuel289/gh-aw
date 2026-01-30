@@ -687,10 +687,8 @@ var PriorityJobFields = []string{"name", "runs-on", "needs", "if", "permissions"
 var PriorityWorkflowFields = []string{"on", "permissions", "if", "network", "imports", "safe-outputs", "steps"}
 
 // IgnoredFrontmatterFields are fields that should be silently ignored during frontmatter validation
-// but are still processed by the compiler for backwards compatibility
-var IgnoredFrontmatterFields = []string{
-	"timeout_minutes", // Deprecated: Use timeout-minutes instead. Filtered from schema validation but still accepted by runtime.
-}
+// NOTE: This is now empty as description and applyTo are properly validated by the schema
+var IgnoredFrontmatterFields = []string{}
 
 // SharedWorkflowForbiddenFields lists fields that cannot be used in shared/included workflows.
 // These fields are only allowed in main workflows (workflows with an 'on' trigger field).
@@ -700,13 +698,10 @@ var IgnoredFrontmatterFields = []string{
 //
 // Forbidden fields fall into these categories:
 //   - Workflow triggers: on (defines it as a main workflow)
-//   - Workflow execution: command, run-name, runs-on, concurrency, if, timeout-minutes
+//   - Workflow execution: command, run-name, runs-on, concurrency, if, timeout-minutes, timeout_minutes
 //   - Workflow metadata: name, tracker-id, strict
 //   - Workflow features: container, env, environment, sandbox, features
 //   - Access control: roles, github-token
-//
-// Note: timeout_minutes (deprecated underscore variant) is not in this list because it's in
-// IgnoredFrontmatterFields and bypasses validation entirely for backwards compatibility.
 //
 // All other fields defined in main_workflow_schema.json can be used in shared workflows
 // and will be properly imported and merged when the shared workflow is imported.
@@ -727,9 +722,8 @@ var SharedWorkflowForbiddenFields = []string{
 	"sandbox",         // Sandbox configuration
 	"strict",          // Strict mode
 	"timeout-minutes", // Timeout in minutes
-	// Note: timeout_minutes (underscore variant) is deprecated and in IgnoredFrontmatterFields,
-	// so it's not enforced as forbidden. Only the canonical timeout-minutes is forbidden.
-	"tracker-id", // Tracker ID
+	"timeout_minutes", // Timeout in minutes (underscore variant)
+	"tracker-id",      // Tracker ID
 }
 
 func GetWorkflowDir() string {

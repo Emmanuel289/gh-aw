@@ -46,19 +46,6 @@ engine: copilot
 			expectedTimeout: 30,
 			description:     "When timeout-minutes is explicitly specified, that value should be used",
 		},
-		{
-			name: "deprecated timeout_minutes specified - should use that value",
-			frontmatter: `---
-on: workflow_dispatch
-permissions:
-  contents: read
-timeout_minutes: 45
-engine: copilot
-strict: false
----`,
-			expectedTimeout: 45,
-			description:     "When deprecated timeout_minutes is specified, that value should be used",
-		},
 	}
 
 	for _, tt := range tests {
