@@ -16,6 +16,7 @@
 const { loadAgentOutput } = require("./load_agent_output.cjs");
 const { getErrorMessage } = require("./error_helpers.cjs");
 const { writeSafeOutputSummaries } = require("./safe_output_summary.cjs");
+const { validateTokenPermissions, generatePermissionErrorMessage, generatePermissionWarningMessage } = require("./token_permissions.cjs");
 
 /**
  * Handler map configuration for project-related safe outputs
@@ -222,6 +223,51 @@ async function main() {
       core.info("No messages to process");
       core.setOutput("processed_count", 0);
       return;
+    }
+
+    // Pre-flight token permission validation for project operations
+    // Extract project operation types from messages
+    const projectOperationTypes = new Set();
+    for (const message of messages) {
+      if (message.type && messageHandlers.has(message.type)) {
+        projectOperationTypes.add(message.type);
+      }
+    }
+
+    if (projectOperationTypes.size > 0) {
+      core.info("\n=== Pre-flight Token Permission Validation (Project Operations) ===");
+      core.info(`Validating permissions for ${projectOperationTypes.size} project operation type(s): ${Array.from(projectOperationTypes).join(", ")}`);
+
+      try {
+        // Get repository context
+        const owner = context.repo.owner;
+        const repo = context.repo.repo;
+        const token = process.env.GH_AW_PROJECT_GITHUB_TOKEN || "";
+
+        // Validate token permissions
+        const validationResult = await validateTokenPermissions(token, owner, repo, Array.from(projectOperationTypes));
+
+        // Check for missing required permissions (errors)
+        const failedOperations = validationResult.results.filter(r => !r.valid);
+        if (failedOperations.length > 0) {
+          const errorMessage = generatePermissionErrorMessage(validationResult.results, validationResult.tokenType);
+          core.error(errorMessage);
+          core.setFailed("GH_AW_PROJECT_GITHUB_TOKEN lacks required permissions for project operations");
+          return;
+        }
+
+        // Check for missing optional permissions (warnings)
+        const operationsWithOptional = validationResult.results.filter(r => r.optional && r.optional.length > 0);
+        if (operationsWithOptional.length > 0) {
+          const warningMessage = generatePermissionWarningMessage(validationResult.results);
+          core.warning(warningMessage);
+        }
+
+        core.info("✅ Project token permissions validated successfully");
+      } catch (error) {
+        // Log validation error but don't fail - permission check is best-effort
+        core.warning(`Permission validation failed (continuing with operation): ${getErrorMessage(error)}`);
+      }
     }
 
     // Process messages

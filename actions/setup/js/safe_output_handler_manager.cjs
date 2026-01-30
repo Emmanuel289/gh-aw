@@ -16,6 +16,7 @@ const { generateMissingInfoSections } = require("./missing_info_formatter.cjs");
 const { setCollectedMissings } = require("./missing_messages_helper.cjs");
 const { writeSafeOutputSummaries } = require("./safe_output_summary.cjs");
 const { getIssuesToAssignCopilot } = require("./create_issue.cjs");
+const { validateTokenPermissions, generatePermissionErrorMessage, generatePermissionWarningMessage } = require("./token_permissions.cjs");
 
 const DEFAULT_AGENTIC_CAMPAIGN_LABEL = "agentic-campaign";
 
@@ -824,6 +825,51 @@ async function main() {
       core.setOutput("temporary_id_map", "{}");
       core.setOutput("processed_count", 0);
       return;
+    }
+
+    // Pre-flight token permission validation
+    // Extract operation types from messages to validate permissions
+    const operationTypes = new Set();
+    for (const message of agentOutput.items) {
+      if (message.type && messageHandlers.has(message.type)) {
+        operationTypes.add(message.type);
+      }
+    }
+
+    if (operationTypes.size > 0) {
+      core.info("\n=== Pre-flight Token Permission Validation ===");
+      core.info(`Validating permissions for ${operationTypes.size} operation type(s): ${Array.from(operationTypes).join(", ")}`);
+
+      try {
+        // Get repository context
+        const owner = context.repo.owner;
+        const repo = context.repo.repo;
+        const token = process.env.GITHUB_TOKEN || "";
+
+        // Validate token permissions
+        const validationResult = await validateTokenPermissions(token, owner, repo, Array.from(operationTypes));
+
+        // Check for missing required permissions (errors)
+        const failedOperations = validationResult.results.filter(r => !r.valid);
+        if (failedOperations.length > 0) {
+          const errorMessage = generatePermissionErrorMessage(validationResult.results, validationResult.tokenType);
+          core.error(errorMessage);
+          core.setFailed("Token lacks required permissions for safe output operations");
+          return;
+        }
+
+        // Check for missing optional permissions (warnings)
+        const operationsWithOptional = validationResult.results.filter(r => r.optional && r.optional.length > 0);
+        if (operationsWithOptional.length > 0) {
+          const warningMessage = generatePermissionWarningMessage(validationResult.results);
+          core.warning(warningMessage);
+        }
+
+        core.info("✅ Token permissions validated successfully");
+      } catch (error) {
+        // Log validation error but don't fail - permission check is best-effort
+        core.warning(`Permission validation failed (continuing with operation): ${getErrorMessage(error)}`);
+      }
     }
 
     // Process all messages in order of appearance
