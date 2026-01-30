@@ -19,6 +19,7 @@ func TestUpdateProjectHandlerConfigIncludesFieldDefinitions(t *testing.T) {
 name: Test Update Project Handler Config
 on: workflow_dispatch
 engine: copilot
+project: https://github.com/orgs/test/projects/123
 safe-outputs:
   update-project:
     max: 1

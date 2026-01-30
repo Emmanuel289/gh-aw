@@ -549,3 +549,4 @@ func TestCampaignValidationErrorMessages(t *testing.T) {
 		})
 	}
 }
+
