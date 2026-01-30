@@ -248,39 +248,6 @@ func (c *Compiler) hasIssueTrigger(onSection string) bool {
 	return hasIssue
 }
 
-// hasRiskyTriggers checks if the workflow has risky triggers that require explicit permissions
-// Risky triggers include: issue_comment, pull_request_target, workflow_run, pull_request_review_comment
-// These triggers can be exploited by untrusted users and should have minimal permissions at workflow level
-func (c *Compiler) hasRiskyTriggers(onSection string) bool {
-	riskyTriggers := []string{
-		"issue_comment:",
-		"pull_request_target:",
-		"workflow_run:",
-		"pull_request_review_comment:",
-	}
-
-	// Split into lines and check each line to avoid false positives from comments
-	lines := strings.Split(onSection, "\n")
-	for _, line := range lines {
-		// Skip empty lines and comments
-		trimmedLine := strings.TrimSpace(line)
-		if trimmedLine == "" || strings.HasPrefix(trimmedLine, "#") {
-			continue
-		}
-
-		// Check if this line contains a risky trigger
-		for _, trigger := range riskyTriggers {
-			if strings.Contains(line, trigger) {
-				toolsLog.Printf("Detected risky trigger: %s", trigger)
-				return true
-			}
-		}
-	}
-
-	toolsLog.Print("No risky triggers detected")
-	return false
-}
-
 // injectWorkflowDispatchForIssue adds workflow_dispatch trigger with issue_number input
 func (c *Compiler) injectWorkflowDispatchForIssue(onSection string) string {
 	toolsLog.Print("Injecting workflow_dispatch trigger for issue workflows")
