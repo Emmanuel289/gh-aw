@@ -43,8 +43,9 @@ Test workflow
 	require.NoError(t, err, "Failed to read compiled output")
 
 	compiledStr := string(compiledContent)
-	require.Contains(t, compiledStr, "GH_AW_SAFE_OUTPUTS_PROJECT_HANDLER_CONFIG", "Expected project handler config env var")
-	require.Contains(t, compiledStr, "update_project", "Expected update_project in project handler config")
+	// update_project is now in the main handler config, not the project handler config
+	require.Contains(t, compiledStr, "GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG", "Expected handler config env var")
+	require.Contains(t, compiledStr, "update_project", "Expected update_project in handler config")
 
 	// field_definitions uses underscore naming in the JSON config passed to JS
 	require.True(
