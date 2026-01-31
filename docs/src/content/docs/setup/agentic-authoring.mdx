@@ -19,7 +19,7 @@ To create agentic workflows using VSCode or a Coding Agent (Claude Code, Codex e
 
 2. Open VSCode Agent Chat or your Coding Agent and enter the following prompt:
 
-   ```sh wrap
+   ```text wrap
    Initialize this repository for GitHub Agentic Workflows using https://github.com/githubnext/gh-aw/blob/main/install.md
 
    Then follow the instructions in .github/agents/agentic-workflows.agent.md to create a workflow.
@@ -39,7 +39,7 @@ Follow these steps to create agentic workflows on github.com.
 
 Navigate to your repository on https://github.com and click the "Agents" tab, then use this prompt:
 
-```sh wrap
+```text wrap
 Initialize this repository for GitHub Agentic Workflows using https://github.com/githubnext/gh-aw/blob/main/install.md
 ```
 
@@ -56,7 +56,7 @@ After initialization, you'll have:
 
 Navigate to your repository on https://github.com and click the "Agents" tab, then use this prompt:
 
-```sh wrap
+```text wrap
 # Create a new workflow
 /agent agentic-workflows create a workflow that triages issues
 ```
@@ -75,7 +75,7 @@ Once your repository is set up for agentic workflows, you can use the `agentic-w
 
 Modify or improve existing workflows using natural language prompts. The agentic-workflows agent can analyze your current workflow and suggest or implement changes:
 
-```sh wrap
+```text wrap
 /agent agentic-workflows update the issue-triage workflow to add web-fetch tool and
   improve the prompt for better accuracy
 ```
@@ -90,7 +90,7 @@ The agent will:
 
 Keep your agentic workflows up-to-date with the latest `gh-aw` versions and features using the unified agentic-workflows agent:
 
-```sh wrap
+```text wrap
 /agent agentic-workflows upgrade all workflows to latest version
 ```
 
@@ -106,7 +106,7 @@ The agent will:
 
 Import existing workflows from GitHub repositories using natural language prompts. The agentic-workflows agent can fetch, install, and configure workflows from any accessible GitHub repository:
 
-```sh wrap
+```text wrap
 /agent agentic-workflows import workflow from https://github.com/githubnext/agentics/blob/main/workflows/ci-doctor.md
 ```
 
@@ -120,7 +120,7 @@ The agent will:
 
 When importing, you can specify customizations:
 
-```sh wrap
+```text wrap
 # Import and change engine
 /agent agentic-workflows import issue-triage from githubnext/agentics and use claude engine
 
@@ -132,7 +132,7 @@ When importing, you can specify customizations:
 
 When workflows fail or behave unexpectedly, use the agentic-workflows agent to investigate and diagnose issues:
 
-```sh wrap
+```text wrap
 /agent agentic-workflows debug why is my issue-triage workflow failing?
 ```
 
@@ -146,7 +146,7 @@ The debugging agent will:
 
 You can investigate a specific workflow run using its ID or URL:
 
-```sh wrap
+```text wrap
 # Debug by run ID
 /agent agentic-workflows debug run 1234567890
 
@@ -156,7 +156,7 @@ You can investigate a specific workflow run using its ID or URL:
 
 The agent can help with various debugging scenarios:
 
-```sh wrap
+```text wrap
 # Permission errors
 /agent agentic-workflows debug getting 403 errors in my workflow
 
