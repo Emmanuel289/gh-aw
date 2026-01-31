@@ -459,19 +459,19 @@ type SafeOutputsConfig struct {
 	UpdatePullRequests              *UpdatePullRequestsConfig              `yaml:"update-pull-request,omitempty"` // Update GitHub pull request title/body
 	PushToPullRequestBranch         *PushToPullRequestBranchConfig         `yaml:"push-to-pull-request-branch,omitempty"`
 	UploadAssets                    *UploadAssetsConfig                    `yaml:"upload-asset,omitempty"`
-	UpdateRelease                   *UpdateReleaseConfig                   `yaml:"update-release,omitempty"`               // Update GitHub release descriptions
-	CreateAgentSessions             *CreateAgentSessionConfig              `yaml:"create-agent-session,omitempty"`         // Create GitHub Copilot agent sessions
-	CopyProjects                    *CopyProjectsConfig                    `yaml:"copy-project,omitempty"`                 // Copy GitHub Projects V2
-	CreateProjects                  *CreateProjectsConfig                  `yaml:"create-project,omitempty"`               // Create GitHub Projects V2
-	LinkSubIssue                    *LinkSubIssueConfig                    `yaml:"link-sub-issue,omitempty"`               // Link issues as sub-issues
-	HideComment                     *HideCommentConfig                     `yaml:"hide-comment,omitempty"`                 // Hide comments
-	DispatchWorkflow                *DispatchWorkflowConfig                `yaml:"dispatch-workflow,omitempty"`            // Dispatch workflow_dispatch events to other workflows
-	MissingTool                     *MissingToolConfig                     `yaml:"missing-tool,omitempty"`                 // Optional for reporting missing functionality
-	MissingData                     *MissingDataConfig                     `yaml:"missing-data,omitempty"`                 // Optional for reporting missing data required to achieve goals
-	NoOp                            *NoOpConfig                            `yaml:"noop,omitempty"`                         // No-op output for logging only (always available as fallback)
-	ThreatDetection                 *ThreatDetectionConfig                 `yaml:"threat-detection,omitempty"`             // Threat detection configuration
-	Jobs                            map[string]*SafeJobConfig              `yaml:"jobs,omitempty"`                         // Safe-jobs configuration (moved from top-level)
-	App                             *GitHubAppConfig                       `yaml:"app,omitempty"`                          // GitHub App credentials for token minting
+	UpdateRelease                   *UpdateReleaseConfig                   `yaml:"update-release,omitempty"`       // Update GitHub release descriptions
+	CreateAgentSessions             *CreateAgentSessionConfig              `yaml:"create-agent-session,omitempty"` // Create GitHub Copilot agent sessions
+	CopyProjects                    *CopyProjectsConfig                    `yaml:"copy-project,omitempty"`         // Copy GitHub Projects V2
+	CreateProjects                  *CreateProjectsConfig                  `yaml:"create-project,omitempty"`       // Create GitHub Projects V2
+	LinkSubIssue                    *LinkSubIssueConfig                    `yaml:"link-sub-issue,omitempty"`       // Link issues as sub-issues
+	HideComment                     *HideCommentConfig                     `yaml:"hide-comment,omitempty"`         // Hide comments
+	DispatchWorkflow                *DispatchWorkflowConfig                `yaml:"dispatch-workflow,omitempty"`    // Dispatch workflow_dispatch events to other workflows
+	MissingTool                     *MissingToolConfig                     `yaml:"missing-tool,omitempty"`         // Optional for reporting missing functionality
+	MissingData                     *MissingDataConfig                     `yaml:"missing-data,omitempty"`         // Optional for reporting missing data required to achieve goals
+	NoOp                            *NoOpConfig                            `yaml:"noop,omitempty"`                 // No-op output for logging only (always available as fallback)
+	ThreatDetection                 *ThreatDetectionConfig                 `yaml:"threat-detection,omitempty"`     // Threat detection configuration
+	Jobs                            map[string]*SafeJobConfig              `yaml:"jobs,omitempty"`                 // Safe-jobs configuration (moved from top-level)
+	App                             *GitHubAppConfig                       `yaml:"app,omitempty"`                  // GitHub App credentials for token minting
 	AllowedDomains                  []string                               `yaml:"allowed-domains,omitempty"`
 	AllowGitHubReferences           []string                               `yaml:"allowed-github-references,omitempty"` // Allowed repositories for GitHub references (e.g., ["repo", "org/repo2"])
 	Staged                          bool                                   `yaml:"staged,omitempty"`                    // If true, emit step summary messages instead of making GitHub API calls

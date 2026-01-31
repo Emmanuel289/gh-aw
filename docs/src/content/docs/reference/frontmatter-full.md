@@ -1735,23 +1735,14 @@ cache: []
 # (optional)
 # This field supports multiple formats (oneOf):
 
-# Option 1: GitHub Project URL for tracking workflow-created items. When
-# configured, automatically enables project tracking operations (update-project,
-# create-project-status-update) to manage project boards similar to campaign
-# orchestrators.
+# Option 1: GitHub Project URL for tracking workflow-created items.
 project: "example-value"
 
 # Option 2: Project tracking configuration with custom settings for managing
-# GitHub Project boards. Automatically enables update-project and
-# create-project-status-update operations.
+# GitHub Project boards.
 project:
   # GitHub Project URL (required). Must be a valid GitHub Projects V2 URL.
   url: "example-value"
-
-  # Maximum number of project update operations per workflow run (default: 100).
-  # Controls the update-project safe-output maximum.
-  # (optional)
-  max-updates: 1
 
   # Optional list of repositories and organizations this workflow can operate on.
   # Supports 'owner/repo' for specific repositories and 'org:name' for all
@@ -1760,11 +1751,6 @@ project:
   # (optional)
   scope: []
     # Array of strings
-
-  # Maximum number of project status update operations per workflow run (default:
-  # 1). Controls the create-project-status-update safe-output maximum.
-  # (optional)
-  max-status-updates: 1
 
   # Optional custom GitHub token for project operations. Should reference a secret
   # with Projects: Read & Write permissions (e.g., ${{
@@ -2128,79 +2114,6 @@ safe-outputs:
   # Option 2: Enable agent session creation with default configuration
   create-agent-session: null
 
-  # Enable AI agents to update GitHub Project items (issues, pull requests) with
-  # status changes, field updates, and metadata modifications.
-  # (optional)
-  # This field supports multiple formats (oneOf):
-
-  # Option 1: Configuration for managing GitHub Projects v2 boards. Smart tool that
-  # can add issue/PR items and update custom fields on existing items. By default it
-  # is update-only: if the project does not exist, the job fails with instructions
-  # to create it manually. To allow workflows to create missing projects, explicitly
-  # opt in via the agent output field create_if_missing=true (and/or provide a
-  # github-token override). NOTE: Projects v2 requires a Personal Access Token (PAT)
-  # or GitHub App token with appropriate permissions; the GITHUB_TOKEN cannot be
-  # used for Projects v2. Safe output items produced by the agent use
-  # type=update_project Configuration also supports an optional views array for
-  # declaring project views to create. Safe output items produced by the agent use
-  # type=update_project and may include: project (board name), content_type
-  # (issue|pull_request), content_number, fields, campaign_id, and
-  # create_if_missing.
-  update-project:
-    # Maximum number of project operations to perform (default: 10). Each operation
-    # may add a project item, or update its fields.
-    # (optional)
-    max: 1
-
-    # GitHub token to use for this specific output type. Overrides global github-token
-    # if specified.
-    # (optional)
-    github-token: "${{ secrets.GITHUB_TOKEN }}"
-
-    # Optional array of project views to create. Each view must have a name and
-    # layout. Views are created during project setup.
-    # (optional)
-    views: []
-      # Array items:
-        # The name of the view (e.g., 'Sprint Board', 'Campaign Roadmap')
-        name: "My Workflow"
-
-        # The layout type of the view
-        layout: "table"
-
-        # Optional filter query for the view (e.g., 'is:issue is:open', 'label:bug')
-        # (optional)
-        filter: "example-value"
-
-        # Optional array of field IDs that should be visible in the view (table/board
-        # only, not applicable to roadmap)
-        # (optional)
-        visible-fields: []
-
-        # Optional human description for the view. Not supported by the GitHub Views API
-        # and may be ignored.
-        # (optional)
-        description: "Description of the workflow"
-
-    # Optional array of project custom fields to create up-front. Useful for campaign
-    # projects that require a fixed set of fields.
-    # (optional)
-    field-definitions: []
-      # Array items:
-        # The field name to create (e.g., 'status', 'campaign_id')
-        name: "My Workflow"
-
-        # The GitHub Projects v2 custom field type
-        data-type: "DATE"
-
-        # Options for SINGLE_SELECT fields. GitHub does not support adding options later.
-        # (optional)
-        options: []
-          # Array of strings
-
-  # Option 2: Enable project management with default configuration (max=10)
-  update-project: null
-
   # Enable AI agents to duplicate GitHub Project boards with all configuration,
   # views, and settings.
   # (optional)
@@ -2325,32 +2238,6 @@ safe-outputs:
   create-project: null
 
   # Option 3: Alternative null value syntax
-
-  # Enable AI agents to post status updates to GitHub Projects, providing progress
-  # reports and milestone tracking.
-  # (optional)
-  # This field supports multiple formats (oneOf):
-
-  # Option 1: Configuration for creating GitHub Project status updates. Status
-  # updates provide stakeholder communication and historical record of project
-  # progress. Requires a Personal Access Token (PAT) or GitHub App token with
-  # Projects: Read+Write permission. The GITHUB_TOKEN cannot be used for Projects
-  # v2. Status updates are created on the specified project board and appear in the
-  # Updates tab. Typically used by campaign orchestrators to post run summaries with
-  # progress, findings, and next steps.
-  create-project-status-update:
-    # Maximum number of status updates to create (default: 1). Typically 1 per
-    # orchestrator run.
-    # (optional)
-    max: 1
-
-    # GitHub token to use for this specific output type. Overrides global github-token
-    # if specified. Must have Projects: Read+Write permission.
-    # (optional)
-    github-token: "${{ secrets.GITHUB_TOKEN }}"
-
-  # Option 2: Enable project status updates with default configuration (max=1)
-  create-project-status-update: null
 
   # Enable AI agents to create GitHub Discussions from workflow output. Supports
   # categorization, labeling, and automatic closure of older discussions. Does not
