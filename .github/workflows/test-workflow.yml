@@ -1,0 +1,15 @@
+name: Test Workflow
+on:
+  workflow_dispatch:
+    inputs:
+      test_param:
+        description: 'Test parameter'
+        type: string
+        required: false
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Test workflow"
