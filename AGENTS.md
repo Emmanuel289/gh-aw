@@ -1037,6 +1037,151 @@ tools:
 - Accessibility analysis and visual testing
 - Multi-browser support (Chromium, Firefox, Safari)
 
+## Safe Outputs Best Practices
+
+Safe outputs are the primary mechanism for workflows to create GitHub issues, discussions, pull requests, and comments. Understanding when and how to use each output type is critical for creating effective workflows.
+
+### Quick Output Type Selection
+
+**Decision Guide:**
+- **Action required?** → `create-issue`
+- **Automated fix possible?** → `create-pull-request`
+- **Report/analysis only?** → `create-discussion`
+- **Updating existing item?** → `add-comment`
+
+### Output Types and When to Use Them
+
+**Create Issue (`create-issue`)** - Use when:
+- Action is required (task tracking, assignment needed)
+- Status tracking required (open/closed)
+- Needs labels, milestones, or project boards
+- Time-sensitive action items need visibility
+
+**Create Discussion (`create-discussion`)** - Use when:
+- Sharing analysis, reports, or insights
+- No specific action required
+- Community conversation welcome
+- Long-term reference material needed
+- Regular status reports or summaries
+
+**Create Pull Request (`create-pull-request`)** - Use when:
+- Automated fix can be proposed
+- Code changes are ready to review
+- Changes are non-breaking and safe
+- Tests can validate the changes
+
+**Add Comment (`add-comment`)** - Use when:
+- Updating existing issue/PR/discussion
+- Providing progress updates
+- Responding to triggers
+- Linking related items created by the workflow
+
+**Update Issue (`update-issue`)** - Use when:
+- Need to modify existing issue content, labels, or assignees
+- Changing status or milestones
+- Use sparingly - prefer comments for updates
+
+### Multi-Output Patterns
+
+74.8% of agentic workflows use multiple safe output types. Common patterns:
+
+**Pattern 1: Conditional Outputs** - Route by severity/priority
+```yaml
+safe-outputs:
+  create-issue:      # Critical findings only
+    max: 5
+  create-discussion: # Summary of all findings
+    max: 1
+```
+
+**Pattern 2: Hierarchical Outputs** - Parent summary + child tasks
+```yaml
+safe-outputs:
+  create-discussion: # Overall analysis
+    max: 1
+  create-issue:      # Individual actionable items
+    max: 10
+  add-comment:       # Link discussion and issues
+    max: 1
+```
+
+**Pattern 3: Fix-or-Report** - Attempt automation, fallback to manual
+```yaml
+safe-outputs:
+  create-pull-request: # If fix is safe
+    max: 1
+  create-issue:        # If manual review needed
+    max: 1
+```
+
+**Pattern 4: Comment-First** - Update-focused with escalation
+```yaml
+safe-outputs:
+  add-comment:       # Always provide status
+    hide-older-comments: true
+    max: 1
+  create-issue:      # Only for persistent problems
+    max: 1
+```
+
+### Best Practices
+
+**Avoid Duplication:**
+```yaml
+# ❌ BAD - Creates both issue and discussion for same finding
+safe-outputs:
+  create-issue: {max: 10}
+  create-discussion: {max: 1}
+# Agent duplicates content in both
+
+# ✅ GOOD - Conditional based on severity
+safe-outputs:
+  create-issue: {max: 5}      # Critical only
+  create-discussion: {max: 1}  # Summary with all findings
+```
+
+**Cleanup Transient Items:**
+```yaml
+safe-outputs:
+  create-issue:
+    expires: 7d  # Auto-close when condition resolves
+  create-discussion:
+    close-older-discussions: true  # Keep only latest
+```
+
+**Limit Output Volume:**
+```yaml
+safe-outputs:
+  create-issue:
+    max: 5  # Top 5 priorities, not all 50 findings
+```
+
+**Consistent Titles:**
+```yaml
+safe-outputs:
+  create-issue:
+    title-prefix: "[security-critical] "
+  create-discussion:
+    title-prefix: "[Security Scan] "
+```
+
+### Documentation References
+
+- **[Safe Outputs Guide](docs/safe-outputs-guide.md)** - Decision tree, patterns, best practices
+- **[Example Workflows](docs/examples/safe-outputs/)** - Conditional, multi-output, fix-or-report, comment patterns
+- **[Technical Deep-Dive](scratchpad/safe-outputs-patterns.md)** - Implementation details, advanced patterns
+- **[System Specification](scratchpad/safe-outputs-specification.md)** - Formal specification
+- **[Environment Variables](scratchpad/safe-output-environment-variables.md)** - Configuration reference
+
+### Statistics
+
+Based on 147 agentic workflows (2026-01):
+- 76.9% use `create-issue` (113 workflows)
+- 73.5% use `create-discussion` (108 workflows)
+- 36.7% use `create-pull-request` (54 workflows)
+- 23.1% use `add-comment` (34 workflows)
+- 74.8% use 2+ output types (110 workflows)
+
 ## Testing Strategy
 
 **⚠️ IMPORTANT: Prefer selective testing over running all tests.**
