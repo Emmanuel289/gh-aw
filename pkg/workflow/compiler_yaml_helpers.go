@@ -145,6 +145,59 @@ func (c *Compiler) generateCheckoutActionsFolder(data *WorkflowData) []string {
 	return nil
 }
 
+// generateCheckoutForActivation generates the checkout step for the activation job
+// that needs both actions folder (for scripts) and .github folder (for hash validation).
+// This is specifically for the activation job that validates frontmatter hashes.
+//
+// Returns a slice of strings that can be appended to a steps array, where each
+// string represents a line of YAML for the checkout step. Returns nil if:
+// - Not in dev or script mode
+// - action-tag feature is specified (uses remote actions instead)
+func (c *Compiler) generateCheckoutForActivation(data *WorkflowData) []string {
+	// Check if action-tag is specified - if so, we're using remote actions
+	if data != nil && data.Features != nil {
+		if actionTagVal, exists := data.Features["action-tag"]; exists {
+			if actionTagStr, ok := actionTagVal.(string); ok && actionTagStr != "" {
+				// action-tag is set, use remote actions - no checkout needed
+				return nil
+			}
+		}
+	}
+
+	// Script mode: checkout both actions and .github folders from githubnext/gh-aw
+	if c.actionMode.IsScript() {
+		return []string{
+			"      - name: Checkout actions folder\n",
+			fmt.Sprintf("        uses: %s\n", GetActionPin("actions/checkout")),
+			"        with:\n",
+			"          repository: githubnext/gh-aw\n",
+			"          sparse-checkout: |\n",
+			"            actions\n",
+			"            .github\n",
+			"          path: /tmp/gh-aw/actions-source\n",
+			"          depth: 1\n",
+			"          persist-credentials: false\n",
+		}
+	}
+
+	// Dev mode: checkout both actions and .github folders (shallow)
+	if c.actionMode.IsDev() {
+		return []string{
+			"      - name: Checkout actions folder\n",
+			fmt.Sprintf("        uses: %s\n", GetActionPin("actions/checkout")),
+			"        with:\n",
+			"          sparse-checkout: |\n",
+			"            actions\n",
+			"            .github\n",
+			"          depth: 1\n",
+			"          persist-credentials: false\n",
+		}
+	}
+
+	// Release mode or other modes: no checkout needed
+	return nil
+}
+
 // generateGitHubScriptWithRequire generates a github-script step that loads a module using require().
 // Instead of repeating the global variable assignments inline, it uses the setup_globals helper function.
 //

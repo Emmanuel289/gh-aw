@@ -378,7 +378,8 @@ func (c *Compiler) buildActivationJob(data *WorkflowData, preActivationJobCreate
 	}
 
 	// For dev mode (local action path), checkout the actions folder first
-	steps = append(steps, c.generateCheckoutActionsFolder(data)...)
+	// For activation job, also checkout .github folder (shallow) for hash validation
+	steps = append(steps, c.generateCheckoutForActivation(data)...)
 
 	// Activation job doesn't need project support (no safe outputs processed here)
 	steps = append(steps, c.generateSetupStep(setupActionRef, SetupActionDestination, false)...)
