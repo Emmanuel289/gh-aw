@@ -144,6 +144,10 @@ async function displayFrontmatterHashes(workflowMdPath, lockFilePath) {
     }
 
     // Recompute hash from .md file
+    // Note: Uses JavaScript implementation which may differ from Go implementation
+    // If hashes don't match, this could indicate either:
+    // 1. Frontmatter has changed since compilation
+    // 2. Difference between Go and JavaScript implementations
     let recomputedHash = "";
     try {
       // Get the absolute path to the workflow file
