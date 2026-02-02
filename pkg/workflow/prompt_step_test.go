@@ -23,9 +23,10 @@ func TestAppendPromptStep(t *testing.T) {
 				"env:",
 				"GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt",
 				"run: |",
-				`cat << 'PROMPT_EOF' >> "$GH_AW_PROMPT"`,
+				"{",
+				"cat << 'PROMPT_EOF'",
 				"Test prompt content",
-				"PROMPT_EOF",
+				`} >> "$GH_AW_PROMPT"`,
 			},
 		},
 		{
@@ -38,9 +39,10 @@ func TestAppendPromptStep(t *testing.T) {
 				"env:",
 				"GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt",
 				"run: |",
-				`cat << 'PROMPT_EOF' >> "$GH_AW_PROMPT"`,
+				"{",
+				"cat << 'PROMPT_EOF'",
 				"Conditional prompt content",
-				"PROMPT_EOF",
+				`} >> "$GH_AW_PROMPT"`,
 			},
 		},
 	}
@@ -138,9 +140,13 @@ func TestPromptStepRefactoringConsistency(t *testing.T) {
 		if !strings.Contains(result, "GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt") {
 			t.Error("Expected GH_AW_PROMPT env variable not found")
 		}
-		// Verify temp folder instructions are included
-		if !strings.Contains(result, `cat "/opt/gh-aw/prompts/temp_folder_prompt.md" >> "$GH_AW_PROMPT"`) {
+		// Verify temp folder instructions are included (without redirect since it's in a grouped redirect)
+		if !strings.Contains(result, `cat "/opt/gh-aw/prompts/temp_folder_prompt.md"`) {
 			t.Error("Expected cat command for temp folder prompt file not found")
+		}
+		// Verify grouped redirect is used
+		if !strings.Contains(result, "{\n") || !strings.Contains(result, `} > "$GH_AW_PROMPT"`) {
+			t.Error("Expected grouped redirect pattern not found")
 		}
 	})
 }

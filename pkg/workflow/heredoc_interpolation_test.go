@@ -78,15 +78,15 @@ Actor: ${{ github.actor }}
 	}
 
 	// Verify the original expressions have been replaced in the prompt heredoc content
-	// Find the heredoc section by looking for the "cat " line and the PROMPT_EOF delimiter
-	heredocStart := strings.Index(compiledStr, "cat << 'PROMPT_EOF' > \"$GH_AW_PROMPT\"")
+	// Find the heredoc section by looking for the grouped redirect
+	heredocStart := strings.Index(compiledStr, "{\n            cat << 'PROMPT_EOF'")
 	if heredocStart == -1 {
 		t.Error("Could not find prompt heredoc section")
 	} else {
-		// Find the end of the heredoc (PROMPT_EOF on its own line)
-		heredocEnd := strings.Index(compiledStr[heredocStart:], "\n          PROMPT_EOF\n")
+		// Find the end of the grouped redirect
+		heredocEnd := strings.Index(compiledStr[heredocStart:], "} > \"$GH_AW_PROMPT\"\n")
 		if heredocEnd == -1 {
-			t.Error("Could not find end of prompt heredoc")
+			t.Error("Could not find end of prompt grouped redirect")
 		} else {
 			heredocContent := compiledStr[heredocStart : heredocStart+heredocEnd]
 			// Verify original expressions are NOT in the heredoc content
