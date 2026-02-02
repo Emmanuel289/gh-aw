@@ -8,8 +8,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/githubnext/gh-aw/pkg/console"
-	"github.com/githubnext/gh-aw/pkg/logger"
+	"github.com/github/gh-aw/pkg/console"
+	"github.com/github/gh-aw/logger"
 )
 
 var redactedDomainsLog = logger.New("cli:redacted_domains")

@@ -6,8 +6,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/githubnext/gh-aw/pkg/constants"
-	"github.com/githubnext/gh-aw/pkg/logger"
+	"github.com/github/gh-aw/pkg/constants"
+	"github.com/github/gh-aw/logger"
 )
 
 var claudeToolsLog = logger.New("workflow:claude_tools")
@@ -381,7 +381,7 @@ func (e *ClaudeEngine) computeAllowedClaudeToolsString(tools map[string]any, saf
 		if !hasGeneralWrite {
 			allowedTools = append(allowedTools, "Write")
 			// Ideally we would only give permission to the exact file, but that doesn't seem
-			// to be working with Claude. See https://github.com/githubnext/gh-aw/issues/244#issuecomment-3240319103
+			// to be working with Claude. See https://github.com/github/gh-aw/es/244#issuecomment-3240319103
 			//allowedTools = append(allowedTools, "Write(${{ env.GH_AW_SAFE_OUTPUTS }})")
 		}
 	}

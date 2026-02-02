@@ -19,11 +19,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/githubnext/gh-aw/pkg/cli/fileutil"
-	"github.com/githubnext/gh-aw/pkg/console"
-	"github.com/githubnext/gh-aw/pkg/constants"
-	"github.com/githubnext/gh-aw/pkg/logger"
-	"github.com/githubnext/gh-aw/pkg/workflow"
+	"github.com/github/gh-aw/pkg/cli/fileutil"
+	"github.com/github/gh-aw/console"
+	"github.com/github/gh-aw/constants"
+	"github.com/github/gh-aw/logger"
+	"github.com/github/gh-aw/workflow"
 )
 
 var logsMetricsLog = logger.New("cli:logs_metrics")

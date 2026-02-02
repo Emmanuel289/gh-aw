@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/githubnext/gh-aw/pkg/constants"
-	"github.com/githubnext/gh-aw/pkg/logger"
+	"github.com/github/gh-aw/pkg/constants"
+	"github.com/github/gh-aw/logger"
 )
 
 var headerLog = logger.New("workflow:header")
@@ -57,7 +57,7 @@ func GenerateWorkflowHeader(sourceFile string, generatedBy string, customInstruc
 		header.WriteString("# To regenerate this workflow, run:\n")
 	}
 	header.WriteString("#   " + string(constants.CLIExtensionPrefix) + " compile\n")
-	header.WriteString("# For more information: https://github.com/githubnext/gh-aw/blob/main/.github/aw/github-agentic-workflows.md\n")
+	header.WriteString("# For more information: https://github.com/github/gh-aw//main/.github/aw/github-agentic-workflows.md\n")
 
 	// Add custom instructions if provided
 	if customInstructions != "" {

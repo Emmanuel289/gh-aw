@@ -6,9 +6,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/githubnext/gh-aw/pkg/logger"
-	"github.com/githubnext/gh-aw/pkg/repoutil"
-	"github.com/githubnext/gh-aw/pkg/workflow"
+	"github.com/github/gh-aw/pkg/logger"
+	"github.com/github/gh-aw/repoutil"
+	"github.com/github/gh-aw/workflow"
 )
 
 var repoLog = logger.New("cli:repo")

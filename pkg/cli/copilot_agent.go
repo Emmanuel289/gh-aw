@@ -7,9 +7,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/githubnext/gh-aw/pkg/console"
-	"github.com/githubnext/gh-aw/pkg/logger"
-	"github.com/githubnext/gh-aw/pkg/workflow"
+	"github.com/github/gh-aw/pkg/console"
+	"github.com/github/gh-aw/logger"
+	"github.com/github/gh-aw/workflow"
 )
 
 var copilotAgentLog = logger.New("cli:copilot_agent")

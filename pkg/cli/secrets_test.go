@@ -5,9 +5,9 @@ package cli
 import (
 	"testing"
 
-	"github.com/githubnext/gh-aw/pkg/parser"
-	"github.com/githubnext/gh-aw/pkg/types"
-	"github.com/githubnext/gh-aw/pkg/workflow"
+	"github.com/github/gh-aw/pkg/parser"
+	"github.com/github/gh-aw/types"
+	"github.com/github/gh-aw/workflow"
 )
 
 func TestExtractSecretName(t *testing.T) {

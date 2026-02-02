@@ -471,7 +471,7 @@ func TestParseRunURL(t *testing.T) {
 		},
 		{
 			name:        "Job URL with step fragment (no line)",
-			input:       "https://github.com/githubnext/gh-aw/actions/runs/20623556740/job/59230494223#step:7",
+			input:       "https://github.com/github/gh-aw/actions/runs/20623556740/job/59230494223#step:7",
 			wantRunID:   20623556740,
 			wantOwner:   "githubnext",
 			wantRepo:    "gh-aw",

@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/githubnext/gh-aw/pkg/stringutil"
+	"github.com/github/gh-aw/pkg/stringutil"
 
-	"github.com/githubnext/gh-aw/pkg/console"
-	"github.com/githubnext/gh-aw/pkg/logger"
+	"github.com/github/gh-aw/console"
+	"github.com/github/gh-aw/logger"
 )
 
 var stopAfterLog = logger.New("workflow:stop_after")

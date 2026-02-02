@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/githubnext/gh-aw/pkg/console"
-	"github.com/githubnext/gh-aw/pkg/logger"
-	"github.com/githubnext/gh-aw/pkg/timeutil"
-	"github.com/githubnext/gh-aw/pkg/workflow"
+	"github.com/github/gh-aw/pkg/console"
+	"github.com/github/gh-aw/logger"
+	"github.com/github/gh-aw/timeutil"
+	"github.com/github/gh-aw/workflow"
 )
 
 var reportLog = logger.New("cli:logs_report")

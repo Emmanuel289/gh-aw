@@ -6,9 +6,9 @@ import (
 	"os"
 
 	"github.com/charmbracelet/huh"
-	"github.com/githubnext/gh-aw/pkg/console"
-	"github.com/githubnext/gh-aw/pkg/constants"
-	"github.com/githubnext/gh-aw/pkg/logger"
+	"github.com/github/gh-aw/pkg/console"
+	"github.com/github/gh-aw/constants"
+	"github.com/github/gh-aw/logger"
 )
 
 var addInteractiveLog = logger.New("cli:add_interactive")

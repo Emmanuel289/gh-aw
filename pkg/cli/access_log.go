@@ -8,9 +8,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/githubnext/gh-aw/pkg/console"
-	"github.com/githubnext/gh-aw/pkg/logger"
-	"github.com/githubnext/gh-aw/pkg/stringutil"
+	"github.com/github/gh-aw/pkg/console"
+	"github.com/github/gh-aw/logger"
+	"github.com/github/gh-aw/stringutil"
 )
 
 var accessLogLog = logger.New("cli:access_log")

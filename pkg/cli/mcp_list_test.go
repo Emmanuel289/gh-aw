@@ -8,10 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/githubnext/gh-aw/pkg/constants"
-	"github.com/githubnext/gh-aw/pkg/parser"
-	"github.com/githubnext/gh-aw/pkg/testutil"
-	"github.com/githubnext/gh-aw/pkg/types"
+	"github.com/github/gh-aw/pkg/constants"
+	"github.com/github/gh-aw/parser"
+	"github.com/github/gh-aw/testutil"
+	"github.com/github/gh-aw/types"
 )
 
 func TestListWorkflowMCP(t *testing.T) {

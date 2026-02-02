@@ -30,10 +30,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/githubnext/gh-aw/pkg/console"
-	"github.com/githubnext/gh-aw/pkg/logger"
-	"github.com/githubnext/gh-aw/pkg/stringutil"
-	"github.com/githubnext/gh-aw/pkg/workflow"
+	"github.com/github/gh-aw/pkg/console"
+	"github.com/github/gh-aw/logger"
+	"github.com/github/gh-aw/stringutil"
+	"github.com/github/gh-aw/workflow"
 )
 
 var compilePostProcessingLog = logger.New("cli:compile_post_processing")

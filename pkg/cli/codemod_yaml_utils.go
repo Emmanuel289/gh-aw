@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/githubnext/gh-aw/pkg/logger"
-	"github.com/githubnext/gh-aw/pkg/parser"
+	"github.com/github/gh-aw/pkg/logger"
+	"github.com/github/gh-aw/parser"
 )
 
 var yamlUtilsLog = logger.New("cli:codemod_yaml_utils")

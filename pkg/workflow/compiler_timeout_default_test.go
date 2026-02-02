@@ -9,11 +9,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/githubnext/gh-aw/pkg/stringutil"
+	"github.com/github/gh-aw/pkg/stringutil"
 
-	"github.com/githubnext/gh-aw/pkg/testutil"
+	"github.com/github/gh-aw/testutil"
 
-	"github.com/githubnext/gh-aw/pkg/constants"
+	"github.com/github/gh-aw/constants"
 )
 
 func TestDefaultTimeoutMinutesApplied(t *testing.T) {

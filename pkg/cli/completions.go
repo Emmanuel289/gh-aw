@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/githubnext/gh-aw/pkg/logger"
-	"github.com/githubnext/gh-aw/pkg/parser"
-	"github.com/githubnext/gh-aw/pkg/workflow"
+	"github.com/github/gh-aw/pkg/logger"
+	"github.com/github/gh-aw/parser"
+	"github.com/github/gh-aw/workflow"
 	"github.com/spf13/cobra"
 )
 

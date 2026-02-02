@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/githubnext/gh-aw/pkg/constants"
-	"github.com/githubnext/gh-aw/pkg/logger"
-	"github.com/githubnext/gh-aw/pkg/stringutil"
+	"github.com/github/gh-aw/pkg/constants"
+	"github.com/github/gh-aw/logger"
+	"github.com/github/gh-aw/stringutil"
 )
 
 var safeJobsLog = logger.New("workflow:safe_jobs")

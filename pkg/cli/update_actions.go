@@ -10,9 +10,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/githubnext/gh-aw/pkg/console"
-	"github.com/githubnext/gh-aw/pkg/gitutil"
-	"github.com/githubnext/gh-aw/pkg/workflow"
+	"github.com/github/gh-aw/pkg/console"
+	"github.com/github/gh-aw/gitutil"
+	"github.com/github/gh-aw/workflow"
 )
 
 // extractBaseRepo extracts the base repository (owner/repo) from an action path
