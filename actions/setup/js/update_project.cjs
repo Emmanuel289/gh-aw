@@ -94,11 +94,15 @@ function parseProjectUrl(projectUrl) {
     throw new Error(`Invalid project URL: "${projectUrl}". The "project" field must be a full GitHub project URL (e.g., https://github.com/orgs/myorg/projects/123).`);
   }
 
-  return {
+  const parsed = {
     scope: match[1],
     ownerLogin: match[2],
     projectNumber: match[3],
   };
+
+  core.info(`Parsed project URL: scope=${parsed.scope}, owner=${parsed.ownerLogin}, number=${parsed.projectNumber} (type: ${typeof parsed.projectNumber})`);
+
+  return parsed;
 }
 /**
  * List accessible Projects v2 for org or user
@@ -209,6 +213,8 @@ function summarizeEmptyProjectsV2List(list) {
  * @returns {Promise<{ id: string, number: number, title: string, url: string }>} Project details
  */
 async function resolveProjectV2(projectInfo, projectNumberInt, github) {
+  core.info(`resolveProjectV2 called with: scope=${projectInfo.scope}, login=${projectInfo.ownerLogin}, number=${projectNumberInt} (type: ${typeof projectNumberInt})`);
+
   try {
     const query =
       projectInfo.scope === "orgs"
@@ -233,6 +239,8 @@ async function resolveProjectV2(projectInfo, projectNumberInt, github) {
           }
         }`;
 
+    core.info(`Executing direct projectV2 query with variables: login="${projectInfo.ownerLogin}", number=${projectNumberInt}`);
+
     const direct = await github.graphql(query, {
       login: projectInfo.ownerLogin,
       number: projectNumberInt,
@@ -240,7 +248,11 @@ async function resolveProjectV2(projectInfo, projectNumberInt, github) {
 
     const project = projectInfo.scope === "orgs" ? direct?.organization?.projectV2 : direct?.user?.projectV2;
 
-    if (project) return project;
+    if (project) {
+      core.info(`Direct query succeeded: found project #${project.number}`);
+      return project;
+    }
+    core.warning(`Direct query succeeded but returned null project (organization or user might not have project #${projectNumberInt})`);
   } catch (error) {
     core.warning(`Direct projectV2(number) query failed; falling back to projectsV2 list search: ${getErrorMessage(error)}`);
   }
@@ -425,9 +437,11 @@ async function updateProject(output, temporaryIdMap = new Map(), githubClient = 
 
     try {
       const projectNumberInt = parseInt(projectNumberFromUrl, 10);
+      core.info(`Converting project number: "${projectNumberFromUrl}" (string) -> ${projectNumberInt} (${typeof projectNumberInt})`);
       if (!Number.isFinite(projectNumberInt)) {
         throw new Error(`Invalid project number parsed from URL: ${projectNumberFromUrl}`);
       }
+      core.info(`Calling resolveProjectV2 with projectNumberInt=${projectNumberInt}`);
       const project = await resolveProjectV2(projectInfo, projectNumberInt, github);
       projectId = project.id;
       resolvedProjectNumber = String(project.number);
