@@ -299,9 +299,11 @@ func TestBuildSharedPRCheckoutStepsConditions(t *testing.T) {
 // TestBuildHandlerManagerStep tests handler manager step generation
 func TestBuildHandlerManagerStep(t *testing.T) {
 	tests := []struct {
-		name          string
-		safeOutputs   *SafeOutputsConfig
-		checkContains []string
+		name              string
+		safeOutputs       *SafeOutputsConfig
+		parsedFrontmatter *FrontmatterConfig
+		checkContains     []string
+		checkNotContains  []string
 	}{
 		{
 			name: "basic handler manager",
@@ -338,107 +340,63 @@ func TestBuildHandlerManagerStep(t *testing.T) {
 				"GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG",
 			},
 		},
-		// Note: create_project and create_project_status_update are now handled by
-		// the project handler manager (buildProjectHandlerManagerStep), not the main handler manager
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			compiler := NewCompiler()
-
-			workflowData := &WorkflowData{
-				Name:        "Test Workflow",
-				SafeOutputs: tt.safeOutputs,
-			}
-
-			steps := compiler.buildHandlerManagerStep(workflowData)
-
-			require.NotEmpty(t, steps)
-
-			stepsContent := strings.Join(steps, "")
-
-			for _, expected := range tt.checkContains {
-				assert.Contains(t, stepsContent, expected, "Expected to find: "+expected)
-			}
-		})
-	}
-}
-
-// TestBuildProjectHandlerManagerStep tests project handler manager step generation
-func TestBuildProjectHandlerManagerStep(t *testing.T) {
-	tests := []struct {
-		name              string
-		safeOutputs       *SafeOutputsConfig
-		parsedFrontmatter *FrontmatterConfig
-		checkContains     []string
-	}{
 		{
-			name: "project handler manager with create_project",
-			safeOutputs: &SafeOutputsConfig{
-				CreateProjects: &CreateProjectsConfig{
-					GitHubToken: "${{ secrets.PROJECTS_PAT }}",
-					TargetOwner: "test-org",
-				},
-			},
-			checkContains: []string{
-				"name: Process Project-Related Safe Outputs",
-				"id: process_project_safe_outputs",
-				"uses: actions/github-script@",
-				"GH_AW_AGENT_OUTPUT",
-				"GH_AW_SAFE_OUTPUTS_PROJECT_HANDLER_CONFIG",
-				"GH_AW_PROJECT_GITHUB_TOKEN: ${{ secrets.PROJECTS_PAT }}",
-				"github-token: ${{ secrets.PROJECTS_PAT }}",
-				"setupGlobals",
-				"safe_output_project_handler_manager.cjs",
-			},
-		},
-		{
-			name: "project handler manager with create_project_status_update",
-			safeOutputs: &SafeOutputsConfig{
-				CreateProjectStatusUpdates: &CreateProjectStatusUpdateConfig{
-					GitHubToken: "${{ secrets.PROJECTS_PAT }}",
-				},
-			},
-			checkContains: []string{
-				"name: Process Project-Related Safe Outputs",
-				"id: process_project_safe_outputs",
-				"GH_AW_SAFE_OUTPUTS_PROJECT_HANDLER_CONFIG",
-				"GH_AW_PROJECT_GITHUB_TOKEN: ${{ secrets.PROJECTS_PAT }}",
-				"github-token: ${{ secrets.PROJECTS_PAT }}",
-			},
-		},
-		{
-			name: "project handler manager without custom token uses default",
-			safeOutputs: &SafeOutputsConfig{
-				CreateProjects: &CreateProjectsConfig{
-					TargetOwner: "test-org",
-				},
-			},
-			checkContains: []string{
-				"name: Process Project-Related Safe Outputs",
-				"GH_AW_PROJECT_GITHUB_TOKEN: ${{ secrets.GH_AW_PROJECT_GITHUB_TOKEN }}",
-				"github-token: ${{ secrets.GH_AW_PROJECT_GITHUB_TOKEN }}",
-			},
-		},
-		{
-			name: "project handler manager with project URL from frontmatter",
+			name: "handler manager with project URL from update-project config",
 			safeOutputs: &SafeOutputsConfig{
 				UpdateProjects: &UpdateProjectConfig{
 					BaseSafeOutputConfig: BaseSafeOutputConfig{
-						Max: 10,
+						Max: 5,
 					},
+					Project: "https://github.com/orgs/github-agentic-workflows/projects/1",
 				},
 			},
 			parsedFrontmatter: &FrontmatterConfig{
-				Project: &ProjectConfig{
-					URL: "https://github.com/orgs/test-org/projects/123",
+				Engine: "copilot",
+			},
+			checkContains: []string{
+				"name: Process Safe Outputs",
+				"GH_AW_PROJECT_URL: \"https://github.com/orgs/github-agentic-workflows/projects/1\"",
+			},
+		},
+		{
+			name: "handler manager with project URL from update-project config",
+			safeOutputs: &SafeOutputsConfig{
+				UpdateProjects: &UpdateProjectConfig{
+					BaseSafeOutputConfig: BaseSafeOutputConfig{
+						Max: 5,
+					},
+					Project: "https://github.com/orgs/github-agentic-workflows/projects/1",
 				},
 			},
 			checkContains: []string{
-				"name: Process Project-Related Safe Outputs",
-				"GH_AW_PROJECT_URL: \"https://github.com/orgs/test-org/projects/123\"",
+				"GH_AW_PROJECT_URL: \"https://github.com/orgs/github-agentic-workflows/projects/1\"",
 			},
 		},
+		{
+			name: "handler manager with project URL from create-project-status-update config",
+			safeOutputs: &SafeOutputsConfig{
+				CreateProjectStatusUpdates: &CreateProjectStatusUpdateConfig{
+					BaseSafeOutputConfig: BaseSafeOutputConfig{
+						Max: 1,
+					},
+					Project: "https://github.com/orgs/github-agentic-workflows/projects/1",
+				},
+			},
+			checkContains: []string{
+				"GH_AW_PROJECT_URL: \"https://github.com/orgs/github-agentic-workflows/projects/1\"",
+			},
+		},
+		{
+			name: "handler manager without project does not include GH_AW_PROJECT_URL",
+			safeOutputs: &SafeOutputsConfig{
+				CreateIssues: &CreateIssuesConfig{},
+			},
+			checkNotContains: []string{
+				"GH_AW_PROJECT_URL",
+			},
+		},
+		// Note: create_project is now handled by the unified handler manager,
+		// not the separate project handler manager
 	}
 
 	for _, tt := range tests {
@@ -451,7 +409,7 @@ func TestBuildProjectHandlerManagerStep(t *testing.T) {
 				ParsedFrontmatter: tt.parsedFrontmatter,
 			}
 
-			steps := compiler.buildProjectHandlerManagerStep(workflowData)
+			steps := compiler.buildHandlerManagerStep(workflowData)
 
 			require.NotEmpty(t, steps)
 
@@ -459,6 +417,10 @@ func TestBuildProjectHandlerManagerStep(t *testing.T) {
 
 			for _, expected := range tt.checkContains {
 				assert.Contains(t, stepsContent, expected, "Expected to find: "+expected)
+			}
+
+			for _, notExpected := range tt.checkNotContains {
+				assert.NotContains(t, stepsContent, notExpected, "Expected NOT to find: "+notExpected)
 			}
 		})
 	}
@@ -509,51 +471,6 @@ func TestStepOrderInConsolidatedJob(t *testing.T) {
 	if gitConfigPos != -1 && handlerPos != -1 {
 		assert.Less(t, gitConfigPos, handlerPos, "Git config should come before handler")
 	}
-}
-
-// TestHandlerManagerOrderWithProjects tests that project handler manager comes before general handler manager
-func TestHandlerManagerOrderWithProjects(t *testing.T) {
-	compiler := NewCompiler()
-	compiler.jobManager = NewJobManager()
-
-	workflowData := &WorkflowData{
-		Name: "Test Workflow",
-		SafeOutputs: &SafeOutputsConfig{
-			CreateProjects: &CreateProjectsConfig{
-				GitHubToken: "${{ secrets.PROJECTS_PAT }}",
-				TargetOwner: "test-org",
-			},
-			CreateIssues: &CreateIssuesConfig{
-				TitlePrefix: "[Test] ",
-			},
-			AssignToAgent: &AssignToAgentConfig{
-				BaseSafeOutputConfig: BaseSafeOutputConfig{
-					Max: 1,
-				},
-			},
-		},
-	}
-
-	job, _, err := compiler.buildConsolidatedSafeOutputsJob(workflowData, "agent", "test.md")
-
-	require.NoError(t, err)
-	require.NotNil(t, job)
-
-	stepsContent := strings.Join(job.Steps, "")
-
-	// Find positions of handler steps
-	projectHandlerPos := strings.Index(stepsContent, "name: Process Project-Related Safe Outputs")
-	generalHandlerPos := strings.Index(stepsContent, "name: Process Safe Outputs")
-	assignAgentPos := strings.Index(stepsContent, "name: Assign To Agent")
-
-	// Verify all steps are present
-	assert.NotEqual(t, -1, projectHandlerPos, "Project handler manager step should be present")
-	assert.NotEqual(t, -1, generalHandlerPos, "General handler manager step should be present")
-	assert.NotEqual(t, -1, assignAgentPos, "Assign to agent step should be present")
-
-	// Verify correct order: Project Handler → General Handler → Assign To Agent
-	assert.Less(t, projectHandlerPos, generalHandlerPos, "Project handler should come before general handler")
-	assert.Less(t, generalHandlerPos, assignAgentPos, "General handler should come before assign to agent")
 }
 
 // TestStepWithoutCondition tests step building without condition

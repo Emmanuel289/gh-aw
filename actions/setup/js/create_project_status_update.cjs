@@ -309,23 +309,16 @@ async function main(config = {}, githubClient = null) {
 
     const output = message;
 
-    // Get default project URL from environment if available
-    const defaultProjectUrl = process.env.GH_AW_PROJECT_URL || "";
-
-    // Validate project field - can use default from frontmatter if available
-    let effectiveProjectUrl = output.project;
+    // Validate that project field is explicitly provided in the message
+    // The project field is required in agent output messages and must be a full GitHub project URL
+    const effectiveProjectUrl = output.project;
 
     if (!effectiveProjectUrl || typeof effectiveProjectUrl !== "string" || effectiveProjectUrl.trim() === "") {
-      if (defaultProjectUrl) {
-        core.info(`Using default project URL from frontmatter: ${defaultProjectUrl}`);
-        effectiveProjectUrl = defaultProjectUrl;
-      } else {
-        core.error("Missing required field: project (GitHub project URL)");
-        return {
-          success: false,
-          error: "Missing required field: project",
-        };
-      }
+      core.error('Missing required "project" field. The agent must explicitly include the project URL in the output message: {"type": "create_project_status_update", "project": "https://github.com/orgs/myorg/projects/42", "body": "..."}');
+      return {
+        success: false,
+        error: "Missing required field: project",
+      };
     }
 
     if (!output.body) {

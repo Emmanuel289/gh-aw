@@ -422,10 +422,8 @@ var handlerRegistry = map[string]handlerBuilder{
 			AddIfNotEmpty("github-token", c.GitHubToken).
 			Build()
 	},
-}
-
-// projectHandlerRegistry maps project handler names to their builder functions
-var projectHandlerRegistry = map[string]handlerBuilder{
+	// Note: create_project, update_project and create_project_status_update are handled by the unified handler,
+	// not the separate project handler manager, so they are included in this registry.
 	"create_project": func(cfg *SafeOutputsConfig) map[string]any {
 		if cfg.CreateProjects == nil {
 			return nil
@@ -444,16 +442,6 @@ var projectHandlerRegistry = map[string]handlerBuilder{
 		}
 		return builder.Build()
 	},
-	"create_project_status_update": func(cfg *SafeOutputsConfig) map[string]any {
-		if cfg.CreateProjectStatusUpdates == nil {
-			return nil
-		}
-		c := cfg.CreateProjectStatusUpdates
-		return newHandlerConfigBuilder().
-			AddIfPositive("max", c.Max).
-			AddIfNotEmpty("github-token", c.GitHubToken).
-			Build()
-	},
 	"update_project": func(cfg *SafeOutputsConfig) map[string]any {
 		if cfg.UpdateProjects == nil {
 			return nil
@@ -461,7 +449,8 @@ var projectHandlerRegistry = map[string]handlerBuilder{
 		c := cfg.UpdateProjects
 		builder := newHandlerConfigBuilder().
 			AddIfPositive("max", c.Max).
-			AddIfNotEmpty("github-token", c.GitHubToken)
+			AddIfNotEmpty("github-token", c.GitHubToken).
+			AddIfNotEmpty("project", c.Project)
 		if len(c.Views) > 0 {
 			builder.AddDefault("views", c.Views)
 		}
@@ -470,16 +459,15 @@ var projectHandlerRegistry = map[string]handlerBuilder{
 		}
 		return builder.Build()
 	},
-	"copy_project": func(cfg *SafeOutputsConfig) map[string]any {
-		if cfg.CopyProjects == nil {
+	"create_project_status_update": func(cfg *SafeOutputsConfig) map[string]any {
+		if cfg.CreateProjectStatusUpdates == nil {
 			return nil
 		}
-		c := cfg.CopyProjects
+		c := cfg.CreateProjectStatusUpdates
 		return newHandlerConfigBuilder().
 			AddIfPositive("max", c.Max).
 			AddIfNotEmpty("github-token", c.GitHubToken).
-			AddIfNotEmpty("source_project", c.SourceProject).
-			AddIfNotEmpty("target_owner", c.TargetOwner).
+			AddIfNotEmpty("project", c.Project).
 			Build()
 	},
 }
@@ -519,38 +507,6 @@ func (c *Compiler) addHandlerManagerConfigEnvVar(steps *[]string, data *Workflow
 		compilerSafeOutputsConfigLog.Printf("Added handler config env var: size=%d bytes", len(configStr))
 	} else {
 		compilerSafeOutputsConfigLog.Print("No handlers configured, skipping config env var")
-	}
-}
-
-// addProjectHandlerManagerConfigEnvVar adds the GH_AW_SAFE_OUTPUTS_PROJECT_HANDLER_CONFIG environment variable
-// containing JSON configuration for project-related safe output handlers (create_project, create_project_status_update).
-// These handlers require GH_AW_PROJECT_GITHUB_TOKEN and are processed separately from the main handler manager.
-func (c *Compiler) addProjectHandlerManagerConfigEnvVar(steps *[]string, data *WorkflowData) {
-	if data.SafeOutputs == nil {
-		compilerSafeOutputsConfigLog.Print("No safe-outputs configuration, skipping project handler config")
-		return
-	}
-
-	compilerSafeOutputsConfigLog.Print("Building project handler manager configuration")
-	config := make(map[string]map[string]any)
-
-	// Build configuration for each project handler using the registry
-	for handlerName, builder := range projectHandlerRegistry {
-		if handlerConfig := builder(data.SafeOutputs); len(handlerConfig) > 0 {
-			config[handlerName] = handlerConfig
-		}
-	}
-
-	// Only add the env var if there are project handlers to configure
-	if len(config) > 0 {
-		configJSON, err := json.Marshal(config)
-		if err != nil {
-			consolidatedSafeOutputsLog.Printf("Failed to marshal project handler config: %v", err)
-			return
-		}
-		// Escape the JSON for YAML (handle quotes and special chars)
-		configStr := string(configJSON)
-		*steps = append(*steps, fmt.Sprintf("          GH_AW_SAFE_OUTPUTS_PROJECT_HANDLER_CONFIG: %q\n", configStr))
 	}
 }
 

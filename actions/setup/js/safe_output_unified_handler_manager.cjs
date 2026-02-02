@@ -22,6 +22,8 @@ const { setCollectedMissings } = require("./missing_messages_helper.cjs");
 const { writeSafeOutputSummaries } = require("./safe_output_summary.cjs");
 const { getIssuesToAssignCopilot } = require("./create_issue.cjs");
 const { getCampaignLabelsFromEnv } = require("./campaign_labels.cjs");
+const { sortSafeOutputMessages } = require("./safe_output_topological_sort.cjs");
+const { loadCustomSafeOutputJobTypes } = require("./safe_output_helpers.cjs");
 
 /**
  * Merge labels with trimming + case-insensitive de-duplication.
@@ -131,7 +133,6 @@ const PROJECT_HANDLER_MAP = {
   create_project: "./create_project.cjs",
   create_project_status_update: "./create_project_status_update.cjs",
   update_project: "./update_project.cjs",
-  copy_project: "./copy_project.cjs",
 };
 
 /**
@@ -152,6 +153,7 @@ const PROJECT_RELATED_TYPES = new Set(Object.keys(PROJECT_HANDLER_MAP));
 /**
  * Load configuration for safe outputs
  * Reads configuration from both GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG and GH_AW_SAFE_OUTPUTS_PROJECT_HANDLER_CONFIG
+ * Automatically splits project handlers from regular config if they're in the wrong place
  * @returns {{regular: Object, project: Object}} Safe outputs configuration for regular and project handlers
  */
 function loadConfig() {
@@ -162,20 +164,36 @@ function loadConfig() {
   if (process.env.GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG) {
     try {
       const config = JSON.parse(process.env.GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG);
-      core.info(`Loaded regular handler config: ${JSON.stringify(config)}`);
+      core.info(`Loaded config from GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: ${JSON.stringify(config)}`);
+
       // Normalize config keys: convert hyphens to underscores
-      Object.assign(regular, Object.fromEntries(Object.entries(config).map(([k, v]) => [k.replace(/-/g, "_"), v])));
+      const normalizedEntries = Object.entries(config).map(([k, v]) => [k.replace(/-/g, "_"), v]);
+
+      // Automatically split project handlers from regular handlers
+      // Project handlers (update_project, create_project, create_project_status_update) require
+      // a separate Octokit client authenticated with GH_AW_PROJECT_GITHUB_TOKEN because they need
+      // Projects permissions that differ from regular handler permissions. This auto-split ensures
+      // backward compatibility with the Go compiler which puts all handlers in a unified config.
+      for (const [key, value] of normalizedEntries) {
+        if (PROJECT_RELATED_TYPES.has(key)) {
+          project[key] = value;
+          core.info(`Auto-moved ${key} from unified config to project config (requires project token)`);
+        } else {
+          regular[key] = value;
+        }
+      }
     } catch (error) {
       throw new Error(`Failed to parse GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: ${getErrorMessage(error)}`);
     }
   }
 
-  // Load project handler config
+  // Load project handler config (if explicitly provided, merge with auto-split handlers)
   if (process.env.GH_AW_SAFE_OUTPUTS_PROJECT_HANDLER_CONFIG) {
     try {
       const config = JSON.parse(process.env.GH_AW_SAFE_OUTPUTS_PROJECT_HANDLER_CONFIG);
       core.info(`Loaded project handler config: ${JSON.stringify(config)}`);
       // Normalize config keys: convert hyphens to underscores
+      // Explicitly provided project config takes precedence over auto-split config
       Object.assign(project, Object.fromEntries(Object.entries(config).map(([k, v]) => [k.replace(/-/g, "_"), v])));
     } catch (error) {
       throw new Error(`Failed to parse GH_AW_SAFE_OUTPUTS_PROJECT_HANDLER_CONFIG: ${getErrorMessage(error)}`);
@@ -185,6 +203,13 @@ function loadConfig() {
   // At least one config must be present
   if (Object.keys(regular).length === 0 && Object.keys(project).length === 0) {
     throw new Error("At least one of GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG or GH_AW_SAFE_OUTPUTS_PROJECT_HANDLER_CONFIG environment variables is required");
+  }
+
+  const regularCount = Object.keys(regular).length;
+  const projectCount = Object.keys(project).length;
+  core.info(`Configuration loaded: ${regularCount} regular handler${regularCount === 1 ? "" : "s"}, ${projectCount} project handler${projectCount === 1 ? "" : "s"}`);
+  if (projectCount > 0) {
+    core.info(`Project handlers: ${Object.keys(project).join(", ")}`);
   }
 
   return { regular, project };
@@ -341,9 +366,13 @@ function collectMissingMessages(messages) {
 }
 
 /**
- * Process all messages from agent output in the order they appear
+ * Process all messages from agent output in topologically sorted order
  * Dispatches each message to the appropriate handler while maintaining shared state (unified temporary ID map)
  * Tracks outputs created with unresolved temporary IDs and generates synthetic updates after resolution
+ *
+ * Messages are sorted topologically based on temporary ID dependencies before processing.
+ * This ensures items without temporary IDs are created first, enabling single-pass resolution
+ * of temporary IDs in acyclic dependency graphs.
  *
  * The unified temporary ID map stores both issue/PR references and project URLs:
  * - Issue/PR: temporary_id -> {repo: string, number: number}
@@ -362,6 +391,13 @@ async function processMessages(messageHandlers, messages, projectOctokit = null)
 
   // Collect missing_tool and missing_data messages first
   const missings = collectMissingMessages(messages);
+
+  // Load custom safe output job types that are processed by dedicated custom jobs
+  const customSafeOutputJobTypes = loadCustomSafeOutputJobTypes();
+
+  // Sort messages topologically based on temporary ID dependencies
+  // This ensures messages that create entities are processed before messages that reference them
+  const sortedMessages = sortSafeOutputMessages(messages);
 
   // Initialize unified temporary ID map
   // This will be populated by handlers as they create entities with temporary IDs
@@ -389,11 +425,11 @@ async function processMessages(messageHandlers, messages, projectOctokit = null)
   /** @type {Array<{type: string, message: any, messageIndex: number, handler: Function}>} */
   const deferredMessages = [];
 
-  core.info(`Processing ${messages.length} message(s) in order of appearance...`);
+  core.info(`Processing ${sortedMessages.length} message(s) in topologically sorted order...`);
 
-  // Process messages in order of appearance
-  for (let i = 0; i < messages.length; i++) {
-    const message = applyCampaignLabelsToMessage(messages[i], campaignLabels);
+  // Process messages in topologically sorted order
+  for (let i = 0; i < sortedMessages.length; i++) {
+    const message = applyCampaignLabelsToMessage(sortedMessages[i], campaignLabels);
     const messageType = message.type;
 
     if (!messageType) {
@@ -414,6 +450,20 @@ async function processMessages(messageHandlers, messages, projectOctokit = null)
           success: false,
           skipped: true,
           reason: "Handled by standalone step",
+        });
+        continue;
+      }
+
+      // Check if this message type is a custom safe output job
+      if (customSafeOutputJobTypes.has(messageType)) {
+        // Silently skip - this is handled by a custom safe output job
+        core.debug(`Message ${i + 1} (${messageType}) will be handled by custom safe output job`);
+        results.push({
+          type: messageType,
+          messageIndex: i,
+          success: false,
+          skipped: true,
+          reason: "Handled by custom safe output job",
         });
         continue;
       }

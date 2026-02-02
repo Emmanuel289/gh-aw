@@ -57,7 +57,6 @@ The agent requests issue creation; a separate job with `issues: write` creates i
 
 - [**Create Project**](#project-creation-create-project) (`create-project`) — Create new GitHub Projects boards (max: 1, cross-repo)
 - [**Update Project**](#project-board-updates-update-project) (`update-project`) — Manage GitHub Projects boards (max: 10, same-repo only)
-- [**Copy Project**](#project-board-copy-copy-project) (`copy-project`) — Copy GitHub Projects boards (max: 1, cross-repo)
 - [**Create Project Status Update**](#project-status-updates-create-project-status-update) (`create-project-status-update`) — Create project status updates
 - [**Update Release**](#release-updates-update-release) (`update-release`) — Update GitHub release descriptions (max: 1)
 - [**Upload Assets**](#asset-uploads-upload-asset) (`upload-asset`) — Upload files to orphaned git branch (max: 10, same-repo only)
@@ -461,8 +460,8 @@ Manages GitHub Projects boards. Requires PAT or GitHub App token ([`GH_AW_PROJEC
 ```yaml wrap
 safe-outputs:
   update-project:
+    project: "https://github.com/orgs/myorg/projects/42"  # required: target project URL
     max: 20                         # max operations (default: 10)
-    project: "https://github.com/orgs/myorg/projects/42"  # default project URL (optional)
     github-token: ${{ secrets.GH_AW_PROJECT_GITHUB_TOKEN }}
     views:                          # optional: auto-create views
       - name: "Sprint Board"
@@ -475,9 +474,11 @@ safe-outputs:
 ```
 
 **Configuration options:**
-- `project` (optional): Default project URL for operations. When specified, agent messages can omit the `project` field and will use this URL by default. Overridden by explicit `project` field in agent output.
-- Agent can provide full project URL (e.g., `https://github.com/orgs/myorg/projects/42`) in each message, or rely on the configured default.
-- Optional `campaign_id` applies `z_campaign_<id>` labels for [Campaign Workflows](/gh-aw/guides/campaigns/).
+- `project` (required in configuration): Default project URL shown in examples. Note: Agent output messages **must** explicitly include the `project` field - the configured value is for documentation purposes only.
+- `max`: Maximum number of operations per run (default: 10).
+- `github-token`: Custom token with Projects permissions (required for Projects v2 access).
+- `views`: Optional array of project views to create automatically.
+- Optional `campaign_id` in agent output applies `z_campaign_<id>` labels for [Campaign Workflows](/gh-aw/guides/campaigns/).
 - Exposes outputs: `project-id`, `project-number`, `project-url`, `campaign-id`, `item-id`.
 
 #### Supported Field Types
@@ -548,46 +549,6 @@ Views are created automatically during workflow execution. The workflow must inc
 
 
 
-### Project Board Copy (`copy-project:`)
-
-Copies GitHub Projects v2 boards to create new projects with the same structure, fields, and views. Useful for duplicating project templates or migrating projects between organizations. Requires PAT or GitHub App token ([`GH_AW_PROJECT_GITHUB_TOKEN`](/gh-aw/reference/tokens/#gh_aw_project_github_token-github-projects-v2))—default `GITHUB_TOKEN` lacks Projects v2 access.
-
-```yaml wrap
-safe-outputs:
-  copy-project:
-    max: 1                          # max operations (default: 1)
-    github-token: ${{ secrets.GH_AW_PROJECT_GITHUB_TOKEN }}
-    source-project: "https://github.com/orgs/myorg/projects/42"  # default source (optional)
-    target-owner: "myorg"           # default target owner (optional)
-```
-
-The `source-project` and `target-owner` fields are optional defaults. When configured, the agent can omit these fields in tool calls, and the defaults will be used. The agent can still override these defaults by providing explicit values.
-
-**Without defaults** (agent must provide all fields):
-```javascript
-copy_project({
-  sourceProject: "https://github.com/orgs/myorg/projects/42",
-  owner: "myorg",
-  title: "Q1 Sprint Template",
-  includeDraftIssues: false  // Optional, default: false
-});
-```
-
-**With defaults configured** (agent only needs to provide title):
-```javascript
-copy_project({
-  title: "Q1 Sprint Template"
-  // sourceProject and owner use configured defaults
-  // Can still override: sourceProject: "...", owner: "..."
-});
-```
-
-Optionally include `includeDraftIssues: true` to copy draft issues (default: false). Exposes outputs: `project-id`, `project-title`, `project-url`.
-
-> [!NOTE]
-> Custom fields, views, and workflows are copied. Draft issues are excluded by default but can be included by setting `includeDraftIssues: true`.
-
-
 ### Project Status Updates (`create-project-status-update:`)
 
 Creates status updates on GitHub Projects boards to communicate campaign progress, findings, and trends. Status updates appear in the project's Updates tab and provide a historical record of execution. Requires PAT or GitHub App token ([`GH_AW_PROJECT_GITHUB_TOKEN`](/gh-aw/reference/tokens/#gh_aw_project_github_token-github-projects-v2))—default `GITHUB_TOKEN` lacks Projects v2 access.
@@ -595,21 +556,22 @@ Creates status updates on GitHub Projects boards to communicate campaign progres
 ```yaml wrap
 safe-outputs:
   create-project-status-update:
+    project: "https://github.com/orgs/myorg/projects/73"  # required: target project URL
     max: 1                          # max updates per run (default: 1)
-    project: "https://github.com/orgs/myorg/projects/73"  # default project URL (optional)
     github-token: ${{ secrets.GH_AW_PROJECT_GITHUB_TOKEN }}
 ```
 
 **Configuration options:**
-- `project` (optional): Default project URL for status updates. When specified, agent messages can omit the `project` field and will use this URL by default. Overridden by explicit `project` field in agent output.
-- Agent can provide full project URL in each message, or rely on the configured default.
+- `project` (required in configuration): Default project URL shown in examples. Note: Agent output messages **must** explicitly include the `project` field - the configured value is for documentation purposes only.
+- `max`: Maximum number of status updates per run (default: 1).
+- `github-token`: Custom token with Projects permissions (required for Projects v2 access).
 - Typically used by [Campaign Workflows](/gh-aw/guides/campaigns/) to automatically post run summaries.
 
 #### Required Fields
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `project` | URL | Full GitHub project URL (e.g., `https://github.com/orgs/myorg/projects/73`). Can be omitted if configured in safe-outputs. |
+| `project` | URL | Full GitHub project URL (e.g., `https://github.com/orgs/myorg/projects/73`). **Required** in every agent output message. |
 | `body` | Markdown | Status update content with campaign summary, findings, and next steps |
 
 #### Optional Fields
@@ -850,11 +812,13 @@ This rewards honest AI behavior and helps teams improve data accessibility for f
 
 Creates discussions with optional `category` (slug, name, or ID; defaults to first available). `expires` field auto-closes after period (integers, `2h`, `7d`, `2w`, `1m`, `1y`, or `false` to disable; hours < 24 treated as 1 day) as "OUTDATED" with comment. Generates maintenance workflow with dynamic frequency based on shortest expiration time (see Auto-Expiration section above).
 
+**Category Naming Standard**: Use lowercase, plural category names (e.g., `audits`, `general`, `reports`) for consistency and better searchability. GitHub Discussion category IDs (starting with `DIC_`) are also supported.
+
 ```yaml wrap
 safe-outputs:
   create-discussion:
     title-prefix: "[ai] "     # prefix for titles
-    category: "general"       # category slug, name, or ID
+    category: "general"       # category slug, name, or ID (use lowercase)
     expires: 3                # auto-close after 3 days (or false to disable)
     max: 3                    # max discussions (default: 1)
     target-repo: "owner/repo" # cross-repository
@@ -916,13 +880,13 @@ safe-outputs:
 safe-outputs:
   dispatch-workflow:
     workflows: [worker-workflow, scanner-workflow]
-    max: 3  # maximum dispatches (default: 1, max: 3)
+    max: 3  # maximum dispatches (default: 1, max: 50)
 ```
 
 #### Configuration
 
 - **`workflows`** (required) — List of workflow names (without `.md` extension) that the agent is allowed to dispatch. Each workflow must exist in the same repository and support the `workflow_dispatch` trigger.
-- **`max`** (optional) — Maximum number of workflow dispatches allowed (default: 1, maximum: 3). This prevents excessive workflow triggering.
+- **`max`** (optional) — Maximum number of workflow dispatches allowed (default: 1, maximum: 50). This prevents excessive workflow triggering.
 
 #### Validation Rules
 
@@ -949,17 +913,72 @@ At compile time, the compiler validates:
 
 4. **File resolution** — The compiler resolves the correct file extension (`.lock.yml` or `.yml`) at compile time and embeds it in the safe output configuration, ensuring the runtime handler dispatches the correct workflow file.
 
-#### Agent Output Format
+#### How It Works: MCP Tool Generation
 
-The agent produces dispatch requests in its output:
+When you configure `dispatch-workflow`, the compiler automatically generates MCP (Model Context Protocol) tools that the AI agent can call. Each workflow in your `workflows` list becomes a callable tool:
+
+**Example Configuration:**
+```yaml wrap
+safe-outputs:
+  dispatch-workflow:
+    workflows: [deploy-app, run-tests]
+```
+
+**Generated MCP Tools:**
+- `deploy_app` tool — Dispatches the deploy-app workflow
+- `run_tests` tool — Dispatches the run-tests workflow
+
+The compiler:
+1. **Reads workflow_dispatch inputs** from the target workflow's YAML
+2. **Generates MCP tool schemas** with matching input parameters
+3. **Validates workflow files** exist and support workflow_dispatch
+4. **Embeds tool definitions** in the compiled workflow
+
+This means the AI agent automatically knows what inputs each workflow expects and can call them directly as tools.
+
+#### Defining Workflow Inputs
+
+To enable the agent to provide inputs when dispatching workflows, define `workflow_dispatch` inputs in the target workflow:
+
+**Target Workflow Example (`deploy-app.md`):**
+```yaml wrap
+---
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target deployment environment"
+        required: true
+        type: choice
+        options: [staging, production]
+      version:
+        description: "Version to deploy"
+        required: true
+        type: string
+      dry_run:
+        description: "Perform dry run without actual deployment"
+        required: false
+        type: boolean
+        default: false
+---
+
+# Deploy Application Workflow
+
+Deploys the application to the specified environment...
+```
+
+**Agent Output Format:**
+
+When the agent calls the generated MCP tool, it produces:
 
 ```json
 {
   "type": "dispatch_workflow",
-  "workflow_name": "worker-workflow",
+  "workflow_name": "deploy-app",
   "inputs": {
-    "campaign_id": "bootstrap-123",
-    "payload": "{\"target\": \"repositories\"}"
+    "environment": "staging",
+    "version": "v1.2.3",
+    "dry_run": false
   }
 }
 ```
@@ -972,6 +991,146 @@ All input values are automatically converted to strings as required by GitHub's 
 #### Rate Limiting
 
 To respect GitHub API rate limits, the handler automatically enforces a 5-second delay between consecutive workflow dispatches. The first dispatch has no delay.
+
+#### Best Practices
+
+**1. Always Define Explicit Inputs**
+
+When creating workflows that will be dispatched, explicitly define all required inputs in the `workflow_dispatch` section:
+
+```yaml wrap
+---
+on:
+  workflow_dispatch:
+    inputs:
+      task_id:
+        description: "Unique task identifier"
+        required: true
+        type: string
+      priority:
+        description: "Task priority level"
+        required: false
+        type: choice
+        options: [low, medium, high]
+        default: medium
+---
+```
+
+This ensures:
+- The MCP tool schema includes all expected parameters
+- The agent knows what information to provide
+- GitHub validates inputs at dispatch time
+
+**2. Use Descriptive Input Descriptions**
+
+Clear descriptions help the AI agent understand what information to provide:
+
+```yaml wrap
+# ✅ GOOD - Clear description
+repository_url:
+  description: "Full GitHub repository URL (e.g., https://github.com/owner/repo)"
+  required: true
+  type: string
+
+# ❌ BAD - Vague description
+repo:
+  description: "Repository"
+  type: string
+```
+
+**3. Use Choice Types for Limited Options**
+
+When inputs have a fixed set of valid values, use `type: choice`:
+
+```yaml wrap
+action:
+  description: "Action to perform"
+  required: true
+  type: choice
+  options: [analyze, fix, report]
+```
+
+This prevents the agent from providing invalid values and makes the interface clearer.
+
+**4. Provide Sensible Defaults**
+
+For optional inputs, provide defaults that work for the most common use case:
+
+```yaml wrap
+timeout:
+  description: "Maximum execution time in minutes"
+  required: false
+  type: number
+  default: 30
+```
+
+#### Troubleshooting
+
+**Problem: "Workflow file not found"**
+
+Error: `dispatch-workflow: workflow 'my-workflow' not found in .github/workflows/`
+
+**Solutions:**
+1. Ensure the workflow file exists in `.github/workflows/`
+2. Use the workflow name without extension (e.g., `my-workflow`, not `my-workflow.md`)
+3. Compile markdown workflows before dispatching: `gh aw compile my-workflow`
+
+**Problem: "Workflow does not support workflow_dispatch trigger"**
+
+Error: `dispatch-workflow: workflow 'my-workflow' does not support workflow_dispatch trigger`
+
+**Solution:** Add `workflow_dispatch` to the `on:` section of the target workflow:
+
+```yaml wrap
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      # Define your inputs here
+```
+
+**Problem: "Required input not provided"**
+
+The workflow is dispatched but GitHub rejects it due to missing required inputs.
+
+**Solution:** Ensure the target workflow defines its inputs and they match what the agent is providing:
+
+1. Check the target workflow's `workflow_dispatch.inputs` section
+2. Mark required inputs with `required: true`
+3. The agent will automatically know to provide these inputs based on the MCP tool schema
+
+**Problem: "Agent doesn't know what inputs to provide"**
+
+The agent dispatches the workflow but doesn't include necessary inputs.
+
+**Solutions:**
+1. **Define inputs explicitly** in the target workflow's `workflow_dispatch` section
+2. **Add clear descriptions** to help the agent understand what each input is for
+3. **Mark required inputs** with `required: true`
+4. **Update your dispatcher workflow's prompt** to mention specific inputs if needed
+
+**Example of well-defined inputs:**
+
+```yaml wrap
+---
+on:
+  workflow_dispatch:
+    inputs:
+      campaign_id:
+        description: "Unique identifier for this campaign run (e.g., 'campaign-2024-01-15-001')"
+        required: true
+        type: string
+      target_repos:
+        description: "JSON array of repository names to process (e.g., '[\"repo1\", \"repo2\"]')"
+        required: true
+        type: string
+      dry_run:
+        description: "If true, validate configuration without executing actions"
+        required: false
+        type: boolean
+        default: false
+---
+```
 
 #### Security Considerations
 
@@ -1002,8 +1161,11 @@ A workflow can trigger deployment and testing workflows as separate, trackable r
 > [!WARNING]
 > **Workflow compilation required**: Markdown workflows (`.md` files) must be compiled to `.lock.yml` files before they can be dispatched. If you reference a workflow that only exists as `.md`, compilation will fail with an error asking you to run `gh aw compile <workflow-name>`.
 
+> [!TIP]
+> **Define workflow_dispatch inputs explicitly**: The compiler automatically generates MCP tool schemas based on the target workflow's `workflow_dispatch` inputs. Always define inputs in your target workflows to ensure the agent knows what parameters to provide.
+
 > [!NOTE]
-> **Workflow inputs**: If the target workflow defines `workflow_dispatch` inputs, the agent should provide matching inputs in the dispatch request. GitHub validates input requirements at dispatch time.
+> **Input validation**: GitHub validates `workflow_dispatch` inputs at dispatch time. If the agent provides inputs that don't match the workflow's input schema (wrong type, missing required fields, invalid choices), the dispatch will fail with a validation error.
 
 ### Agent Session Creation (`create-agent-session:`)
 

@@ -190,7 +190,7 @@ describe("safe_outputs_tools_loader", () => {
       expect(defaultHandler).toHaveBeenCalledWith("dispatch_workflow");
     });
 
-    it("should include workflow_name in dispatch_workflow handler args", () => {
+    it("should wrap args in inputs property for dispatch_workflow handler", () => {
       const tools = [{ name: "ci_workflow", description: "CI workflow", _workflow_name: "ci" }];
       const mockHandlerFunction = vi.fn();
       const defaultHandler = vi.fn(() => mockHandlerFunction);
@@ -204,16 +204,63 @@ describe("safe_outputs_tools_loader", () => {
       const result = attachHandlers(tools, handlers);
 
       // Call the handler
-      const mockArgs = { input1: "value1" };
+      const mockArgs = { input1: "value1", input2: "value2" };
       result[0].handler(mockArgs);
 
-      // Verify the handler function was called with workflow_name
-      expect(mockHandlerFunction).toHaveBeenCalledWith(
-        expect.objectContaining({
-          workflow_name: "ci",
+      // Verify the handler function was called with workflow_name and inputs wrapped
+      expect(mockHandlerFunction).toHaveBeenCalledWith({
+        workflow_name: "ci",
+        inputs: {
           input1: "value1",
-        })
-      );
+          input2: "value2",
+        },
+      });
+    });
+
+    it("should handle dispatch_workflow with no inputs (empty object)", () => {
+      const tools = [{ name: "no_inputs_workflow", description: "No inputs workflow", _workflow_name: "no-inputs" }];
+      const mockHandlerFunction = vi.fn();
+      const defaultHandler = vi.fn(() => mockHandlerFunction);
+      const handlers = {
+        createPullRequestHandler: vi.fn(),
+        pushToPullRequestBranchHandler: vi.fn(),
+        uploadAssetHandler: vi.fn(),
+        defaultHandler: defaultHandler,
+      };
+
+      const result = attachHandlers(tools, handlers);
+
+      // Call the handler with empty object (typical for MCP tools with no inputs)
+      result[0].handler({});
+
+      // Verify inputs is still included as empty object
+      expect(mockHandlerFunction).toHaveBeenCalledWith({
+        workflow_name: "no-inputs",
+        inputs: {},
+      });
+    });
+
+    it("should handle dispatch_workflow with undefined args", () => {
+      const tools = [{ name: "undefined_workflow", description: "Undefined workflow", _workflow_name: "undefined-test" }];
+      const mockHandlerFunction = vi.fn();
+      const defaultHandler = vi.fn(() => mockHandlerFunction);
+      const handlers = {
+        createPullRequestHandler: vi.fn(),
+        pushToPullRequestBranchHandler: vi.fn(),
+        uploadAssetHandler: vi.fn(),
+        defaultHandler: defaultHandler,
+      };
+
+      const result = attachHandlers(tools, handlers);
+
+      // Call the handler with undefined (edge case)
+      result[0].handler(undefined);
+
+      // When args is undefined, inputs should not be included
+      // The dispatch_workflow handler will handle missing inputs property
+      expect(mockHandlerFunction).toHaveBeenCalledWith({
+        workflow_name: "undefined-test",
+      });
     });
   });
 

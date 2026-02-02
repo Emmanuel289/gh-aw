@@ -23,10 +23,11 @@ network:
 
 safe-outputs:
   create-discussion:
-    category: "General"
+    category: "general"
     max: 1
     close-older-discussions: true
   create-pull-request:
+    expires: 2d
     title-prefix: "[docs] "
     labels: [documentation, automation]
     draft: false
