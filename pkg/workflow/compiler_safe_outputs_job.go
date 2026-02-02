@@ -257,7 +257,9 @@ func (c *Compiler) buildConsolidatedSafeOutputsJob(data *WorkflowData, mainJobNa
 		outputs["assign_to_agent_assignment_errors"] = "${{ steps.assign_to_agent.outputs.assignment_errors }}"
 		outputs["assign_to_agent_assignment_error_count"] = "${{ steps.assign_to_agent.outputs.assignment_error_count }}"
 
-		permissions.Merge(NewPermissionsContentsReadIssuesWrite())
+		// Assigning Copilot agents requires elevated permissions for the replaceActorsForAssignable GraphQL mutation
+		// See: actions/setup/js/assign_agent_helpers.cjs logPermissionError() for details
+		permissions.Merge(NewPermissionsActionsWriteContentsWriteIssuesWritePRWrite())
 	}
 
 	// 4. Create Agent Session step
