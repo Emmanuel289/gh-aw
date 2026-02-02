@@ -516,128 +516,130 @@ jobs:
           GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
         run: |
           bash /opt/gh-aw/actions/create_prompt_first.sh
-          cat << 'PROMPT_EOF' > "$GH_AW_PROMPT"
-          <system>
-          PROMPT_EOF
-          cat "/opt/gh-aw/prompts/temp_folder_prompt.md" >> "$GH_AW_PROMPT"
-          cat "/opt/gh-aw/prompts/markdown.md" >> "$GH_AW_PROMPT"
-          cat "/opt/gh-aw/prompts/playwright_prompt.md" >> "$GH_AW_PROMPT"
-          cat << 'PROMPT_EOF' >> "$GH_AW_PROMPT"
-          <safe-outputs>
-          <description>GitHub API Access Instructions</description>
-          <important>
-          The gh CLI is NOT authenticated. Do NOT use gh commands for GitHub operations.
-          </important>
-          <instructions>
-          To create or modify GitHub resources (issues, discussions, pull requests, etc.), you MUST call the appropriate safe output tool. Simply writing content will NOT work - the workflow requires actual tool calls.
-          
-          Discover available tools from the safeoutputs MCP server.
-          
-          **Critical**: Tool calls write structured data that downstream jobs process. Without tool calls, follow-up actions will be skipped.
-          
-          **Note**: If you made no other safe output tool calls during this workflow execution, call the "noop" tool to provide a status message indicating completion or that no actions were needed.
-          </instructions>
-          </safe-outputs>
-          <github-context>
-          The following GitHub context information is available for this workflow:
-          {{#if __GH_AW_GITHUB_ACTOR__ }}
-          - **actor**: __GH_AW_GITHUB_ACTOR__
-          {{/if}}
-          {{#if __GH_AW_GITHUB_REPOSITORY__ }}
-          - **repository**: __GH_AW_GITHUB_REPOSITORY__
-          {{/if}}
-          {{#if __GH_AW_GITHUB_WORKSPACE__ }}
-          - **workspace**: __GH_AW_GITHUB_WORKSPACE__
-          {{/if}}
-          {{#if __GH_AW_GITHUB_EVENT_ISSUE_NUMBER__ }}
-          - **issue-number**: #__GH_AW_GITHUB_EVENT_ISSUE_NUMBER__
-          {{/if}}
-          {{#if __GH_AW_GITHUB_EVENT_DISCUSSION_NUMBER__ }}
-          - **discussion-number**: #__GH_AW_GITHUB_EVENT_DISCUSSION_NUMBER__
-          {{/if}}
-          {{#if __GH_AW_GITHUB_EVENT_PULL_REQUEST_NUMBER__ }}
-          - **pull-request-number**: #__GH_AW_GITHUB_EVENT_PULL_REQUEST_NUMBER__
-          {{/if}}
-          {{#if __GH_AW_GITHUB_EVENT_COMMENT_ID__ }}
-          - **comment-id**: __GH_AW_GITHUB_EVENT_COMMENT_ID__
-          {{/if}}
-          {{#if __GH_AW_GITHUB_RUN_ID__ }}
-          - **workflow-run-id**: __GH_AW_GITHUB_RUN_ID__
-          {{/if}}
-          </github-context>
-          
-          PROMPT_EOF
-          cat << 'PROMPT_EOF' >> "$GH_AW_PROMPT"
-          </system>
-          PROMPT_EOF
-          cat << 'PROMPT_EOF' >> "$GH_AW_PROMPT"
-          ## Starting the Documentation Preview Server
-          
-          **Context**: The documentation has been pre-built using `npm run build`. Use the preview server to serve the static build.
-          
-          Navigate to the docs directory and start the preview server in the background:
-          
-          ```bash
-          cd docs
-          npm run preview > /tmp/preview.log 2>&1 &
-          echo $! > /tmp/server.pid
-          ```
-          
-          This will:
-          - Start the preview server on port 4321
-          - Redirect output to `/tmp/preview.log`
-          - Save the process ID to `/tmp/server.pid` for later cleanup
-          
-          ## Waiting for Server Readiness
-          
-          Poll the server with curl to ensure it's ready before use:
-          
-          ```bash
-          for i in {1..30}; do
-            curl -s http://localhost:4321 > /dev/null && echo "Server ready!" && break
-            echo "Waiting for server... ($i/30)" && sleep 2
-          done
-          ```
-          
-          This will:
-          - Attempt to connect up to 30 times (60 seconds total)
-          - Wait 2 seconds between attempts
-          - Exit successfully when server responds
-          
-          ## Verifying Server Accessibility (Optional)
-          
-          Optionally verify the server is serving content:
-          
-          ```bash
-          curl -s http://localhost:4321/gh-aw/ | head -20
-          ```
-          
-          ## Stopping the Documentation Server
-          
-          After you're done using the server, clean up the process:
-          
-          ```bash
-          kill $(cat /tmp/server.pid) 2>/dev/null || true
-          rm -f /tmp/server.pid /tmp/preview.log
-          ```
-          
-          This will:
-          - Kill the server process using the saved PID
-          - Remove temporary files
-          - Ignore errors if the process already stopped
-          
-          ## Usage Notes
-          
-          - The server runs on `http://localhost:4321`
-          - Documentation is accessible at `http://localhost:4321/gh-aw/`
-          - Always clean up the server when done to avoid orphan processes
-          - If the server fails to start, check `/tmp/preview.log` for errors
-          
-          
-          PROMPT_EOF
-          cat << 'PROMPT_EOF' >> "$GH_AW_PROMPT"
-          {{#runtime-import workflows/docs-noob-tester.md}}
-          PROMPT_EOF
+          {
+            cat << 'PROMPT_EOF'
+            <system>
+            PROMPT_EOF
+            cat "/opt/gh-aw/prompts/temp_folder_prompt.md"
+            cat "/opt/gh-aw/prompts/markdown.md"
+            cat "/opt/gh-aw/prompts/playwright_prompt.md"
+            cat << 'PROMPT_EOF'
+            <safe-outputs>
+            <description>GitHub API Access Instructions</description>
+            <important>
+            The gh CLI is NOT authenticated. Do NOT use gh commands for GitHub operations.
+            </important>
+            <instructions>
+            To create or modify GitHub resources (issues, discussions, pull requests, etc.), you MUST call the appropriate safe output tool. Simply writing content will NOT work - the workflow requires actual tool calls.
+            
+            Discover available tools from the safeoutputs MCP server.
+            
+            **Critical**: Tool calls write structured data that downstream jobs process. Without tool calls, follow-up actions will be skipped.
+            
+            **Note**: If you made no other safe output tool calls during this workflow execution, call the "noop" tool to provide a status message indicating completion or that no actions were needed.
+            </instructions>
+            </safe-outputs>
+            <github-context>
+            The following GitHub context information is available for this workflow:
+            {{#if __GH_AW_GITHUB_ACTOR__ }}
+            - **actor**: __GH_AW_GITHUB_ACTOR__
+            {{/if}}
+            {{#if __GH_AW_GITHUB_REPOSITORY__ }}
+            - **repository**: __GH_AW_GITHUB_REPOSITORY__
+            {{/if}}
+            {{#if __GH_AW_GITHUB_WORKSPACE__ }}
+            - **workspace**: __GH_AW_GITHUB_WORKSPACE__
+            {{/if}}
+            {{#if __GH_AW_GITHUB_EVENT_ISSUE_NUMBER__ }}
+            - **issue-number**: #__GH_AW_GITHUB_EVENT_ISSUE_NUMBER__
+            {{/if}}
+            {{#if __GH_AW_GITHUB_EVENT_DISCUSSION_NUMBER__ }}
+            - **discussion-number**: #__GH_AW_GITHUB_EVENT_DISCUSSION_NUMBER__
+            {{/if}}
+            {{#if __GH_AW_GITHUB_EVENT_PULL_REQUEST_NUMBER__ }}
+            - **pull-request-number**: #__GH_AW_GITHUB_EVENT_PULL_REQUEST_NUMBER__
+            {{/if}}
+            {{#if __GH_AW_GITHUB_EVENT_COMMENT_ID__ }}
+            - **comment-id**: __GH_AW_GITHUB_EVENT_COMMENT_ID__
+            {{/if}}
+            {{#if __GH_AW_GITHUB_RUN_ID__ }}
+            - **workflow-run-id**: __GH_AW_GITHUB_RUN_ID__
+            {{/if}}
+            </github-context>
+            
+            PROMPT_EOF
+            cat << 'PROMPT_EOF'
+            </system>
+            PROMPT_EOF
+            cat << 'PROMPT_EOF'
+            ## Starting the Documentation Preview Server
+            
+            **Context**: The documentation has been pre-built using `npm run build`. Use the preview server to serve the static build.
+            
+            Navigate to the docs directory and start the preview server in the background:
+            
+            ```bash
+            cd docs
+            npm run preview > /tmp/preview.log 2>&1 &
+            echo $! > /tmp/server.pid
+            ```
+            
+            This will:
+            - Start the preview server on port 4321
+            - Redirect output to `/tmp/preview.log`
+            - Save the process ID to `/tmp/server.pid` for later cleanup
+            
+            ## Waiting for Server Readiness
+            
+            Poll the server with curl to ensure it's ready before use:
+            
+            ```bash
+            for i in {1..30}; do
+              curl -s http://localhost:4321 > /dev/null && echo "Server ready!" && break
+              echo "Waiting for server... ($i/30)" && sleep 2
+            done
+            ```
+            
+            This will:
+            - Attempt to connect up to 30 times (60 seconds total)
+            - Wait 2 seconds between attempts
+            - Exit successfully when server responds
+            
+            ## Verifying Server Accessibility (Optional)
+            
+            Optionally verify the server is serving content:
+            
+            ```bash
+            curl -s http://localhost:4321/gh-aw/ | head -20
+            ```
+            
+            ## Stopping the Documentation Server
+            
+            After you're done using the server, clean up the process:
+            
+            ```bash
+            kill $(cat /tmp/server.pid) 2>/dev/null || true
+            rm -f /tmp/server.pid /tmp/preview.log
+            ```
+            
+            This will:
+            - Kill the server process using the saved PID
+            - Remove temporary files
+            - Ignore errors if the process already stopped
+            
+            ## Usage Notes
+            
+            - The server runs on `http://localhost:4321`
+            - Documentation is accessible at `http://localhost:4321/gh-aw/`
+            - Always clean up the server when done to avoid orphan processes
+            - If the server fails to start, check `/tmp/preview.log` for errors
+            
+            
+            PROMPT_EOF
+            cat << 'PROMPT_EOF'
+            {{#runtime-import workflows/docs-noob-tester.md}}
+            PROMPT_EOF
+          } > "$GH_AW_PROMPT"
       - name: Substitute placeholders
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
