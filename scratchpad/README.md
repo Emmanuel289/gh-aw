@@ -39,6 +39,14 @@ This directory contains design specifications and implementation documentation f
 | [mdflow Syntax Comparison](./mdflow-comparison.md) | ✅ Documented | Detailed comparison of mdflow and gh-aw syntax covering 17 aspects: file naming, frontmatter design, templates, imports, security models, execution patterns, and more |
 | [Gastown Multi-Agent Orchestration](./gastown.md) | ✅ Documented | Deep analysis of Gastown's multi-agent coordination patterns and mapping to gh-aw concepts: persistent state, workflow composition, crash recovery, agent communication, and implementation recommendations |
 
+## Statistical Analysis & Reports
+
+| Document | Date | Description |
+|----------|------|-------------|
+| [Serena Tools Usage Analysis](./serena-tools-analysis.md) | 2026-02-01 | ✅ Complete deep-dive statistical analysis of Serena MCP server tool usage in workflow run 21560089409 |
+| [Serena Tools Quick Reference](./serena-tools-quick-reference.md) | 2026-02-01 | ✅ At-a-glance summary of Serena tool usage metrics and insights |
+| [Serena Tools Raw Data](./serena-tools-data.json) | 2026-02-01 | ✅ JSON dataset with complete statistics for programmatic access |
+
 ## Related Documentation
 
 For user-facing documentation, see [docs/](../docs/).
@@ -48,7 +56,7 @@ For user-facing documentation, see [docs/](../docs/).
 When adding new specifications:
 
 1. Document implementation details with file paths
-2. Mark status clearly: ✅ Implemented, 🚧 In Progress, or 📋 Planned
+2. Mark status with standard icons: ✅ Implemented, 🚧 In Progress, or 📋 Planned
 3. Provide code samples and usage patterns
 4. Link to test files
 5. Update this README's table

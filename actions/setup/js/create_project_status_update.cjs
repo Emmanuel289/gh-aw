@@ -265,10 +265,20 @@ function formatDate(date) {
 /**
  * Main handler factory for create_project_status_update
  * Returns a message handler function that processes individual create_project_status_update messages
- * @type {HandlerFactoryFunction}
+ * @param {Object} config - Handler configuration
+ * @param {Object} githubClient - GitHub client (Octokit instance) to use for API calls
+ * @returns {Promise<Function>} Message handler function
  */
-async function main(config = {}) {
+async function main(config = {}, githubClient = null) {
   const maxCount = config.max || 10;
+
+  // Use the provided github client, or fall back to the global github object
+  // @ts-ignore - global.github is set by setupGlobals() from github-script context
+  const github = githubClient || global.github;
+
+  if (!github) {
+    throw new Error("GitHub client is required but not provided. Either pass a github client to main() or ensure global.github is set by github-script action.");
+  }
 
   core.info(`Max count: ${maxCount}`);
 
@@ -281,10 +291,11 @@ async function main(config = {}) {
   /**
    * Message handler function that processes a single create_project_status_update message
    * @param {Object} message - The create_project_status_update message to process
-   * @param {Object} resolvedTemporaryIds - Map of temporary IDs to {repo, number}
+   * @param {Map<string, {repo?: string, number?: number, projectUrl?: string}>} temporaryIdMap - Unified map of temporary IDs
+   * @param {Object} resolvedTemporaryIds - Plain object version of temporaryIdMap for backward compatibility
    * @returns {Promise<Object>} Result with success/error status and status update details
    */
-  return async function handleCreateProjectStatusUpdate(message, resolvedTemporaryIds) {
+  return async function handleCreateProjectStatusUpdate(message, temporaryIdMap, resolvedTemporaryIds = {}) {
     // Check if we've hit the max limit
     if (processedCount >= maxCount) {
       core.warning(`Skipping create-project-status-update: max count of ${maxCount} reached`);
@@ -298,23 +309,16 @@ async function main(config = {}) {
 
     const output = message;
 
-    // Get default project URL from environment if available
-    const defaultProjectUrl = process.env.GH_AW_PROJECT_URL || "";
-
-    // Validate project field - can use default from frontmatter if available
-    let effectiveProjectUrl = output.project;
+    // Validate that project field is explicitly provided in the message
+    // The project field is required in agent output messages and must be a full GitHub project URL
+    const effectiveProjectUrl = output.project;
 
     if (!effectiveProjectUrl || typeof effectiveProjectUrl !== "string" || effectiveProjectUrl.trim() === "") {
-      if (defaultProjectUrl) {
-        core.info(`Using default project URL from frontmatter: ${defaultProjectUrl}`);
-        effectiveProjectUrl = defaultProjectUrl;
-      } else {
-        core.error("Missing required field: project (GitHub project URL)");
-        return {
-          success: false,
-          error: "Missing required field: project",
-        };
-      }
+      core.error('Missing required "project" field. The agent must explicitly include the project URL in the output message: {"type": "create_project_status_update", "project": "https://github.com/orgs/myorg/projects/42", "body": "..."}');
+      return {
+        success: false,
+        error: "Missing required field: project",
+      };
     }
 
     if (!output.body) {

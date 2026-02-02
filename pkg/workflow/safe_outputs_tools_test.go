@@ -298,7 +298,6 @@ func TestGetSafeOutputsToolsJSON(t *testing.T) {
 		"link_sub_issue",
 		"hide_comment",
 		"update_project",
-		"copy_project",
 		"create_project",
 		"create_project_status_update",
 		"autofix_code_scanning_alert",
@@ -426,12 +425,12 @@ func TestEnhanceToolDescription(t *testing.T) {
 			baseDescription: "Create a discussion.",
 			safeOutputs: &SafeOutputsConfig{
 				CreateDiscussions: &CreateDiscussionsConfig{
-					Category: "General",
+					Category: "general",
 				},
 			},
 			wantContains: []string{
 				"CONSTRAINTS:",
-				`Discussions will be created in category "General"`,
+				`Discussions will be created in category "general"`,
 			},
 		},
 		{

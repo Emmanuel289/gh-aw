@@ -7,16 +7,40 @@ sidebar:
 
 import CopyEntireFileButton from '../../../components/CopyEntireFileButton.astro';
 
-One way to author new agentic workflows is to use AI under your guidance. You can create powerful automation workflows using natural language, with the flexibility to choose the tools that fit your workflow.
+You can author new agentic workflows using AI under your guidance.
 
-In this guide, we show you how to add the "agentic-workflows" agent to the GitHub Copilot support in your repository. Once installed the agent can be used from the GitHub web interface (github.com), your terminal, or in VS Code chat.
+In this guide, we show you how to create agentic workflows in the GitHub web interface (github.com), your coding agent, or in VS Code chat.
 
-## Step 1: Prepare Your Repository
+## Creating Agentic Workflows using VSCode or a Coding Agent
+
+To create agentic workflows using VSCode or a Coding Agent (Claude Code, Codex etc.), follow these steps
+
+1. Start VSCode or your Coding Agent in your repository
+
+2. Open VSCode Agent Chat or your Coding Agent and enter the following prompt:
+
+   ```text wrap
+   Initialize this repository for GitHub Agentic Workflows using https://github.com/githubnext/gh-aw/blob/main/install.md
+
+   Then follow the instructions in .github/agents/agentic-workflows.agent.md to create a workflow.
+   
+   The purpose of the workflow is to triage issues.
+   ```
+
+   You can replace the last line with your desired workflow purpose and as much additional detail, context, goals, guardrails and purpose as you like.
+
+3. If you haven't done so already, [set up your repository secrets](/gh-aw/reference/engines/) for the coding agent your workflow use (Copilot, Claude, Codex). Also adjust the `engine:` setting in your generated workflow to match if not using Copilot CLI.
+
+## Creating Agentic Workflows on github.com
+
+Follow these steps to create agentic workflows on github.com.
+
+### Step 1 - Prepare Your Repository
 
 Navigate to your repository on https://github.com and click the "Agents" tab, then use this prompt:
 
 ```text wrap
-Initialize this repository for GitHub Agentic Workflows using https://github.com/githubnext/gh-aw/blob/main/copilot-setup.md
+Initialize this repository for GitHub Agentic Workflows using https://github.com/githubnext/gh-aw/blob/main/install.md
 ```
 
 This will guide the Copilot agent to:
@@ -28,31 +52,45 @@ After initialization, you'll have:
 - `.github/agents/agentic-workflows.agent.md` - [A Copilot file](/gh-aw/reference/glossary/#agent-files) (custom AI instructions) for the `/agent agentic-workflows` command in Copilot Chat
 - Additional configuration files for workflow authoring
 
-## Step 2: Create an agentic workflow using AI
+### Step 2 - Create an agentic workflow
 
 Navigate to your repository on https://github.com and click the "Agents" tab, then use this prompt:
 
-```sh wrap
+```text wrap
 # Create a new workflow
 /agent agentic-workflows create a workflow that triages issues
-
-# Debug an existing workflow
-/agent agentic-workflows debug why is my workflow failing?
-
-# Update a workflow
-/agent agentic-workflows update add web-fetch tool to issue-classifier
-
-# Upgrade workflows
-/agent agentic-workflows upgrade all workflows to latest version
 ```
 
 The agent will understand your intent and route to the appropriate specialized prompt for your task.
 
-## Upgrading Agentic Workflows
+### Step 3 - Setup required secrets
+
+If you haven't done so already, [set up your repository secrets](/gh-aw/reference/engines/) for the coding agent your workflow will be using (Copilot, Claude, Codex). Also need to adjust the `engine:` setting in your generated workflow to match if not using Copilot CLI.
+
+## Going Further
+
+Once your repository is set up for agentic workflows, you can use the `agentic-workflows` agent from VSCode or GitHub.com to perform a variety of tasks:
+
+### Updating Existing Workflows
+
+Modify or improve existing workflows using natural language prompts. The agentic-workflows agent can analyze your current workflow and suggest or implement changes:
+
+```text wrap
+/agent agentic-workflows update the issue-triage workflow to add web-fetch tool and
+  improve the prompt for better accuracy
+```
+
+The agent will:
+- Load the existing workflow file
+- Analyze the current configuration and prompt
+- Apply requested changes to tools, prompts, triggers, or permissions
+- Recompile the workflow to `.lock.yml`
+
+### Upgrading Agentic Workflows
 
 Keep your agentic workflows up-to-date with the latest `gh-aw` versions and features using the unified agentic-workflows agent:
 
-```sh wrap
+```text wrap
 /agent agentic-workflows upgrade all workflows to latest version
 ```
 
@@ -64,11 +102,11 @@ The agent will:
 - Recompile workflows after changes
 - Generate a summary of upgraded workflows
 
-## Importing Workflows
+### Importing Workflows
 
 Import existing workflows from GitHub repositories using natural language prompts. The agentic-workflows agent can fetch, install, and configure workflows from any accessible GitHub repository:
 
-```sh wrap
+```text wrap
 /agent agentic-workflows import workflow from https://github.com/githubnext/agentics/blob/main/workflows/ci-doctor.md
 ```
 
@@ -82,7 +120,7 @@ The agent will:
 
 When importing, you can specify customizations:
 
-```sh wrap
+```text wrap
 # Import and change engine
 /agent agentic-workflows import issue-triage from githubnext/agentics and use claude engine
 
@@ -90,11 +128,11 @@ When importing, you can specify customizations:
 /agent agentic-workflows import pr-review from owner/repo and add web-fetch tool
 ```
 
-## Debugging Agentic Workflows
+### Debugging Agentic Workflows
 
 When workflows fail or behave unexpectedly, use the agentic-workflows agent to investigate and diagnose issues:
 
-```sh wrap
+```text wrap
 /agent agentic-workflows debug why is my issue-triage workflow failing?
 ```
 
@@ -108,7 +146,7 @@ The debugging agent will:
 
 You can investigate a specific workflow run using its ID or URL:
 
-```sh wrap
+```text wrap
 # Debug by run ID
 /agent agentic-workflows debug run 1234567890
 
@@ -118,7 +156,7 @@ You can investigate a specific workflow run using its ID or URL:
 
 The agent can help with various debugging scenarios:
 
-```sh wrap
+```text wrap
 # Permission errors
 /agent agentic-workflows debug getting 403 errors in my workflow
 

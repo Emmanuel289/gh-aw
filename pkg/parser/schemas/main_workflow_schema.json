@@ -3652,332 +3652,9 @@
         }
       ]
     },
-    "project": {
-      "oneOf": [
-        {
-          "type": "string",
-          "description": "GitHub Project URL for tracking workflow-created items. When configured, automatically enables project tracking operations (update-project, create-project-status-update) to manage project boards similar to campaign orchestrators.",
-          "pattern": "^https://github\\.com/(users|orgs)/([^/]+|<[A-Z_]+>)/projects/(\\d+|<[A-Z_]+>)$",
-          "examples": ["https://github.com/orgs/github/projects/123", "https://github.com/users/username/projects/456", "https://github.com/orgs/<ORG>/projects/<NUMBER>"]
-        },
-        {
-          "type": "object",
-          "description": "Project tracking configuration with custom settings for managing GitHub Project boards. Automatically enables update-project and create-project-status-update operations.",
-          "required": ["url"],
-          "additionalProperties": false,
-          "properties": {
-            "url": {
-              "type": "string",
-              "description": "GitHub Project URL (required). Must be a valid GitHub Projects V2 URL.",
-              "pattern": "^https://github\\.com/(users|orgs)/([^/]+|<[A-Z_]+>)/projects/(\\d+|<[A-Z_]+>)$",
-              "examples": ["https://github.com/orgs/github/projects/123", "https://github.com/users/username/projects/456", "https://github.com/orgs/<ORG>/projects/<NUMBER>"]
-            },
-            "max-updates": {
-              "type": "integer",
-              "description": "Maximum number of project update operations per workflow run (default: 100). Controls the update-project safe-output maximum.",
-              "minimum": 1,
-              "maximum": 1000,
-              "default": 100
-            },
-            "scope": {
-              "type": "array",
-              "description": "Optional list of repositories and organizations this workflow can operate on. Supports 'owner/repo' for specific repositories and 'org:name' for all repositories in an organization. When omitted, defaults to the current repository.",
-              "items": {
-                "type": "string",
-                "pattern": "^([a-zA-Z0-9][-a-zA-Z0-9]{0,38}/[a-zA-Z0-9._-]+|org:[a-zA-Z0-9][-a-zA-Z0-9]{0,38})$"
-              },
-              "examples": [["owner/repo"], ["org:github"], ["owner/repo1", "owner/repo2", "org:myorg"]]
-            },
-            "max-status-updates": {
-              "type": "integer",
-              "description": "Maximum number of project status update operations per workflow run (default: 1). Controls the create-project-status-update safe-output maximum.",
-              "minimum": 1,
-              "maximum": 10,
-              "default": 1
-            },
-            "github-token": {
-              "type": "string",
-              "description": "Optional custom GitHub token for project operations. Should reference a secret with Projects: Read & Write permissions (e.g., ${{ secrets.GH_AW_PROJECT_GITHUB_TOKEN }}).",
-              "examples": ["${{ secrets.GH_AW_PROJECT_GITHUB_TOKEN }}"]
-            },
-            "do-not-downgrade-done-items": {
-              "type": "boolean",
-              "description": "When true, prevents moving items backward in workflow status (e.g., Done \u2192 In Progress). Useful for maintaining completed state integrity.",
-              "default": false
-            },
-            "id": {
-              "type": "string",
-              "description": "Optional campaign identifier. If not provided, derived from workflow filename.",
-              "examples": ["security-alert-burndown", "dependency-upgrade-campaign"]
-            },
-            "workflows": {
-              "type": "array",
-              "description": "List of worker workflow IDs (basename without .md) associated with this campaign",
-              "items": {
-                "type": "string"
-              },
-              "examples": [["code-scanning-fixer", "security-fix-pr"]]
-            },
-            "memory-paths": {
-              "type": "array",
-              "description": "Repo-memory paths where this campaign writes its state and metrics",
-              "items": {
-                "type": "string"
-              },
-              "examples": [["memory/campaigns/security-burndown/**"]]
-            },
-            "metrics-glob": {
-              "type": "string",
-              "description": "Glob pattern for locating JSON metrics snapshots in the memory/campaigns branch",
-              "examples": ["memory/campaigns/security-burndown-*/metrics/*.json"]
-            },
-            "cursor-glob": {
-              "type": "string",
-              "description": "Glob pattern for locating durable cursor/checkpoint files in the memory/campaigns branch",
-              "examples": ["memory/campaigns/security-burndown-*/cursor.json"]
-            },
-            "tracker-label": {
-              "type": "string",
-              "description": "Label used to discover worker-created issues/PRs",
-              "examples": ["campaign:security-2025"]
-            },
-            "owners": {
-              "type": "array",
-              "description": "Primary human owners for this campaign",
-              "items": {
-                "type": "string"
-              },
-              "examples": [["@username1", "@username2"]]
-            },
-            "risk-level": {
-              "type": "string",
-              "description": "Campaign risk level",
-              "enum": ["low", "medium", "high"],
-              "examples": ["high"]
-            },
-            "state": {
-              "type": "string",
-              "description": "Campaign lifecycle state",
-              "enum": ["planned", "active", "paused", "completed", "archived"],
-              "examples": ["active"]
-            },
-            "tags": {
-              "type": "array",
-              "description": "Free-form tags for categorization",
-              "items": {
-                "type": "string"
-              },
-              "examples": [["security", "modernization"]]
-            },
-            "governance": {
-              "type": "object",
-              "description": "Campaign governance policies for pacing and opt-out",
-              "additionalProperties": false,
-              "properties": {
-                "max-new-items-per-run": {
-                  "type": "integer",
-                  "description": "Maximum new items to add to project board per run",
-                  "minimum": 0
-                },
-                "max-discovery-items-per-run": {
-                  "type": "integer",
-                  "description": "Maximum items to scan during discovery",
-                  "minimum": 0
-                },
-                "max-discovery-pages-per-run": {
-                  "type": "integer",
-                  "description": "Maximum pages of results to fetch during discovery",
-                  "minimum": 0
-                },
-                "opt-out-labels": {
-                  "type": "array",
-                  "description": "Labels that opt issues/PRs out of campaign tracking",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "do-not-downgrade-done-items": {
-                  "type": "boolean",
-                  "description": "Prevent moving items backward (e.g., Done \u2192 In Progress)"
-                },
-                "max-project-updates-per-run": {
-                  "type": "integer",
-                  "description": "Maximum project update operations per run",
-                  "minimum": 0
-                },
-                "max-comments-per-run": {
-                  "type": "integer",
-                  "description": "Maximum comment operations per run",
-                  "minimum": 0
-                }
-              }
-            },
-            "bootstrap": {
-              "type": "object",
-              "description": "Bootstrap configuration for creating initial work items",
-              "required": ["mode"],
-              "additionalProperties": false,
-              "properties": {
-                "mode": {
-                  "type": "string",
-                  "description": "Bootstrap strategy",
-                  "enum": ["seeder-worker", "project-todos", "manual"]
-                },
-                "seeder-worker": {
-                  "type": "object",
-                  "description": "Seeder worker configuration (only when mode is seeder-worker)",
-                  "required": ["workflow-id", "payload"],
-                  "properties": {
-                    "workflow-id": {
-                      "type": "string",
-                      "description": "Worker workflow ID to dispatch"
-                    },
-                    "payload": {
-                      "type": "object",
-                      "description": "JSON payload to send to seeder worker"
-                    },
-                    "max-items": {
-                      "type": "integer",
-                      "description": "Maximum work items to return",
-                      "minimum": 0
-                    }
-                  }
-                },
-                "project-todos": {
-                  "type": "object",
-                  "description": "Project todos configuration (only when mode is project-todos)",
-                  "properties": {
-                    "status-field": {
-                      "type": "string",
-                      "description": "Project status field name",
-                      "default": "Status"
-                    },
-                    "todo-value": {
-                      "type": "string",
-                      "description": "Status value indicating Todo",
-                      "default": "Todo"
-                    },
-                    "max-items": {
-                      "type": "integer",
-                      "description": "Maximum Todo items to process",
-                      "minimum": 0
-                    },
-                    "require-fields": {
-                      "type": "array",
-                      "description": "Project fields that must be populated",
-                      "items": {
-                        "type": "string"
-                      }
-                    }
-                  }
-                }
-              }
-            },
-            "workers": {
-              "type": "array",
-              "description": "Worker workflow metadata for deterministic selection",
-              "items": {
-                "type": "object",
-                "required": ["id", "capabilities", "payload-schema", "output-labeling", "idempotency-strategy"],
-                "properties": {
-                  "id": {
-                    "type": "string",
-                    "description": "Worker workflow ID"
-                  },
-                  "name": {
-                    "type": "string",
-                    "description": "Human-readable worker name"
-                  },
-                  "description": {
-                    "type": "string",
-                    "description": "Worker description"
-                  },
-                  "capabilities": {
-                    "type": "array",
-                    "description": "Work types this worker can perform",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "payload-schema": {
-                    "type": "object",
-                    "description": "Worker payload schema definition",
-                    "additionalProperties": {
-                      "type": "object",
-                      "required": ["type", "description"],
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "enum": ["string", "number", "boolean", "array", "object"]
-                        },
-                        "description": {
-                          "type": "string"
-                        },
-                        "required": {
-                          "type": "boolean"
-                        },
-                        "example": {}
-                      }
-                    }
-                  },
-                  "output-labeling": {
-                    "type": "object",
-                    "description": "Worker output labeling contract",
-                    "required": ["key-in-title"],
-                    "properties": {
-                      "labels": {
-                        "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
-                      },
-                      "key-in-title": {
-                        "type": "boolean"
-                      },
-                      "key-format": {
-                        "type": "string"
-                      },
-                      "metadata-fields": {
-                        "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  },
-                  "idempotency-strategy": {
-                    "type": "string",
-                    "description": "How worker ensures idempotent execution",
-                    "enum": ["branch-based", "pr-title-based", "issue-title-based", "cursor-based"]
-                  },
-                  "priority": {
-                    "type": "integer",
-                    "description": "Worker priority for selection (higher = higher priority)"
-                  }
-                }
-              }
-            }
-          },
-          "examples": [
-            {
-              "url": "https://github.com/orgs/github/projects/123",
-              "scope": ["owner/repo1", "owner/repo2"],
-              "max-updates": 50,
-              "github-token": "${{ secrets.GH_AW_PROJECT_GITHUB_TOKEN }}"
-            },
-            {
-              "url": "https://github.com/users/username/projects/456",
-              "scope": ["org:myorg"],
-              "max-status-updates": 2,
-              "do-not-downgrade-done-items": true
-            }
-          ]
-        }
-      ]
-    },
     "safe-outputs": {
       "type": "object",
-      "$comment": "Required if workflow creates or modifies GitHub resources. Operations requiring safe-outputs: autofix-code-scanning-alert, add-comment, add-labels, add-reviewer, assign-milestone, assign-to-agent, close-discussion, close-issue, close-pull-request, create-agent-session, create-agent-task (deprecated, use create-agent-session), create-code-scanning-alert, create-discussion, copy-project, create-issue, create-project-status-update, create-pull-request, create-pull-request-review-comment, dispatch-workflow, hide-comment, link-sub-issue, mark-pull-request-as-ready-for-review, missing-tool, noop, push-to-pull-request-branch, remove-labels, threat-detection, update-discussion, update-issue, update-project, update-pull-request, update-release, upload-asset. See documentation for complete details.",
+      "$comment": "Required if workflow creates or modifies GitHub resources. Operations requiring safe-outputs: autofix-code-scanning-alert, add-comment, add-labels, add-reviewer, assign-milestone, assign-to-agent, close-discussion, close-issue, close-pull-request, create-agent-session, create-agent-task (deprecated, use create-agent-session), create-code-scanning-alert, create-discussion, create-issue, create-project-status-update, create-pull-request, create-pull-request-review-comment, dispatch-workflow, hide-comment, link-sub-issue, mark-pull-request-as-ready-for-review, missing-tool, noop, push-to-pull-request-branch, remove-labels, threat-detection, update-discussion, update-issue, update-project, update-pull-request, update-release, upload-asset. See documentation for complete details.",
       "description": "Safe output processing configuration that automatically creates GitHub issues, comments, and pull requests from AI workflow output without requiring write permissions in the main job",
       "examples": [
         {
@@ -4220,6 +3897,7 @@
             {
               "type": "object",
               "description": "Configuration for managing GitHub Projects v2 boards. Smart tool that can add issue/PR items and update custom fields on existing items. By default it is update-only: if the project does not exist, the job fails with instructions to create it manually. To allow workflows to create missing projects, explicitly opt in via the agent output field create_if_missing=true (and/or provide a github-token override). NOTE: Projects v2 requires a Personal Access Token (PAT) or GitHub App token with appropriate permissions; the GITHUB_TOKEN cannot be used for Projects v2. Safe output items produced by the agent use type=update_project Configuration also supports an optional views array for declaring project views to create. Safe output items produced by the agent use type=update_project and may include: project (board name), content_type (issue|pull_request), content_number, fields, campaign_id, and create_if_missing.",
+              "required": ["project"],
               "properties": {
                 "max": {
                   "type": "integer",
@@ -4230,6 +3908,12 @@
                 "github-token": {
                   "$ref": "#/$defs/github_token",
                   "description": "GitHub token to use for this specific output type. Overrides global github-token if specified."
+                },
+                "project": {
+                  "type": "string",
+                  "description": "Target project URL for update-project operations. This is required in the configuration for documentation purposes. Agent messages MUST explicitly include the project field in their output - the configured value is not used as a fallback. Must be a valid GitHub Projects v2 URL.",
+                  "pattern": "^https://github\\.com/(users|orgs)/([^/]+|<[A-Z_]+>)/projects/(\\d+|<[A-Z_]+>)$",
+                  "examples": ["https://github.com/orgs/myorg/projects/123", "https://github.com/users/username/projects/456"]
                 },
                 "views": {
                   "type": "array",
@@ -4312,55 +3996,6 @@
             }
           ],
           "description": "Enable AI agents to update GitHub Project items (issues, pull requests) with status changes, field updates, and metadata modifications."
-        },
-        "copy-project": {
-          "oneOf": [
-            {
-              "type": "object",
-              "description": "Configuration for copying GitHub Projects v2 boards. Creates a new project with the same structure, fields, and views as the source project. By default, draft issues are NOT copied unless explicitly requested with includeDraftIssues=true in the tool call. Requires a Personal Access Token (PAT) or GitHub App token with Projects permissions; the GITHUB_TOKEN cannot be used. Safe output items use type=copy_project and include: sourceProject (URL), owner (org/user login), title (new project name), and optional includeDraftIssues (boolean). The source-project and target-owner can be configured in the workflow frontmatter to provide defaults that the agent can use or override.",
-              "properties": {
-                "max": {
-                  "type": "integer",
-                  "description": "Maximum number of copy operations to perform (default: 1).",
-                  "minimum": 1,
-                  "maximum": 100
-                },
-                "github-token": {
-                  "$ref": "#/$defs/github_token",
-                  "description": "GitHub token to use for this specific output type. Must have Projects write permission. Overrides global github-token if specified."
-                },
-                "source-project": {
-                  "type": "string",
-                  "pattern": "^https://github\\.com/(orgs|users)/[^/]+/projects/\\d+$",
-                  "description": "Optional default source project URL to copy from (e.g., 'https://github.com/orgs/myorg/projects/42'). If specified, the agent can omit the sourceProject field in the tool call and this default will be used. The agent can still override by providing a sourceProject in the tool call."
-                },
-                "target-owner": {
-                  "type": "string",
-                  "description": "Optional default target owner (organization or user login name) where the new project will be created (e.g., 'myorg' or 'username'). If specified, the agent can omit the owner field in the tool call and this default will be used. The agent can still override by providing an owner in the tool call."
-                }
-              },
-              "additionalProperties": false,
-              "examples": [
-                {
-                  "max": 1
-                },
-                {
-                  "github-token": "${{ secrets.PROJECT_GITHUB_TOKEN }}",
-                  "max": 1
-                },
-                {
-                  "source-project": "https://github.com/orgs/myorg/projects/42",
-                  "target-owner": "myorg",
-                  "max": 1
-                }
-              ]
-            },
-            {
-              "type": "null",
-              "description": "Enable project copying with default configuration (max=1)"
-            }
-          ],
-          "description": "Enable AI agents to duplicate GitHub Project boards with all configuration, views, and settings."
         },
         "create-project": {
           "oneOf": [
@@ -4471,6 +4106,7 @@
             {
               "type": "object",
               "description": "Configuration for creating GitHub Project status updates. Status updates provide stakeholder communication and historical record of project progress. Requires a Personal Access Token (PAT) or GitHub App token with Projects: Read+Write permission. The GITHUB_TOKEN cannot be used for Projects v2. Status updates are created on the specified project board and appear in the Updates tab. Typically used by campaign orchestrators to post run summaries with progress, findings, and next steps.",
+              "required": ["project"],
               "properties": {
                 "max": {
                   "type": "integer",
@@ -4481,6 +4117,12 @@
                 "github-token": {
                   "$ref": "#/$defs/github_token",
                   "description": "GitHub token to use for this specific output type. Overrides global github-token if specified. Must have Projects: Read+Write permission."
+                },
+                "project": {
+                  "type": "string",
+                  "description": "Target project URL for status update operations. This is required in the configuration for documentation purposes. Agent messages MUST explicitly include the project field in their output - the configured value is not used as a fallback. Must be a valid GitHub Projects v2 URL.",
+                  "pattern": "^https://github\\.com/(users|orgs)/([^/]+|<[A-Z_]+>)/projects/(\\d+|<[A-Z_]+>)$",
+                  "examples": ["https://github.com/orgs/myorg/projects/123", "https://github.com/users/username/projects/456"]
                 }
               },
               "additionalProperties": false,
@@ -6751,6 +6393,10 @@
             "config": {
               "type": "string",
               "description": "Additional TOML configuration text that will be appended to the generated config.toml in the action (codex engine only)"
+            },
+            "agent": {
+              "type": "string",
+              "description": "Agent identifier to pass to copilot --agent flag (copilot engine only). Specifies which custom agent to use for the workflow."
             },
             "args": {
               "type": "array",

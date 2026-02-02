@@ -272,10 +272,8 @@ func (c *Compiler) collectPromptSections(data *WorkflowData) []PromptSection {
 
 	// 7. Safe outputs instructions (if enabled)
 	if HasSafeOutputsEnabled(data.SafeOutputs) {
-		enabledTools := GetEnabledSafeOutputToolNames(data.SafeOutputs)
-		if len(enabledTools) > 0 {
-			unifiedPromptLog.Printf("Adding safe outputs section: tools=%d", len(enabledTools))
-			safeOutputsContent := `<safe-outputs>
+		unifiedPromptLog.Print("Adding safe outputs section")
+		safeOutputsContent := `<safe-outputs>
 <description>GitHub API Access Instructions</description>
 <important>
 The gh CLI is NOT authenticated. Do NOT use gh commands for GitHub operations.
@@ -286,13 +284,14 @@ To create or modify GitHub resources (issues, discussions, pull requests, etc.),
 Discover available tools from the safeoutputs MCP server.
 
 **Critical**: Tool calls write structured data that downstream jobs process. Without tool calls, follow-up actions will be skipped.
+
+**Note**: If you made no other safe output tool calls during this workflow execution, call the "noop" tool to provide a status message indicating completion or that no actions were needed.
 </instructions>
 </safe-outputs>`
-			sections = append(sections, PromptSection{
-				Content: safeOutputsContent,
-				IsFile:  false,
-			})
-		}
+		sections = append(sections, PromptSection{
+			Content: safeOutputsContent,
+			IsFile:  false,
+		})
 	}
 
 	// 8. GitHub context (if GitHub tool is enabled)

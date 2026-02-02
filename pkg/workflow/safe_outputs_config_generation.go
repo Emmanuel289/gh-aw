@@ -3,7 +3,6 @@ package workflow
 import (
 	"encoding/json"
 	"fmt"
-	"path/filepath"
 	"sort"
 
 	"github.com/githubnext/gh-aw/pkg/stringutil"
@@ -12,6 +11,49 @@ import (
 // ========================================
 // Safe Output Configuration Generation
 // ========================================
+
+// populateDispatchWorkflowFiles populates the WorkflowFiles map for dispatch-workflow configuration.
+// This must be called before generateSafeOutputsConfig to ensure workflow file extensions are available.
+func populateDispatchWorkflowFiles(data *WorkflowData, markdownPath string) {
+	if data.SafeOutputs == nil || data.SafeOutputs.DispatchWorkflow == nil {
+		return
+	}
+
+	if len(data.SafeOutputs.DispatchWorkflow.Workflows) == 0 {
+		return
+	}
+
+	safeOutputsConfigLog.Printf("Populating workflow files for %d dispatch workflows", len(data.SafeOutputs.DispatchWorkflow.Workflows))
+
+	// Initialize WorkflowFiles map if not already initialized
+	if data.SafeOutputs.DispatchWorkflow.WorkflowFiles == nil {
+		data.SafeOutputs.DispatchWorkflow.WorkflowFiles = make(map[string]string)
+	}
+
+	for _, workflowName := range data.SafeOutputs.DispatchWorkflow.Workflows {
+		// Find the workflow file
+		fileResult, err := findWorkflowFile(workflowName, markdownPath)
+		if err != nil {
+			safeOutputsConfigLog.Printf("Warning: error finding workflow %s: %v", workflowName, err)
+			continue
+		}
+
+		// Determine which file to use - priority: .lock.yml > .yml
+		var extension string
+		if fileResult.lockExists {
+			extension = ".lock.yml"
+		} else if fileResult.ymlExists {
+			extension = ".yml"
+		} else {
+			safeOutputsConfigLog.Printf("Warning: workflow file not found for %s (only .md exists, needs compilation)", workflowName)
+			continue
+		}
+
+		// Store the file extension for runtime use
+		data.SafeOutputs.DispatchWorkflow.WorkflowFiles[workflowName] = extension
+		safeOutputsConfigLog.Printf("Mapped workflow %s to extension %s", workflowName, extension)
+	}
+}
 
 func generateSafeOutputsConfig(data *WorkflowData) string {
 	// Pass the safe-outputs configuration for validation
@@ -253,12 +295,6 @@ func generateSafeOutputsConfig(data *WorkflowData) string {
 			safeOutputsConfig["create_project_status_update"] = generateMaxConfig(
 				data.SafeOutputs.CreateProjectStatusUpdates.Max,
 				10, // default max
-			)
-		}
-		if data.SafeOutputs.CopyProjects != nil {
-			safeOutputsConfig["copy_project"] = generateMaxConfig(
-				data.SafeOutputs.CopyProjects.Max,
-				1, // default max
 			)
 		}
 		if data.SafeOutputs.CreateProjects != nil {
@@ -614,9 +650,6 @@ func generateFilteredToolsJSON(data *WorkflowData, markdownPath string) (string,
 	if data.SafeOutputs.CreateProjectStatusUpdates != nil {
 		enabledTools["create_project_status_update"] = true
 	}
-	if data.SafeOutputs.CopyProjects != nil {
-		enabledTools["copy_project"] = true
-	}
 	if data.SafeOutputs.CreateProjects != nil {
 		enabledTools["create_project"] = true
 	}
@@ -681,31 +714,33 @@ func generateFilteredToolsJSON(data *WorkflowData, markdownPath string) (string,
 	if data.SafeOutputs.DispatchWorkflow != nil && len(data.SafeOutputs.DispatchWorkflow.Workflows) > 0 {
 		safeOutputsConfigLog.Printf("Adding %d dispatch_workflow tools", len(data.SafeOutputs.DispatchWorkflow.Workflows))
 
-		// Get workflows directory from markdownPath
-		workflowsDir := filepath.Dir(markdownPath)
-
 		// Initialize WorkflowFiles map if not already initialized
 		if data.SafeOutputs.DispatchWorkflow.WorkflowFiles == nil {
 			data.SafeOutputs.DispatchWorkflow.WorkflowFiles = make(map[string]string)
 		}
 
 		for _, workflowName := range data.SafeOutputs.DispatchWorkflow.Workflows {
-			// Try to find the workflow file - priority: .lock.yml > .yml
-			// .lock.yml is used for compiled agentic workflows
-			// .yml is used for standard GitHub Actions workflows
-			lockFilePath := filepath.Join(workflowsDir, workflowName+".lock.yml")
-			ymlFilePath := filepath.Join(workflowsDir, workflowName+".yml")
+			// Find the workflow file in multiple locations
+			fileResult, err := findWorkflowFile(workflowName, markdownPath)
+			if err != nil {
+				safeOutputsConfigLog.Printf("Warning: error finding workflow %s: %v", workflowName, err)
+				// Continue with empty inputs
+				tool := generateDispatchWorkflowTool(workflowName, make(map[string]any))
+				filteredTools = append(filteredTools, tool)
+				continue
+			}
 
+			// Determine which file to use - priority: .lock.yml > .yml
 			var workflowPath string
 			var extension string
-			if fileExists(lockFilePath) {
-				workflowPath = lockFilePath
+			if fileResult.lockExists {
+				workflowPath = fileResult.lockPath
 				extension = ".lock.yml"
-			} else if fileExists(ymlFilePath) {
-				workflowPath = ymlFilePath
+			} else if fileResult.ymlExists {
+				workflowPath = fileResult.ymlPath
 				extension = ".yml"
 			} else {
-				safeOutputsConfigLog.Printf("Warning: workflow file not found for %s (tried %s and %s)", workflowName, lockFilePath, ymlFilePath)
+				safeOutputsConfigLog.Printf("Warning: workflow file not found for %s (only .md exists, needs compilation)", workflowName)
 				// Continue with empty inputs
 				tool := generateDispatchWorkflowTool(workflowName, make(map[string]any))
 				filteredTools = append(filteredTools, tool)
@@ -897,7 +932,7 @@ func generateDispatchWorkflowTool(workflowName string, workflowInputs map[string
 	toolName := stringutil.NormalizeSafeOutputIdentifier(workflowName)
 
 	// Build the description
-	description := fmt.Sprintf("Dispatch the '%s' workflow with workflow_dispatch trigger. This workflow must support workflow_dispatch and be in the same repository.", workflowName)
+	description := fmt.Sprintf("Dispatch the '%s' workflow with workflow_dispatch trigger. This workflow must support workflow_dispatch and be in .github/workflows/ directory in the same repository.", workflowName)
 
 	// Build input schema properties
 	properties := make(map[string]any)

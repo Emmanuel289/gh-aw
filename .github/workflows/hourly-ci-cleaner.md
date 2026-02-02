@@ -16,7 +16,9 @@ tracker-id: hourly-ci-cleaner
 # - Target: Focus on systematic fix application with minimal iteration
 # - Budget target: 15-20 turns for typical CI fixes
 # Note: max-turns not available for Copilot engine (Claude only)
-engine: copilot
+engine:
+  id: copilot
+  agent: ci-cleaner
 network:
   allowed:
     - defaults
@@ -99,6 +101,7 @@ steps:
     run: make deps-dev
 safe-outputs:
   create-pull-request:
+    expires: 2d
     title-prefix: "[ca] "
   missing-tool:
 timeout-minutes: 45

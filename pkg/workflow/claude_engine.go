@@ -199,9 +199,9 @@ func (e *ClaudeEngine) GetExecutionSteps(workflowData *WorkflowData, logFile str
 	claudeArgs = append(claudeArgs, "--permission-mode", "bypassPermissions")
 
 	// Add output format for structured output
-	// Changed from "stream-json" to "json" to fix compatibility with Claude Code CLI 2.1.6
-	// which rejects "stream-json" with error: "only prompt commands are supported in streaming mode"
-	claudeArgs = append(claudeArgs, "--output-format", "json")
+	// Use "stream-json" to output JSONL format (newline-delimited JSON objects)
+	// This format is compatible with the log parser which expects either JSON array or JSONL
+	claudeArgs = append(claudeArgs, "--output-format", "stream-json")
 
 	// Add custom args from engine configuration before the prompt
 	if workflowData.EngineConfig != nil && len(workflowData.EngineConfig.Args) > 0 {
@@ -395,37 +395,37 @@ func (e *ClaudeEngine) GetExecutionSteps(workflowData *WorkflowData, logFile str
 		// Compute GH_AW_TOOL_BINS on the runner side (safer than shell expansion inside container)
 		toolBinsSetup := GetToolBinsSetup()
 
-		// Note: Claude Code CLI will write debug logs directly to the file specified by --debug-file
-		// We no longer need 2>&1 | tee since debug logs are written separately
-		// The JSON output will still appear on stdout for monitoring
+		// Note: Claude Code CLI writes debug logs to --debug-file and JSON output to stdout
+		// Use tee to capture stdout (stream-json output) to the log file while also displaying on console
+		// The combined output (debug logs + JSON) will be in the log file for parsing
 		if promptSetup != "" {
 			command = fmt.Sprintf(`set -o pipefail
           %s
 %s
 mkdir -p "$HOME/.cache"
 %s %s \
-  -- %s`, promptSetup, toolBinsSetup, awfCommand, shellJoinArgs(awfArgs), shellWrappedCommand)
+  -- %s 2>&1 | tee -a %s`, promptSetup, toolBinsSetup, awfCommand, shellJoinArgs(awfArgs), shellWrappedCommand, logFile)
 		} else {
 			command = fmt.Sprintf(`set -o pipefail
 %s
 mkdir -p "$HOME/.cache"
 %s %s \
-  -- %s`, toolBinsSetup, awfCommand, shellJoinArgs(awfArgs), shellWrappedCommand)
+  -- %s 2>&1 | tee -a %s`, toolBinsSetup, awfCommand, shellJoinArgs(awfArgs), shellWrappedCommand, logFile)
 		}
 	} else {
 		// Run Claude command without AWF wrapper
-		// Note: Claude Code CLI will write debug logs directly to the file specified by --debug-file
-		// We no longer need 2>&1 | tee since debug logs are written separately
-		// The JSON output will still appear on stdout for monitoring
+		// Note: Claude Code CLI writes debug logs to --debug-file and JSON output to stdout
+		// Use tee to capture stdout (stream-json output) to the log file while also displaying on console
+		// The combined output (debug logs + JSON) will be in the log file for parsing
 		if promptSetup != "" {
 			command = fmt.Sprintf(`set -o pipefail
           %s
           # Execute Claude Code CLI with prompt from file
-          %s`, promptSetup, claudeCommand)
+          %s 2>&1 | tee -a %s`, promptSetup, claudeCommand, logFile)
 		} else {
 			command = fmt.Sprintf(`set -o pipefail
           # Execute Claude Code CLI with prompt from file
-          %s`, claudeCommand)
+          %s 2>&1 | tee -a %s`, claudeCommand, logFile)
 		}
 	}
 

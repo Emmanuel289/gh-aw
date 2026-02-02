@@ -1228,6 +1228,11 @@ engine:
   # (optional)
   config: "example-value"
 
+  # Agent identifier to pass to copilot --agent flag (copilot engine only).
+  # Specifies which custom agent to use for the workflow.
+  # (optional)
+  agent: "example-value"
+
   # Optional array of command-line arguments to pass to the AI engine CLI. These
   # arguments are injected after all other args but before the prompt.
   # (optional)
@@ -1727,213 +1732,6 @@ cache:
 cache: []
   # Array items: object
 
-# (optional)
-# This field supports multiple formats (oneOf):
-
-# Option 1: GitHub Project URL for tracking workflow-created items. When
-# configured, automatically enables project tracking operations (update-project,
-# create-project-status-update) to manage project boards similar to campaign
-# orchestrators.
-project: "example-value"
-
-# Option 2: Project tracking configuration with custom settings for managing
-# GitHub Project boards. Automatically enables update-project and
-# create-project-status-update operations.
-project:
-  # GitHub Project URL (required). Must be a valid GitHub Projects V2 URL.
-  url: "example-value"
-
-  # Maximum number of project update operations per workflow run (default: 100).
-  # Controls the update-project safe-output maximum.
-  # (optional)
-  max-updates: 1
-
-  # Optional list of repositories and organizations this workflow can operate on.
-  # Supports 'owner/repo' for specific repositories and 'org:name' for all
-  # repositories in an organization. When omitted, defaults to the current
-  # repository.
-  # (optional)
-  scope: []
-    # Array of strings
-
-  # Maximum number of project status update operations per workflow run (default:
-  # 1). Controls the create-project-status-update safe-output maximum.
-  # (optional)
-  max-status-updates: 1
-
-  # Optional custom GitHub token for project operations. Should reference a secret
-  # with Projects: Read & Write permissions (e.g., ${{
-  # secrets.GH_AW_PROJECT_GITHUB_TOKEN }}).
-  # (optional)
-  github-token: "${{ secrets.GITHUB_TOKEN }}"
-
-  # When true, prevents moving items backward in workflow status (e.g., Done → In
-  # Progress). Useful for maintaining completed state integrity.
-  # (optional)
-  do-not-downgrade-done-items: true
-
-  # Optional campaign identifier. If not provided, derived from workflow filename.
-  # (optional)
-  id: "example-value"
-
-  # List of worker workflow IDs (basename without .md) associated with this campaign
-  # (optional)
-  workflows: []
-    # Array of strings
-
-  # Repo-memory paths where this campaign writes its state and metrics
-  # (optional)
-  memory-paths: []
-    # Array of strings
-
-  # Glob pattern for locating JSON metrics snapshots in the memory/campaigns branch
-  # (optional)
-  metrics-glob: "example-value"
-
-  # Glob pattern for locating durable cursor/checkpoint files in the
-  # memory/campaigns branch
-  # (optional)
-  cursor-glob: "example-value"
-
-  # Label used to discover worker-created issues/PRs
-  # (optional)
-  tracker-label: "example-value"
-
-  # Primary human owners for this campaign
-  # (optional)
-  owners: []
-    # Array of strings
-
-  # Campaign risk level
-  # (optional)
-  risk-level: "low"
-
-  # Campaign lifecycle state
-  # (optional)
-  state: "planned"
-
-  # Free-form tags for categorization
-  # (optional)
-  tags: []
-    # Array of strings
-
-  # Campaign governance policies for pacing and opt-out
-  # (optional)
-  governance:
-    # Maximum new items to add to project board per run
-    # (optional)
-    max-new-items-per-run: 1
-
-    # Maximum items to scan during discovery
-    # (optional)
-    max-discovery-items-per-run: 1
-
-    # Maximum pages of results to fetch during discovery
-    # (optional)
-    max-discovery-pages-per-run: 1
-
-    # Labels that opt issues/PRs out of campaign tracking
-    # (optional)
-    opt-out-labels: []
-      # Array of strings
-
-    # Prevent moving items backward (e.g., Done → In Progress)
-    # (optional)
-    do-not-downgrade-done-items: true
-
-    # Maximum project update operations per run
-    # (optional)
-    max-project-updates-per-run: 1
-
-    # Maximum comment operations per run
-    # (optional)
-    max-comments-per-run: 1
-
-  # Bootstrap configuration for creating initial work items
-  # (optional)
-  bootstrap:
-    # Bootstrap strategy
-    mode: "seeder-worker"
-
-    # Seeder worker configuration (only when mode is seeder-worker)
-    # (optional)
-    seeder-worker:
-      # Worker workflow ID to dispatch
-      workflow-id: "example-value"
-
-      # JSON payload to send to seeder worker
-      payload:
-        {}
-
-      # Maximum work items to return
-      # (optional)
-      max-items: 1
-
-    # Project todos configuration (only when mode is project-todos)
-    # (optional)
-    project-todos:
-      # Project status field name
-      # (optional)
-      status-field: "example-value"
-
-      # Status value indicating Todo
-      # (optional)
-      todo-value: "example-value"
-
-      # Maximum Todo items to process
-      # (optional)
-      max-items: 1
-
-      # Project fields that must be populated
-      # (optional)
-      require-fields: []
-        # Array of strings
-
-  # Worker workflow metadata for deterministic selection
-  # (optional)
-  workers: []
-    # Array items:
-      # Worker workflow ID
-      id: "example-value"
-
-      # Human-readable worker name
-      # (optional)
-      name: "My Workflow"
-
-      # Worker description
-      # (optional)
-      description: "Description of the workflow"
-
-      # Work types this worker can perform
-      capabilities: []
-        # Array of strings
-
-      # Worker payload schema definition
-      payload-schema:
-        {}
-
-      # Worker output labeling contract
-      output-labeling:
-        # (optional)
-        labels: []
-          # Array of strings
-
-        key-in-title: true
-
-        # (optional)
-        key-format: "example-value"
-
-        # (optional)
-        metadata-fields: []
-          # Array of strings
-
-      # How worker ensures idempotent execution
-      idempotency-strategy: "branch-based"
-
-      # Worker priority for selection (higher = higher priority)
-      # (optional)
-      priority: 1
-
 # Safe output processing configuration that automatically creates GitHub issues,
 # comments, and pull requests from AI workflow output without requiring write
 # permissions in the main job
@@ -2152,6 +1950,12 @@ safe-outputs:
     # (optional)
     github-token: "${{ secrets.GITHUB_TOKEN }}"
 
+    # Target project URL for update-project operations. This is required in the
+    # configuration for documentation purposes. Agent messages MUST explicitly include
+    # the project field in their output - the configured value is not used as a
+    # fallback. Must be a valid GitHub Projects v2 URL.
+    project: "example-value"
+
     # Optional array of project views to create. Each view must have a name and
     # layout. Views are created during project setup.
     # (optional)
@@ -2195,47 +1999,6 @@ safe-outputs:
 
   # Option 2: Enable project management with default configuration (max=10)
   update-project: null
-
-  # Enable AI agents to duplicate GitHub Project boards with all configuration,
-  # views, and settings.
-  # (optional)
-  # This field supports multiple formats (oneOf):
-
-  # Option 1: Configuration for copying GitHub Projects v2 boards. Creates a new
-  # project with the same structure, fields, and views as the source project. By
-  # default, draft issues are NOT copied unless explicitly requested with
-  # includeDraftIssues=true in the tool call. Requires a Personal Access Token (PAT)
-  # or GitHub App token with Projects permissions; the GITHUB_TOKEN cannot be used.
-  # Safe output items use type=copy_project and include: sourceProject (URL), owner
-  # (org/user login), title (new project name), and optional includeDraftIssues
-  # (boolean). The source-project and target-owner can be configured in the workflow
-  # frontmatter to provide defaults that the agent can use or override.
-  copy-project:
-    # Maximum number of copy operations to perform (default: 1).
-    # (optional)
-    max: 1
-
-    # GitHub token to use for this specific output type. Must have Projects write
-    # permission. Overrides global github-token if specified.
-    # (optional)
-    github-token: "${{ secrets.GITHUB_TOKEN }}"
-
-    # Optional default source project URL to copy from (e.g.,
-    # 'https://github.com/orgs/myorg/projects/42'). If specified, the agent can omit
-    # the sourceProject field in the tool call and this default will be used. The
-    # agent can still override by providing a sourceProject in the tool call.
-    # (optional)
-    source-project: "example-value"
-
-    # Optional default target owner (organization or user login name) where the new
-    # project will be created (e.g., 'myorg' or 'username'). If specified, the agent
-    # can omit the owner field in the tool call and this default will be used. The
-    # agent can still override by providing an owner in the tool call.
-    # (optional)
-    target-owner: "example-value"
-
-  # Option 2: Enable project copying with default configuration (max=1)
-  copy-project: null
 
   # Enable AI agents to create new GitHub Project boards with custom fields, views,
   # and configurations.
@@ -2343,6 +2106,12 @@ safe-outputs:
     # if specified. Must have Projects: Read+Write permission.
     # (optional)
     github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+    # Target project URL for status update operations. This is required in the
+    # configuration for documentation purposes. Agent messages MUST explicitly include
+    # the project field in their output - the configured value is not used as a
+    # fallback. Must be a valid GitHub Projects v2 URL.
+    project: "example-value"
 
   # Option 2: Enable project status updates with default configuration (max=1)
   create-project-status-update: null

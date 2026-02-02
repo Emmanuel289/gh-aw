@@ -1,3 +1,62 @@
+// Package workflow provides GitHub Actions setup step generation for MCP servers.
+//
+// # MCP Setup Generator
+//
+// This file generates the complete setup sequence for MCP servers in GitHub Actions
+// workflows. It orchestrates the initialization of all MCP tools including built-in
+// servers (GitHub, Playwright, safe-outputs, safe-inputs) and custom HTTP/stdio
+// MCP servers.
+//
+// Key responsibilities:
+//   - Identifying and collecting MCP tools from workflow configuration
+//   - Generating Docker image download steps
+//   - Installing gh-aw extension for agentic-workflows tool
+//   - Setting up safe-outputs MCP server (config, API key, HTTP server)
+//   - Setting up safe-inputs MCP server (config, tool files, HTTP server)
+//   - Starting Serena MCP server in local mode
+//   - Starting the MCP gateway with proper environment variables
+//   - Rendering MCP configuration for the selected AI engine
+//
+// Setup sequence:
+//  1. Download required Docker images
+//  2. Install gh-aw extension (if agentic-workflows enabled)
+//  3. Write safe-outputs config files (config.json, tools.json, validation.json)
+//  4. Generate and start safe-outputs HTTP server
+//  5. Setup safe-inputs config and tool files (JavaScript, Python, Shell, Go)
+//  6. Generate and start safe-inputs HTTP server
+//  7. Start Serena local mode server
+//  8. Start MCP gateway with all environment variables
+//  9. Render engine-specific MCP configuration
+//
+// MCP tools supported:
+//   - github: GitHub API access via MCP (local Docker or remote hosted)
+//   - playwright: Browser automation with Playwright
+//   - safe-outputs: Controlled output storage for AI agents
+//   - safe-inputs: Custom tool execution with secret passthrough
+//   - cache-memory: Memory/knowledge base management
+//   - agentic-workflows: Workflow execution via gh-aw
+//   - serena: Local Serena search functionality
+//   - Custom HTTP/stdio MCP servers
+//
+// Gateway modes:
+//   - Enabled (default): MCP servers run through gateway proxy
+//   - Disabled (sandbox: false): Direct MCP server communication
+//
+// Related files:
+//   - mcp_gateway_config.go: Gateway configuration management
+//   - mcp_environment.go: Environment variable collection
+//   - mcp_renderer.go: MCP configuration YAML rendering
+//   - safe_outputs.go: Safe outputs server configuration
+//   - safe_inputs.go: Safe inputs server configuration
+//
+// Example workflow setup:
+//   - Download Docker images
+//   - Write safe-outputs config to /opt/gh-aw/safeoutputs/
+//   - Start safe-outputs HTTP server on port 3001
+//   - Write safe-inputs config to /opt/gh-aw/safe-inputs/
+//   - Start safe-inputs HTTP server on port 3000
+//   - Start MCP gateway on port 80
+//   - Render MCP config based on engine (copilot/claude/codex/custom)
 package workflow
 
 import (
@@ -8,6 +67,7 @@ import (
 
 	"github.com/githubnext/gh-aw/pkg/constants"
 	"github.com/githubnext/gh-aw/pkg/logger"
+	"github.com/githubnext/gh-aw/pkg/sliceutil"
 )
 
 var mcpSetupGeneratorLog = logger.New("workflow:mcp_setup_generator")
@@ -50,6 +110,10 @@ func (c *Compiler) generateMCPSetup(yaml *strings.Builder, tools map[string]any,
 	if IsSafeInputsEnabled(workflowData.SafeInputs, workflowData) {
 		mcpTools = append(mcpTools, "safe-inputs")
 	}
+
+	// Populate dispatch-workflow file mappings before generating config
+	// This ensures workflow_files is available in the config.json
+	populateDispatchWorkflowFiles(workflowData, c.markdownPath)
 
 	// Generate safe-outputs configuration once to avoid duplicate computation
 	var safeOutputConfig string
@@ -266,10 +330,7 @@ func (c *Compiler) generateMCPSetup(yaml *strings.Builder, tools map[string]any,
 		yaml.WriteString("        run: |\n")
 
 		// Generate individual tool files (sorted by name for stable code generation)
-		safeInputToolNames := make([]string, 0, len(workflowData.SafeInputs.Tools))
-		for toolName := range workflowData.SafeInputs.Tools {
-			safeInputToolNames = append(safeInputToolNames, toolName)
-		}
+		safeInputToolNames := sliceutil.MapToSlice(workflowData.SafeInputs.Tools)
 		sort.Strings(safeInputToolNames)
 
 		for _, toolName := range safeInputToolNames {
@@ -345,11 +406,8 @@ func (c *Compiler) generateMCPSetup(yaml *strings.Builder, tools map[string]any,
 
 		safeInputsSecrets := collectSafeInputsSecrets(workflowData.SafeInputs)
 		if len(safeInputsSecrets) > 0 {
-			// Sort env var names for consistent output
-			envVarNames := make([]string, 0, len(safeInputsSecrets))
-			for envVarName := range safeInputsSecrets {
-				envVarNames = append(envVarNames, envVarName)
-			}
+			// Sort env var names for consistent output - using functional helper
+			envVarNames := sliceutil.MapToSlice(safeInputsSecrets)
 			sort.Strings(envVarNames)
 
 			for _, envVarName := range envVarNames {
@@ -389,10 +447,8 @@ func (c *Compiler) generateMCPSetup(yaml *strings.Builder, tools map[string]any,
 			yaml.WriteString("        env:\n")
 
 			// Sort environment variable names for consistent output
-			envVarNames := make([]string, 0, len(mcpEnvVars))
-			for envVarName := range mcpEnvVars {
-				envVarNames = append(envVarNames, envVarName)
-			}
+			// Using functional helper to extract map keys
+			envVarNames := sliceutil.MapToSlice(mcpEnvVars)
 			sort.Strings(envVarNames)
 
 			// Write environment variables in sorted order
@@ -459,10 +515,8 @@ func (c *Compiler) generateMCPSetup(yaml *strings.Builder, tools map[string]any,
 
 		// Add user-configured environment variables
 		if len(gatewayConfig.Env) > 0 {
-			envVarNames := make([]string, 0, len(gatewayConfig.Env))
-			for envVarName := range gatewayConfig.Env {
-				envVarNames = append(envVarNames, envVarName)
-			}
+			// Using functional helper to extract map keys
+			envVarNames := sliceutil.MapToSlice(gatewayConfig.Env)
 			sort.Strings(envVarNames)
 
 			for _, envVarName := range envVarNames {
@@ -549,10 +603,8 @@ func (c *Compiler) generateMCPSetup(yaml *strings.Builder, tools map[string]any,
 			containerCmd += " -e GH_AW_SAFE_OUTPUTS_API_KEY"
 		}
 		if len(gatewayConfig.Env) > 0 {
-			envVarNames := make([]string, 0, len(gatewayConfig.Env))
-			for envVarName := range gatewayConfig.Env {
-				envVarNames = append(envVarNames, envVarName)
-			}
+			// Using functional helper to extract map keys
+			envVarNames := sliceutil.MapToSlice(gatewayConfig.Env)
 			sort.Strings(envVarNames)
 			for _, envVarName := range envVarNames {
 				containerCmd += " -e " + envVarName

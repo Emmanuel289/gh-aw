@@ -58,6 +58,7 @@ safe-outputs:
   
   # Issue creation with custom prefix and labels
   create-issue:
+    expires: 2d
     title-prefix: "[🎭 POEM-BOT] "
     labels: [poetry, automation, ai-generated]
     max: 2
@@ -66,7 +67,7 @@ safe-outputs:
   # Discussion creation for poem summaries and logs
   create-discussion:
     title-prefix: "[📜 POETRY] "
-    category: "General"
+    category: "general"
     labels: [poetry, automation, ai-generated]
     max: 2
     close-older-discussions: true
@@ -91,6 +92,7 @@ safe-outputs:
 
   # Pull request creation
   create-pull-request:
+    expires: 2d
     title-prefix: "[🎨 POETRY] "
     labels: [poetry, automation, creative-writing]
     reviewers: copilot

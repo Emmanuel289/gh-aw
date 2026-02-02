@@ -30,6 +30,16 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Cache Go modules (explicit fallback)
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-modules-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-modules-
+
       - name: Report Go cache status
         run: |
           if [ "${{ steps.setup-go.outputs.cache-hit }}" == "true" ]; then
@@ -38,13 +48,36 @@ jobs:
             echo "⚠️ Go cache miss" >> $GITHUB_STEP_SUMMARY
           fi
 
+      - name: Download dependencies with retry
+        run: |
+          set -e
+          MAX_RETRIES=3
+          RETRY_DELAY=5
+          
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i of $MAX_RETRIES: Downloading Go modules..."
+            if go mod download; then
+              echo "✅ Successfully downloaded Go modules"
+              break
+            else
+              if [ $i -eq $MAX_RETRIES ]; then
+                echo "❌ Failed to download Go modules after $MAX_RETRIES attempts"
+                echo "This may indicate that proxy.golang.org is unreachable"
+                echo "Please check network connectivity or consider vendoring dependencies"
+                exit 1
+              fi
+              echo "⚠️ Download failed, retrying in ${RETRY_DELAY}s..."
+              sleep $RETRY_DELAY
+            fi
+          done
+
       - name: Verify dependencies
         run: go mod verify
 
       - name: Run unit tests with coverage
         run: |
           set -o pipefail
-          go test -v -parallel=8 -timeout=3m -run='^Test' -tags '!integration' -coverprofile=coverage.out -json ./... | tee test-result-unit.json
+          go test -v -parallel=8 -timeout=3m -run='^Test' -tags '!integration' -coverprofile=coverage.out -json ./... > test-result-unit.json
           go tool cover -html=coverage.out -o coverage.html
 
       # Coverage reports for recent builds only - 7 days is sufficient for debugging recent changes
@@ -182,6 +215,16 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Cache Go modules (explicit fallback)
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-modules-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-modules-
+
       - name: Report Go cache status
         run: |
           if [ "${{ steps.setup-go.outputs.cache-hit }}" == "true" ]; then
@@ -189,6 +232,29 @@ jobs:
           else
             echo "⚠️ Go cache miss" >> $GITHUB_STEP_SUMMARY
           fi
+
+      - name: Download dependencies with retry
+        run: |
+          set -e
+          MAX_RETRIES=3
+          RETRY_DELAY=5
+          
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i of $MAX_RETRIES: Downloading Go modules..."
+            if go mod download; then
+              echo "✅ Successfully downloaded Go modules"
+              break
+            else
+              if [ $i -eq $MAX_RETRIES ]; then
+                echo "❌ Failed to download Go modules after $MAX_RETRIES attempts"
+                echo "This may indicate that proxy.golang.org is unreachable"
+                echo "Please check network connectivity or consider vendoring dependencies"
+                exit 1
+              fi
+              echo "⚠️ Download failed, retrying in ${RETRY_DELAY}s..."
+              sleep $RETRY_DELAY
+            fi
+          done
 
       - name: Verify dependencies
         run: go mod verify
@@ -288,6 +354,16 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Cache Go modules (explicit fallback)
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-modules-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-modules-
+
       - name: Report Go cache status
         run: |
           if [ "${{ steps.setup-go.outputs.cache-hit }}" == "true" ]; then
@@ -295,6 +371,29 @@ jobs:
           else
             echo "⚠️ Go cache miss" >> $GITHUB_STEP_SUMMARY
           fi
+
+      - name: Download dependencies with retry
+        run: |
+          set -e
+          MAX_RETRIES=3
+          RETRY_DELAY=5
+          
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i of $MAX_RETRIES: Downloading Go modules..."
+            if go mod download; then
+              echo "✅ Successfully downloaded Go modules"
+              break
+            else
+              if [ $i -eq $MAX_RETRIES ]; then
+                echo "❌ Failed to download Go modules after $MAX_RETRIES attempts"
+                echo "This may indicate that proxy.golang.org is unreachable"
+                echo "Please check network connectivity or consider vendoring dependencies"
+                exit 1
+              fi
+              echo "⚠️ Download failed, retrying in ${RETRY_DELAY}s..."
+              sleep $RETRY_DELAY
+            fi
+          done
 
       - name: Verify dependencies
         run: go mod verify
@@ -452,6 +551,57 @@ jobs:
           cp actions/setup/md/*.md /opt/gh-aw/prompts/
       - name: Run tests
         run: cd actions/setup/js && npm test
+
+  js-integration-live-api:
+    runs-on: ubuntu-latest
+    needs: validate-yaml
+    permissions:
+      contents: read
+    concurrency:
+      group: ci-${{ github.ref }}-js-integration-live-api
+      cancel-in-progress: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - name: Set up Node.js
+        id: setup-node
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: actions/setup/js/package-lock.json
+
+      - name: Report Node cache status
+        run: |
+          if [ "${{ steps.setup-node.outputs.cache-hit }}" == "true" ]; then
+            echo "✅ Node cache hit" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Node cache miss" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Install npm dependencies
+        run: cd actions/setup/js && npm ci
+
+      - name: Run live GitHub API integration test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "## 🔍 Live GitHub API Integration Test" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -z "$GITHUB_TOKEN" ]; then
+            echo "⚠️ GITHUB_TOKEN not available - test will be skipped" >> $GITHUB_STEP_SUMMARY
+            echo "ℹ️ This is expected in forks or when secrets are not available" >> $GITHUB_STEP_SUMMARY
+            cd actions/setup/js && npm test -- frontmatter_hash_github_api.test.cjs
+          else
+            echo "✅ GITHUB_TOKEN available - running live API test" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            cd actions/setup/js && npm test -- frontmatter_hash_github_api.test.cjs
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✨ Live API test completed successfully" >> $GITHUB_STEP_SUMMARY
+          fi
+
   bench:
     # Only run benchmarks on main branch for performance tracking
     if: github.ref == 'refs/heads/main'
@@ -472,6 +622,16 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Cache Go modules (explicit fallback)
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-modules-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-modules-
+
       - name: Report Go cache status
         run: |
           if [ "${{ steps.setup-go.outputs.cache-hit }}" == "true" ]; then
@@ -479,6 +639,29 @@ jobs:
           else
             echo "⚠️ Go cache miss" >> $GITHUB_STEP_SUMMARY
           fi
+
+      - name: Download dependencies with retry
+        run: |
+          set -e
+          MAX_RETRIES=3
+          RETRY_DELAY=5
+          
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i of $MAX_RETRIES: Downloading Go modules..."
+            if go mod download; then
+              echo "✅ Successfully downloaded Go modules"
+              break
+            else
+              if [ $i -eq $MAX_RETRIES ]; then
+                echo "❌ Failed to download Go modules after $MAX_RETRIES attempts"
+                echo "This may indicate that proxy.golang.org is unreachable"
+                echo "Please check network connectivity or consider vendoring dependencies"
+                exit 1
+              fi
+              echo "⚠️ Download failed, retrying in ${RETRY_DELAY}s..."
+              sleep $RETRY_DELAY
+            fi
+          done
 
       - name: Verify dependencies
         run: go mod verify
@@ -640,6 +823,16 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Cache Go modules (explicit fallback)
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-modules-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-modules-
+
       - name: Report Go cache status
         run: |
           if [ "${{ steps.setup-go.outputs.cache-hit }}" == "true" ]; then
@@ -647,6 +840,29 @@ jobs:
           else
             echo "⚠️ Go cache miss" >> $GITHUB_STEP_SUMMARY
           fi
+
+      - name: Download dependencies with retry
+        run: |
+          set -e
+          MAX_RETRIES=3
+          RETRY_DELAY=5
+          
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i of $MAX_RETRIES: Downloading Go modules..."
+            if go mod download; then
+              echo "✅ Successfully downloaded Go modules"
+              break
+            else
+              if [ $i -eq $MAX_RETRIES ]; then
+                echo "❌ Failed to download Go modules after $MAX_RETRIES attempts"
+                echo "This may indicate that proxy.golang.org is unreachable"
+                echo "Please check network connectivity or consider vendoring dependencies"
+                exit 1
+              fi
+              echo "⚠️ Download failed, retrying in ${RETRY_DELAY}s..."
+              sleep $RETRY_DELAY
+            fi
+          done
 
       - name: Verify dependencies
         run: go mod verify
@@ -711,6 +927,16 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Cache Go modules (explicit fallback)
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-modules-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-modules-
+
       - name: Report Go cache status
         run: |
           if [ "${{ steps.setup-go.outputs.cache-hit }}" == "true" ]; then
@@ -718,6 +944,29 @@ jobs:
           else
             echo "⚠️ Go cache miss" >> $GITHUB_STEP_SUMMARY
           fi
+
+      - name: Download dependencies with retry
+        run: |
+          set -e
+          MAX_RETRIES=3
+          RETRY_DELAY=5
+          
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i of $MAX_RETRIES: Downloading Go modules..."
+            if go mod download; then
+              echo "✅ Successfully downloaded Go modules"
+              break
+            else
+              if [ $i -eq $MAX_RETRIES ]; then
+                echo "❌ Failed to download Go modules after $MAX_RETRIES attempts"
+                echo "This may indicate that proxy.golang.org is unreachable"
+                echo "Please check network connectivity or consider vendoring dependencies"
+                exit 1
+              fi
+              echo "⚠️ Download failed, retrying in ${RETRY_DELAY}s..."
+              sleep $RETRY_DELAY
+            fi
+          done
 
       - name: Verify dependencies
         run: go mod verify
@@ -748,6 +997,16 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Cache Go modules (explicit fallback)
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-modules-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-modules-
+
       - name: Report Go cache status
         run: |
           if [ "${{ steps.setup-go.outputs.cache-hit }}" == "true" ]; then
@@ -755,6 +1014,29 @@ jobs:
           else
             echo "⚠️ Go cache miss" >> $GITHUB_STEP_SUMMARY
           fi
+
+      - name: Download dependencies with retry
+        run: |
+          set -e
+          MAX_RETRIES=3
+          RETRY_DELAY=5
+          
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i of $MAX_RETRIES: Downloading Go modules..."
+            if go mod download; then
+              echo "✅ Successfully downloaded Go modules"
+              break
+            else
+              if [ $i -eq $MAX_RETRIES ]; then
+                echo "❌ Failed to download Go modules after $MAX_RETRIES attempts"
+                echo "This may indicate that proxy.golang.org is unreachable"
+                echo "Please check network connectivity or consider vendoring dependencies"
+                exit 1
+              fi
+              echo "⚠️ Download failed, retrying in ${RETRY_DELAY}s..."
+              sleep $RETRY_DELAY
+            fi
+          done
 
       - name: Verify dependencies
         run: go mod verify
@@ -839,6 +1121,16 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Cache Go modules (explicit fallback)
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-modules-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-modules-
+
       - name: Report Go cache status
         run: |
           if [ "${{ steps.setup-go.outputs.cache-hit }}" == "true" ]; then
@@ -846,6 +1138,29 @@ jobs:
           else
             echo "⚠️ Go cache miss" >> $GITHUB_STEP_SUMMARY
           fi
+
+      - name: Download dependencies with retry
+        run: |
+          set -e
+          MAX_RETRIES=3
+          RETRY_DELAY=5
+          
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i of $MAX_RETRIES: Downloading Go modules..."
+            if go mod download; then
+              echo "✅ Successfully downloaded Go modules"
+              break
+            else
+              if [ $i -eq $MAX_RETRIES ]; then
+                echo "❌ Failed to download Go modules after $MAX_RETRIES attempts"
+                echo "This may indicate that proxy.golang.org is unreachable"
+                echo "Please check network connectivity or consider vendoring dependencies"
+                exit 1
+              fi
+              echo "⚠️ Download failed, retrying in ${RETRY_DELAY}s..."
+              sleep $RETRY_DELAY
+            fi
+          done
 
       - name: Verify dependencies
         run: go mod verify
@@ -885,6 +1200,16 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Cache Go modules (explicit fallback)
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-modules-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-modules-
+
       - name: Report Go cache status
         run: |
           if [ "${{ steps.setup-go.outputs.cache-hit }}" == "true" ]; then
@@ -892,6 +1217,29 @@ jobs:
           else
             echo "⚠️ Go cache miss" >> $GITHUB_STEP_SUMMARY
           fi
+
+      - name: Download dependencies with retry
+        run: |
+          set -e
+          MAX_RETRIES=3
+          RETRY_DELAY=5
+          
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i of $MAX_RETRIES: Downloading Go modules..."
+            if go mod download; then
+              echo "✅ Successfully downloaded Go modules"
+              break
+            else
+              if [ $i -eq $MAX_RETRIES ]; then
+                echo "❌ Failed to download Go modules after $MAX_RETRIES attempts"
+                echo "This may indicate that proxy.golang.org is unreachable"
+                echo "Please check network connectivity or consider vendoring dependencies"
+                exit 1
+              fi
+              echo "⚠️ Download failed, retrying in ${RETRY_DELAY}s..."
+              sleep $RETRY_DELAY
+            fi
+          done
 
       - name: Build gh-aw
         run: make build
@@ -1195,6 +1543,16 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Cache Go modules (explicit fallback)
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-modules-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-modules-
+
       - name: Report Go cache status
         shell: bash
         run: |
@@ -1203,6 +1561,30 @@ jobs:
           else
             echo "⚠️ Go cache miss" >> $GITHUB_STEP_SUMMARY
           fi
+
+      - name: Download dependencies with retry
+        shell: bash
+        run: |
+          set -e
+          MAX_RETRIES=3
+          RETRY_DELAY=5
+          
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i of $MAX_RETRIES: Downloading Go modules..."
+            if go mod download; then
+              echo "✅ Successfully downloaded Go modules"
+              break
+            else
+              if [ $i -eq $MAX_RETRIES ]; then
+                echo "❌ Failed to download Go modules after $MAX_RETRIES attempts"
+                echo "This may indicate that proxy.golang.org is unreachable"
+                echo "Please check network connectivity or consider vendoring dependencies"
+                exit 1
+              fi
+              echo "⚠️ Download failed, retrying in ${RETRY_DELAY}s..."
+              sleep $RETRY_DELAY
+            fi
+          done
 
       - name: Verify dependencies
         run: go mod verify
@@ -1293,6 +1675,16 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Cache Go modules (explicit fallback)
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-modules-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-modules-
+
       - name: Report Go cache status
         run: |
           if [ "${{ steps.setup-go.outputs.cache-hit }}" == "true" ]; then
@@ -1300,6 +1692,29 @@ jobs:
           else
             echo "⚠️ Go cache miss" >> $GITHUB_STEP_SUMMARY
           fi
+
+      - name: Download dependencies with retry
+        run: |
+          set -e
+          MAX_RETRIES=3
+          RETRY_DELAY=5
+          
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i of $MAX_RETRIES: Downloading Go modules..."
+            if go mod download; then
+              echo "✅ Successfully downloaded Go modules"
+              break
+            else
+              if [ $i -eq $MAX_RETRIES ]; then
+                echo "❌ Failed to download Go modules after $MAX_RETRIES attempts"
+                echo "This may indicate that proxy.golang.org is unreachable"
+                echo "Please check network connectivity or consider vendoring dependencies"
+                exit 1
+              fi
+              echo "⚠️ Download failed, retrying in ${RETRY_DELAY}s..."
+              sleep $RETRY_DELAY
+            fi
+          done
 
       - name: Verify dependencies
         run: go mod verify

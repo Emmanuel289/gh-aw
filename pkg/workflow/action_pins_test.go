@@ -297,9 +297,9 @@ func TestApplyActionPinToStep(t *testing.T) {
 func TestGetActionPinsSorting(t *testing.T) {
 	pins := getActionPins()
 
-	// Verify we got all the pins (43 as of January 2026)
-	if len(pins) != 43 {
-		t.Errorf("getActionPins() returned %d pins, expected 43", len(pins))
+	// Verify we got all the pins (42 as of January 2026)
+	if len(pins) != 42 {
+		t.Errorf("getActionPins() returned %d pins, expected 42", len(pins))
 	}
 
 	// Verify they are sorted by version (descending) then by repository name (ascending)
@@ -831,11 +831,8 @@ func TestSortPinsByVersion(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Make a copy to avoid modifying the test case
-			result := make([]ActionPin, len(tt.input))
-			copy(result, tt.input)
-
-			sortPinsByVersion(result)
+			// sortPinsByVersion now returns a new sorted slice (immutable operation)
+			result := sortPinsByVersion(tt.input)
 
 			if len(result) != len(tt.expected) {
 				t.Errorf("sortPinsByVersion() length = %d, want %d", len(result), len(tt.expected))

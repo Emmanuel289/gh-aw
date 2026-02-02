@@ -54,6 +54,7 @@ steps:
       cat /tmp/gh-aw/issues-data/issues-schema.json | jq .
 safe-outputs:
   create-issue:
+    expires: 2d
     title-prefix: "[Parent] "
     max: 5
     group: true
@@ -61,7 +62,7 @@ safe-outputs:
     max: 50
   create-discussion:
     title-prefix: "[Issue Arborist] "
-    category: "Audits"
+    category: "audits"
     close-older-discussions: true
 timeout-minutes: 15
 ---

@@ -4,15 +4,14 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 
-// Version information - should match Go constants
-// Note: gh-aw version is excluded for non-release builds to prevent
-// hash changes during development. Only include it for release builds.
-const VERSIONS = {
-  // "gh-aw": "dev", // Excluded for non-release builds
-  awf: "v0.11.2",
-  agents: "v0.0.84",
-  gateway: "v0.0.84",
-};
+/**
+ * Default file reader using Node.js fs module
+ * @param {string} filePath - Path to the file
+ * @returns {Promise<string>} File content
+ */
+async function defaultFileReader(filePath) {
+  return fs.readFileSync(filePath, "utf8");
+}
 
 /**
  * Computes a deterministic SHA-256 hash of workflow frontmatter
@@ -20,10 +19,15 @@ const VERSIONS = {
  * Uses text-based parsing only - no YAML library dependencies
  *
  * @param {string} workflowPath - Path to the workflow file
+ * @param {Object} [options] - Optional configuration
+ * @param {Function} [options.fileReader] - Custom file reader function (async (filePath) => content)
+ *                                          If not provided, uses fs.readFileSync
  * @returns {Promise<string>} The SHA-256 hash as a lowercase hexadecimal string (64 characters)
  */
-async function computeFrontmatterHash(workflowPath) {
-  const content = fs.readFileSync(workflowPath, "utf8");
+async function computeFrontmatterHash(workflowPath, options = {}) {
+  const fileReader = options.fileReader || defaultFileReader;
+
+  const content = await fileReader(workflowPath);
 
   // Extract frontmatter text and markdown body
   const { frontmatterText, markdown } = extractFrontmatterAndBody(content);
@@ -35,7 +39,7 @@ async function computeFrontmatterHash(workflowPath) {
   const expressions = extractRelevantTemplateExpressions(markdown);
 
   // Process imports using text-based parsing
-  const { importedFiles, importedFrontmatterTexts } = await processImportsTextBased(frontmatterText, baseDir);
+  const { importedFiles, importedFrontmatterTexts } = await processImportsTextBased(frontmatterText, baseDir, undefined, fileReader);
 
   // Build canonical representation from text
   // The key insight is to treat frontmatter as mostly text
@@ -60,9 +64,6 @@ async function computeFrontmatterHash(workflowPath) {
   if (expressions.length > 0) {
     canonical["template-expressions"] = expressions;
   }
-
-  // Add version information
-  canonical.versions = VERSIONS;
 
   // Serialize to canonical JSON
   const canonicalJSON = marshalCanonicalJSON(canonical);
@@ -110,9 +111,10 @@ function extractFrontmatterAndBody(content) {
  * @param {string} frontmatterText - The frontmatter text
  * @param {string} baseDir - Base directory for resolving imports
  * @param {Set<string>} visited - Set of visited files for cycle detection
+ * @param {Function} fileReader - File reader function (async (filePath) => content)
  * @returns {Promise<{importedFiles: string[], importedFrontmatterTexts: string[]}>}
  */
-async function processImportsTextBased(frontmatterText, baseDir, visited = new Set()) {
+async function processImportsTextBased(frontmatterText, baseDir, visited = new Set(), fileReader = defaultFileReader) {
   const importedFiles = [];
   const importedFrontmatterTexts = [];
 
@@ -127,8 +129,8 @@ async function processImportsTextBased(frontmatterText, baseDir, visited = new S
   const sortedImports = [...imports].sort();
 
   for (const importPath of sortedImports) {
-    // Resolve import path relative to base directory
-    const fullPath = path.resolve(baseDir, importPath);
+    // Join import path with base directory (preserves relative paths for GitHub API compatibility)
+    const fullPath = path.join(baseDir, importPath);
 
     // Skip if already visited (cycle detection)
     if (visited.has(fullPath)) continue;
@@ -136,12 +138,7 @@ async function processImportsTextBased(frontmatterText, baseDir, visited = new S
 
     // Read imported file
     try {
-      if (!fs.existsSync(fullPath)) {
-        // Skip missing imports silently
-        continue;
-      }
-
-      const importContent = fs.readFileSync(fullPath, "utf8");
+      const importContent = await fileReader(fullPath);
       const { frontmatterText: importFrontmatterText } = extractFrontmatterAndBody(importContent);
 
       // Add to imported files list
@@ -150,7 +147,7 @@ async function processImportsTextBased(frontmatterText, baseDir, visited = new S
 
       // Recursively process imports in the imported file
       const importBaseDir = path.dirname(fullPath);
-      const nestedResult = await processImportsTextBased(importFrontmatterText, importBaseDir, visited);
+      const nestedResult = await processImportsTextBased(importFrontmatterText, importBaseDir, visited, fileReader);
 
       // Add nested imports
       importedFiles.push(...nestedResult.importedFiles);
@@ -308,6 +305,37 @@ function extractHashFromLockFile(lockFileContent) {
   return "";
 }
 
+/**
+ * Creates a file reader that uses GitHub's getFileContent API
+ * @param {Object} github - GitHub API client (@actions/github)
+ * @param {string} owner - Repository owner
+ * @param {string} repo - Repository name
+ * @param {string} ref - Git reference (branch, tag, or commit SHA)
+ * @returns {Function} File reader function compatible with computeFrontmatterHash
+ */
+function createGitHubFileReader(github, owner, repo, ref) {
+  return async function (filePath) {
+    try {
+      const response = await github.rest.repos.getContent({
+        owner,
+        repo,
+        path: filePath,
+        ref,
+      });
+
+      // Decode base64 content
+      if (response.data.encoding === "base64") {
+        return Buffer.from(response.data.content, "base64").toString("utf8");
+      }
+
+      return response.data.content;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to read file ${filePath} from GitHub: ${errorMessage}`);
+    }
+  };
+}
+
 module.exports = {
   computeFrontmatterHash,
   extractFrontmatterAndBody,
@@ -318,4 +346,6 @@ module.exports = {
   extractHashFromLockFile,
   normalizeFrontmatterText,
   processImportsTextBased,
+  defaultFileReader,
+  createGitHubFileReader,
 };

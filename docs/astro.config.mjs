@@ -159,7 +159,6 @@ export default defineConfig({
 						{ label: 'Quick Start', link: '/setup/quick-start/' },
 						{ label: 'Authoring Workflows with AI', link: '/setup/agentic-authoring/' },
 						{ label: 'CLI Commands', link: '/setup/cli/' },
-						{ label: 'VS Code Integration', link: '/setup/vscode/' },
 					],
 				},
 				{
@@ -186,6 +185,7 @@ export default defineConfig({
 						{ label: 'ResearchPlanAssign', link: '/guides/researchplanassign/' },
 						{ label: 'MultiRepoOps', link: '/guides/multirepoops/' },
 						{ label: 'SideRepoOps', link: '/guides/siderepoops/' },
+						{ label: 'SpecOps', link: '/guides/specops/' },
 						{ label: 'TrialOps', link: '/guides/trialops/' },
 						{ label: 'AgenticImport', link: '/guides/agentic-import/' },
 					],

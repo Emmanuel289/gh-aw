@@ -103,9 +103,10 @@ function parseProjectUrl(projectUrl) {
 /**
  * List accessible Projects v2 for org or user
  * @param {{ scope: string, ownerLogin: string, projectNumber: string }} projectInfo - Project info
+ * @param {Object} github - GitHub client (Octokit instance) to use for GraphQL queries
  * @returns {Promise<{ nodes: Array<{ id: string, number: number, title: string, closed?: boolean, url: string }>, totalCount?: number, diagnostics: { rawNodesCount: number, nullNodesCount: number, rawEdgesCount: number, nullEdgeNodesCount: number } }>} List result
  */
-async function listAccessibleProjectsV2(projectInfo) {
+async function listAccessibleProjectsV2(projectInfo, github) {
   const baseQuery = `projectsV2(first: 100) {
     totalCount
     nodes {
@@ -204,9 +205,10 @@ function summarizeEmptyProjectsV2List(list) {
  * Resolve a project by number
  * @param {{ scope: string, ownerLogin: string, projectNumber: string }} projectInfo - Project info
  * @param {number} projectNumberInt - Project number
+ * @param {Object} github - GitHub client (Octokit instance) to use for GraphQL queries
  * @returns {Promise<{ id: string, number: number, title: string, url: string }>} Project details
  */
-async function resolveProjectV2(projectInfo, projectNumberInt) {
+async function resolveProjectV2(projectInfo, projectNumberInt, github) {
   try {
     const query =
       projectInfo.scope === "orgs"
@@ -243,7 +245,7 @@ async function resolveProjectV2(projectInfo, projectNumberInt) {
     core.warning(`Direct projectV2(number) query failed; falling back to projectsV2 list search: ${getErrorMessage(error)}`);
   }
 
-  const list = await listAccessibleProjectsV2(projectInfo);
+  const list = await listAccessibleProjectsV2(projectInfo, github);
   const nodes = Array.isArray(list.nodes) ? list.nodes : [];
   const found = nodes.find(p => p && typeof p.number === "number" && p.number === projectNumberInt);
 
@@ -337,15 +339,17 @@ function checkFieldTypeMismatch(fieldName, field, expectedDataType) {
 /**
  * Update a GitHub Project v2
  * @param {any} output - Safe output configuration
- * @returns {Promise<void>}
- */
-/**
- * Update a GitHub Project v2
- * @param {any} output - Safe output configuration
  * @param {Map<string, any>} temporaryIdMap - Map of temporary IDs to resolved issue numbers
+ * @param {Object} githubClient - GitHub client (Octokit instance) to use for GraphQL queries
  * @returns {Promise<void>}
  */
-async function updateProject(output, temporaryIdMap) {
+async function updateProject(output, temporaryIdMap = new Map(), githubClient = null) {
+  // Use the provided github client, or fall back to the global github object
+  // @ts-ignore - global.github is set by setupGlobals() from github-script context
+  const github = githubClient || global.github;
+  if (!github) {
+    throw new Error("GitHub client is required but not provided. Either pass a github client to updateProject() or ensure global.github is set.");
+  }
   const { owner, repo } = context.repo;
   const projectInfo = parseProjectUrl(output.project);
   const projectNumberFromUrl = projectInfo.projectNumber;
@@ -415,7 +419,7 @@ async function updateProject(output, temporaryIdMap) {
       if (!Number.isFinite(projectNumberInt)) {
         throw new Error(`Invalid project number parsed from URL: ${projectNumberFromUrl}`);
       }
-      const project = await resolveProjectV2(projectInfo, projectNumberInt);
+      const project = await resolveProjectV2(projectInfo, projectNumberInt, github);
       projectId = project.id;
       resolvedProjectNumber = String(project.number);
       core.info(`✓ Resolved project #${resolvedProjectNumber} (${projectInfo.ownerLogin}) (ID: ${projectId})`);
@@ -997,9 +1001,19 @@ async function updateProject(output, temporaryIdMap) {
  * @param {number} [config.max] - Maximum number of update_project items to process
  * @param {Array<Object>} [config.views] - Views to create from configuration
  * @param {Array<Object>} [config.field_definitions] - Field definitions to create from configuration
+ * @param {Object} githubClient - GitHub client (Octokit instance) to use for API calls
  * @returns {Promise<Function>} Message handler function
  */
-async function main(config = {}) {
+async function main(config = {}, githubClient = null) {
+  // Use the provided github client, or fall back to the global github object
+  // The global github object is available when running via github-script action
+  // @ts-ignore - global.github is set by setupGlobals() from github-script context
+  const github = githubClient || global.github;
+
+  if (!github) {
+    throw new Error("GitHub client is required but not provided. Either pass a github client to main() or ensure global.github is set by github-script action.");
+  }
+
   // Extract configuration
   // Default is intentionally configurable via safe-outputs.update-project.max,
   // but we keep a sane global default to avoid surprising truncation.
@@ -1027,11 +1041,11 @@ async function main(config = {}) {
   /**
    * Message handler function that processes a single update_project message
    * @param {Object} message - The update_project message to process
-   * @param {Map<string, string>} temporaryProjectMap - Map of temporary project IDs to actual URLs
-   * @param {Map<string, any>} temporaryIdMap - Map of temporary IDs to resolved issue numbers
+   * @param {Map<string, {repo?: string, number?: number, projectUrl?: string}>} temporaryIdMap - Unified map of temporary IDs
+   * @param {Object} resolvedTemporaryIds - Plain object version of temporaryIdMap for backward compatibility
    * @returns {Promise<Object>} Result with success/error status
    */
-  return async function handleUpdateProject(message, temporaryProjectMap, temporaryIdMap = new Map()) {
+  return async function handleUpdateProject(message, temporaryIdMap, resolvedTemporaryIds = {}) {
     // Check max limit
     if (processedCount >= maxCount) {
       core.warning(`Skipping update_project: max count of ${maxCount} reached`);
@@ -1042,41 +1056,35 @@ async function main(config = {}) {
     }
 
     try {
-      // Get default project URL from environment if available
-      const defaultProjectUrl = process.env.GH_AW_PROJECT_URL || "";
-
-      // Validate project field - can use default from frontmatter if available
+      // Validate that project field is explicitly provided in the message
+      // The project field is required in agent output messages and must be a full GitHub project URL
       let effectiveProjectUrl = message.project;
 
-      // If no project field in message, try to use default from frontmatter
       if (!effectiveProjectUrl || typeof effectiveProjectUrl !== "string" || effectiveProjectUrl.trim() === "") {
-        if (defaultProjectUrl) {
-          core.info(`Using default project URL from frontmatter: ${defaultProjectUrl}`);
-          effectiveProjectUrl = defaultProjectUrl;
+        const errorMsg = 'Missing required "project" field. The agent must explicitly include the project URL in the output message.';
+        core.error(errorMsg);
+
+        // Provide helpful context based on content_type
+        if (message.content_type === "draft_issue") {
+          core.error('For draft_issue content_type, you must include: {"type": "update_project", "project": "https://github.com/orgs/myorg/projects/42", "content_type": "draft_issue", "draft_title": "...", "fields": {...}}');
+        } else if (message.content_type === "issue" || message.content_type === "pull_request") {
+          core.error(
+            `For ${message.content_type} content_type, you must include: {"type": "update_project", "project": "https://github.com/orgs/myorg/projects/42", "content_type": "${message.content_type}", "content_number": 123, "fields": {...}}`
+          );
         } else {
-          const errorMsg =
-            'Missing required "project" field in update_project message. The "project" field must be a full GitHub project URL (e.g., "https://github.com/orgs/myorg/projects/42"), or configure a default project URL in the workflow frontmatter.';
-          core.error(errorMsg);
-
-          // Provide helpful context based on content_type
-          if (message.content_type === "draft_issue") {
-            core.error('For draft_issue content_type, you must include: {"project": "https://...", "content_type": "draft_issue", "draft_title": "...", "fields": {...}}');
-          } else if (message.content_type === "issue" || message.content_type === "pull_request") {
-            core.error(`For ${message.content_type} content_type, you must include: {"project": "https://...", "content_type": "${message.content_type}", "content_number": 123, "fields": {...}}`);
-          }
-
-          return {
-            success: false,
-            error: errorMsg,
-          };
+          core.error('Example: {"type": "update_project", "project": "https://github.com/orgs/myorg/projects/42", "content_type": "draft_issue", "draft_title": "Task Title", "fields": {"Status": "Todo"}}');
         }
+
+        return {
+          success: false,
+          error: errorMsg,
+        };
       }
 
       // Validation passed - increment processed count
       processedCount++;
 
       // Resolve temporary project ID if present
-
       if (effectiveProjectUrl && typeof effectiveProjectUrl === "string") {
         // Strip # prefix if present
         const projectStr = effectiveProjectUrl.trim();
@@ -1084,10 +1092,11 @@ async function main(config = {}) {
 
         // Check if it's a temporary ID (aw_XXXXXXXXXXXX)
         if (/^aw_[0-9a-f]{12}$/i.test(projectWithoutHash)) {
-          const resolved = temporaryProjectMap.get(projectWithoutHash.toLowerCase());
-          if (resolved) {
-            core.info(`Resolved temporary project ID ${projectStr} to ${resolved}`);
-            effectiveProjectUrl = resolved;
+          // Look up in the unified temporaryIdMap
+          const resolved = temporaryIdMap.get(projectWithoutHash.toLowerCase());
+          if (resolved && resolved.projectUrl) {
+            core.info(`Resolved temporary project ID ${projectStr} to ${resolved.projectUrl}`);
+            effectiveProjectUrl = resolved.projectUrl;
           } else {
             throw new Error(`Temporary project ID '${projectStr}' not found. Ensure create_project was called before update_project.`);
           }
@@ -1118,7 +1127,7 @@ async function main(config = {}) {
           };
 
           try {
-            await updateProject(fieldsOutput, temporaryIdMap);
+            await updateProject(fieldsOutput, temporaryIdMap, github);
             core.info("✓ Created configured fields");
           } catch (err) {
             // prettier-ignore
@@ -1136,7 +1145,7 @@ async function main(config = {}) {
       }
 
       // Process the update_project message
-      await updateProject(effectiveMessage, temporaryIdMap);
+      await updateProject(effectiveMessage, temporaryIdMap, github);
 
       // After processing the first message, create configured views if any
       // Views are created after the first item is processed to ensure the project exists
@@ -1161,7 +1170,7 @@ async function main(config = {}) {
               },
             };
 
-            await updateProject(viewOutput, temporaryIdMap);
+            await updateProject(viewOutput, temporaryIdMap, github);
             core.info(`✓ Created view ${i + 1}/${configuredViews.length}: ${viewConfig.name} (${viewConfig.layout})`);
           } catch (err) {
             // prettier-ignore
