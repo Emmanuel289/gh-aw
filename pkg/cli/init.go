@@ -256,6 +256,16 @@ func initializeBasicRepository(verbose bool) error {
 		fmt.Fprintln(os.Stderr, console.FormatSuccessMessage("Created Serena tool documentation"))
 	}
 
+	// Write agentic campaigns prompt
+	initLog.Print("Writing agentic campaigns prompt")
+	if err := ensureAgenticCampaignsPrompt(verbose, false); err != nil {
+		initLog.Printf("Failed to write agentic campaigns prompt: %v", err)
+		return fmt.Errorf("failed to write agentic campaigns prompt: %w", err)
+	}
+	if verbose {
+		fmt.Fprintln(os.Stderr, console.FormatSuccessMessage("Created agentic campaigns prompt"))
+	}
+
 	return nil
 }
 
@@ -582,6 +592,16 @@ func InitRepository(verbose bool, mcp bool, campaign bool, tokens bool, engine s
 	}
 	if verbose {
 		fmt.Fprintln(os.Stderr, console.FormatSuccessMessage("Created Serena tool documentation"))
+	}
+
+	// Write agentic campaigns prompt
+	initLog.Print("Writing agentic campaigns prompt")
+	if err := ensureAgenticCampaignsPrompt(verbose, false); err != nil {
+		initLog.Printf("Failed to write agentic campaigns prompt: %v", err)
+		return fmt.Errorf("failed to write agentic campaigns prompt: %w", err)
+	}
+	if verbose {
+		fmt.Fprintln(os.Stderr, console.FormatSuccessMessage("Created agentic campaigns prompt"))
 	}
 
 	// Configure MCP if requested

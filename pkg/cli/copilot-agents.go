@@ -224,6 +224,18 @@ func ensureSerenaTool(verbose bool, skipInstructions bool) error {
 	)
 }
 
+// ensureAgenticCampaignsPrompt ensures that .github/aw/agentic-campaigns.md contains the campaign creation and management prompt
+func ensureAgenticCampaignsPrompt(verbose bool, skipInstructions bool) error {
+	return ensureFileMatchesTemplate(
+		filepath.Join(".github", "aw"),
+		"agentic-campaigns.md",
+		agenticCampaignsPromptTemplate,
+		"agentic campaigns prompt",
+		verbose,
+		skipInstructions,
+	)
+}
+
 // deleteSetupAgenticWorkflowsAgent deletes the setup-agentic-workflows.agent.md file if it exists
 func deleteSetupAgenticWorkflowsAgent(verbose bool) error {
 	gitRoot, err := findGitRoot()

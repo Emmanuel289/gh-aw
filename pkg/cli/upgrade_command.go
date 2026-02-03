@@ -306,6 +306,12 @@ func updateAgentFiles(verbose bool) error {
 		return fmt.Errorf("failed to update Serena tool documentation: %w", err)
 	}
 
+	// Update agentic campaigns prompt
+	if err := ensureAgenticCampaignsPrompt(verbose, false); err != nil {
+		upgradeLog.Printf("Failed to update agentic campaigns prompt: %v", err)
+		return fmt.Errorf("failed to update agentic campaigns prompt: %w", err)
+	}
+
 	// Upgrade copilot-setup-steps.yml version
 	actionMode := workflow.DetectActionMode(GetVersion())
 	if err := upgradeCopilotSetupSteps(verbose, actionMode, GetVersion()); err != nil {
