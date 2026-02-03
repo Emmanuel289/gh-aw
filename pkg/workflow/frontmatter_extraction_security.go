@@ -146,7 +146,8 @@ func (c *Compiler) extractSandboxConfig(frontmatter map[string]any) *SandboxConf
 	if sandboxBool, ok := sandbox.(bool); ok {
 		if !sandboxBool {
 			frontmatterExtractionSecurityLog.Print("Sandbox: false is not supported")
-			// Return a validation error that will be caught during validation
+			// Return nil - the early validation in ParseWorkflowFile will catch this
+			// and provide a proper error message
 			return nil
 		}
 		// sandbox: true is not meaningful, treat as no configuration
