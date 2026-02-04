@@ -197,8 +197,12 @@ Trial results are saved both locally (in trials/ directory) and in the host repo
 func RunWorkflowTrials(ctx context.Context, workflowSpecs []string, opts TrialOptions) error {
 	// Enable secret deletion for trial command
 	// This is a runtime safety guard to prevent accidental secret deletion outside of trial contexts
-	os.Setenv("GH_AW_ALLOW_SECRET_DELETION", "1")
-	defer os.Unsetenv("GH_AW_ALLOW_SECRET_DELETION")
+	if err := os.Setenv("GH_AW_ALLOW_SECRET_DELETION", "1"); err != nil {
+		return fmt.Errorf("failed to set secret deletion flag: %w", err)
+	}
+	defer func() {
+		_ = os.Unsetenv("GH_AW_ALLOW_SECRET_DELETION") // Ignore error on cleanup
+	}()
 
 	trialLog.Printf("Starting trial execution: specs=%v, logicalRepo=%s, cloneRepo=%s, hostRepo=%s, repeat=%d", workflowSpecs, opts.Repos.LogicalRepo, opts.Repos.CloneRepo, opts.Repos.HostRepo, opts.RepeatCount)
 
