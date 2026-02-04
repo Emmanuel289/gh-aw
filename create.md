@@ -105,9 +105,16 @@ Here ROOT is the location where you found this file. For example,
 - "Wrap the Slack MCP server as a reusable component"
 - "Design a shared workflow for database queries"
 
-If you need to clarify requirements or discuss options, and you are working in an interactive agent chat system, do so interactively with the user. If running non-interactively, make reasonable assumptions based on the repository context.
+### Use Shared Agentic Workflows
 
-## Reusable Components
+**Load when**: User wants to learn about or use reusable workflow components, imports, orchestration, or monitoring patterns
+
+**Use cases**:
+
+- "What shared components are available?"
+- "How do I use orchestration in my workflow?"
+- "Show me monitoring patterns"
+- "How do I import shared components?"
 
 GitHub Agentic Workflows supports modular, reusable components that can be imported into your workflows. This enables:
 
@@ -116,7 +123,7 @@ GitHub Agentic Workflows supports modular, reusable components that can be impor
 - **Separation of Concerns**: Maintain tool configs, permissions, and prompts independently
 - **Consistent Patterns**: Use battle-tested components for common patterns
 
-### Common Reusable Components
+**Common Reusable Components**
 
 **Orchestration** - Coordinate multiple workflows or agents
 
@@ -130,7 +137,7 @@ safe-outputs:
     workflows: [worker-a, worker-b]
     max: 10
   assign-to-agent:
-    name: copilot
+    name: "copilot"
     max: 5
 ```
 
@@ -145,10 +152,10 @@ imports:
   - shared/projects.md
 safe-outputs:
   update-project:
-    project: https://github.com/orgs/myorg/projects/123
+    project: "https://github.com/orgs/myorg/projects/123"
     max: 10
   create-project-status-update:
-    project: https://github.com/orgs/myorg/projects/123
+    project: "https://github.com/orgs/myorg/projects/123"
     max: 1
 ```
 
@@ -165,7 +172,7 @@ imports:
 
 **Use cases**: Daily/weekly status reports, test results, analysis summaries
 
-### Discovering Available Components
+**Discovering Available Components**
 
 Repositories using gh-aw often organize shared components in:
 
@@ -178,7 +185,7 @@ List available components:
 ls .github/workflows/shared/
 ```
 
-### Using Imports
+**Using Imports**
 
 Add imports to your workflow frontmatter:
 
@@ -194,7 +201,7 @@ imports:
 
 The compiler merges imported configurations with your workflow's config. See [Packaging & Distribution](/gh-aw/guides/packaging-imports/) for complete details on import behavior and merge semantics.
 
-### Available After Installation
+**Available After Installation**
 
 When you run `gh aw init` in a repository, several helper files become available:
 
@@ -211,11 +218,13 @@ When you run `gh aw init` in a repository, several helper files become available
 
 These files are available for AI assistants to use when helping you create, update, or debug workflows. The `create.md` file (this file) references these prompts and routes you to the appropriate one based on your task.
 
-### Learn More
+**Learn More**
 
 - **[Orchestration Guide](/gh-aw/guides/orchestration/)** - Orchestrator/worker pattern for coordinating multiple workflows
 - **[Projects & Monitoring Guide](/gh-aw/guides/monitoring/)** - Track workflow activities in GitHub Projects boards
 - **[Packaging & Distribution Guide](/gh-aw/guides/packaging-imports/)** - Import system, versioning, and shared components
+
+If you need to clarify requirements or discuss options, and you are working in an interactive agent chat system, do so interactively with the user. If running non-interactively, make reasonable assumptions based on the repository context.
 
 ## Step 3: Review Changes
 
