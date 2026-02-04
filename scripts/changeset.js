@@ -436,7 +436,7 @@ async function runRelease(versionTag, skipConfirmation = false) {
   } catch (error) {
     // Pull failed due to an error (e.g., network issues, authentication, conflicts, or no remote configured)
     // Log the error details but continue (working tree check already passed, so local state is clean)
-    const errorDetails = error.stderr || error.message;
+    const errorDetails = error.stderr || error.message || "Unknown error";
     console.log(formatInfoMessage(`Pull from remote failed: ${errorDetails}`));
     console.log(formatInfoMessage("Continuing with local state (working tree is clean)"));
   }
