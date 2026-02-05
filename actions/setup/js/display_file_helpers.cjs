@@ -116,7 +116,30 @@ function displayDirectories(directories, maxBytes = 64 * 1024) {
   core.startGroup("=== Listing All Gateway-Related Files ===");
 
   for (const dir of directories) {
-    displayDirectory(dir, maxBytes);
+    // Display directory header without creating a nested group
+    core.info(`📁 Directory: ${dir}`);
+
+    try {
+      if (!fs.existsSync(dir)) {
+        core.notice(`  Directory does not exist: ${dir}`);
+        continue;
+      }
+
+      const files = fs.readdirSync(dir);
+      if (files.length === 0) {
+        core.info("  (empty directory)");
+        continue;
+      }
+
+      // Display each file
+      for (const file of files) {
+        const filePath = `${dir}/${file}`;
+        displayFileContent(filePath, file, maxBytes);
+      }
+    } catch (/** @type {unknown} */ error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      core.error(`  Error reading directory ${dir}: ${errorMessage}`);
+    }
   }
 
   core.endGroup();

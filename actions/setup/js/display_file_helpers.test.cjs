@@ -439,10 +439,10 @@ describe("display_file_helpers", () => {
         // Check outer group was started
         expect(mockCore.startGroup).toHaveBeenCalledWith("=== Listing All Gateway-Related Files ===");
 
-        // Check both directories were displayed
-        const startGroupCalls = mockCore.startGroup.mock.calls.map(call => call[0]);
-        expect(startGroupCalls.some(call => call.includes(tmpDir1))).toBe(true);
-        expect(startGroupCalls.some(call => call.includes(tmpDir2))).toBe(true);
+        // Check both directories were displayed in info messages (not as separate groups)
+        const infoMessages = mockCore.info.mock.calls.map(call => call[0]).join("\n");
+        expect(infoMessages).toContain(`📁 Directory: ${tmpDir1}`);
+        expect(infoMessages).toContain(`📁 Directory: ${tmpDir2}`);
       } finally {
         delete global.core;
         fs.rmSync(tmpDir1, { recursive: true, force: true });

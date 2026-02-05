@@ -387,8 +387,8 @@ Some content here.`;
         // Check header group was started
         expect(allGroups).toContain("=== Listing All Gateway-Related Files ===");
 
-        // Check directories are listed
-        expect(allGroups).toContain("/tmp/gh-aw/mcp-logs");
+        // Check directories are listed in info messages (not as separate groups)
+        expect(allOutput).toContain("📁 Directory: /tmp/gh-aw/mcp-logs");
 
         // Check files are listed
         expect(allOutput).toContain("gateway.log");
