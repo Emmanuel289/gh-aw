@@ -155,9 +155,10 @@ Uses imported serena tool.
 		t.Error("Expected compiled workflow to contain serena tool")
 	}
 
-	// Verify serena container (now using Docker instead of uvx)
-	if !strings.Contains(workflowData, "ghcr.io/github/serena-mcp-server:latest") {
-		t.Error("Expected compiled workflow to contain serena Docker container")
+	// Verify serena container (should use Oraios for Go support)
+	if !strings.Contains(workflowData, "ghcr.io/oraios/serena:latest") &&
+		!strings.Contains(workflowData, "ghcr.io/github/serena-mcp-server:latest") {
+		t.Error("Expected compiled workflow to contain serena Docker container (Oraios or GitHub)")
 	}
 
 	// Verify that language service setup steps are NOT present
@@ -321,8 +322,9 @@ Uses all imported tools.
 	if !strings.Contains(workflowData, "mcr.microsoft.com/playwright/mcp") {
 		t.Error("Expected compiled workflow to contain playwright Docker image")
 	}
-	if !strings.Contains(workflowData, "ghcr.io/github/serena-mcp-server:latest") {
-		t.Error("Expected compiled workflow to contain serena Docker container")
+	if !strings.Contains(workflowData, "ghcr.io/oraios/serena:latest") &&
+		!strings.Contains(workflowData, "ghcr.io/github/serena-mcp-server:latest") {
+		t.Error("Expected compiled workflow to contain serena Docker container (Oraios or GitHub)")
 	}
 	if !strings.Contains(workflowData, "example.com") {
 		t.Error("Expected compiled workflow to contain example.com domain for playwright")
@@ -404,9 +406,10 @@ Uses imported serena with language config.
 		t.Error("Did not expect Node.js setup step (Serena runs in container)")
 	}
 
-	// Verify serena container is present
-	if !strings.Contains(workflowData, "ghcr.io/github/serena-mcp-server") {
-		t.Error("Expected serena to use Docker container")
+	// Verify serena container is present (should use Oraios for Go)
+	if !strings.Contains(workflowData, "ghcr.io/oraios/serena") &&
+		!strings.Contains(workflowData, "ghcr.io/github/serena-mcp-server") {
+		t.Error("Expected serena to use Docker container (Oraios or GitHub)")
 	}
 }
 

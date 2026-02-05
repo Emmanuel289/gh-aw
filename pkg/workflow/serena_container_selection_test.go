@@ -22,14 +22,38 @@ func TestSelectSerenaContainer(t *testing.T) {
 			expectedContainer: constants.DefaultSerenaMCPServerContainer,
 		},
 		{
-			name: "supported languages - uses default",
+			name: "go language - falls back to Oraios",
+			serenaTool: map[string]any{
+				"langs": []any{"go"},
+			},
+			expectedContainer: constants.OraiosSerenaContainer,
+		},
+		{
+			name: "go with typescript - falls back to Oraios",
 			serenaTool: map[string]any{
 				"langs": []any{"go", "typescript"},
+			},
+			expectedContainer: constants.OraiosSerenaContainer,
+		},
+		{
+			name: "supported languages without go - uses default",
+			serenaTool: map[string]any{
+				"langs": []any{"typescript", "python"},
 			},
 			expectedContainer: constants.DefaultSerenaMCPServerContainer,
 		},
 		{
-			name: "all supported languages - uses default",
+			name: "all default supported languages - uses default",
+			serenaTool: map[string]any{
+				"languages": map[string]any{
+					"typescript": map[string]any{},
+					"python":     map[string]any{},
+				},
+			},
+			expectedContainer: constants.DefaultSerenaMCPServerContainer,
+		},
+		{
+			name: "go with detailed config - falls back to Oraios",
 			serenaTool: map[string]any{
 				"languages": map[string]any{
 					"go":         map[string]any{},
@@ -37,7 +61,7 @@ func TestSelectSerenaContainer(t *testing.T) {
 					"python":     map[string]any{},
 				},
 			},
-			expectedContainer: constants.DefaultSerenaMCPServerContainer,
+			expectedContainer: constants.OraiosSerenaContainer,
 		},
 		{
 			name: "unsupported language - still uses default",
@@ -47,14 +71,21 @@ func TestSelectSerenaContainer(t *testing.T) {
 			expectedContainer: constants.DefaultSerenaMCPServerContainer,
 		},
 		{
-			name: "SerenaToolConfig with short syntax",
+			name: "SerenaToolConfig with go in short syntax - falls back to Oraios",
 			serenaTool: &SerenaToolConfig{
 				ShortSyntax: []string{"go", "rust"},
+			},
+			expectedContainer: constants.OraiosSerenaContainer,
+		},
+		{
+			name: "SerenaToolConfig without go - uses default",
+			serenaTool: &SerenaToolConfig{
+				ShortSyntax: []string{"rust", "python"},
 			},
 			expectedContainer: constants.DefaultSerenaMCPServerContainer,
 		},
 		{
-			name: "SerenaToolConfig with detailed languages",
+			name: "SerenaToolConfig with detailed languages without go - uses default",
 			serenaTool: &SerenaToolConfig{
 				Languages: map[string]*SerenaLangConfig{
 					"python": {},
@@ -62,6 +93,16 @@ func TestSelectSerenaContainer(t *testing.T) {
 				},
 			},
 			expectedContainer: constants.DefaultSerenaMCPServerContainer,
+		},
+		{
+			name:              "array format with go - falls back to Oraios",
+			serenaTool:        []any{"go"},
+			expectedContainer: constants.OraiosSerenaContainer,
+		},
+		{
+			name:              "string array format with go - falls back to Oraios",
+			serenaTool:        []string{"go"},
+			expectedContainer: constants.OraiosSerenaContainer,
 		},
 	}
 
@@ -94,7 +135,8 @@ func TestSerenaLanguageSupport(t *testing.T) {
 	}
 
 	// Verify some expected languages are present in default container
-	expectedLangs := []string{"go", "typescript", "python", "java", "rust"}
+	// Note: "go" is NOT in the default container as it lacks Go runtime
+	expectedLangs := []string{"typescript", "python", "java", "rust"}
 	for _, lang := range expectedLangs {
 		found := false
 		for _, supportedLang := range defaultLangs {
@@ -106,5 +148,17 @@ func TestSerenaLanguageSupport(t *testing.T) {
 		if !found {
 			t.Errorf("Expected language '%s' not found in default container support list", lang)
 		}
+	}
+
+	// Verify Go is in Oraios container
+	goFound := false
+	for _, lang := range oraiosLangs {
+		if lang == "go" {
+			goFound = true
+			break
+		}
+	}
+	if !goFound {
+		t.Error("Expected 'go' language in Oraios container support list")
 	}
 }

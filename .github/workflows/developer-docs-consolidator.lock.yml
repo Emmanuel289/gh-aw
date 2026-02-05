@@ -493,7 +493,7 @@ jobs:
                 }
               },
               "serena": {
-                "container": "ghcr.io/github/serena-mcp-server:latest",
+                "container": "ghcr.io/oraios/serena:latest",
                 "args": [
                   "--network",
                   "host"

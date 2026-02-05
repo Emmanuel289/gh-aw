@@ -1163,7 +1163,7 @@ func TestRenderSerenaMCPConfigLocalMode(t *testing.T) {
 			expectedContent: []string{
 				`"serena": {`,
 				`"type": "stdio"`,
-				`"container": "ghcr.io/github/serena-mcp-server:latest"`,
+				`"container": "ghcr.io/oraios/serena:latest"`, // Falls back to Oraios for Go
 			},
 			unexpectedContent: []string{
 				`"url"`,

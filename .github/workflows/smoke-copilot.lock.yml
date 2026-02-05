@@ -1159,7 +1159,7 @@ jobs:
               },
               "serena": {
                 "type": "stdio",
-                "container": "ghcr.io/github/serena-mcp-server:latest",
+                "container": "ghcr.io/oraios/serena:latest",
                 "args": ["--network", "host"],
                 "entrypoint": "serena",
                 "entrypointArgs": ["start-mcp-server", "--context", "codex", "--project", "${{ github.workspace }}"],
