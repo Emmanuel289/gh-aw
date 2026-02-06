@@ -29,7 +29,6 @@ safe-outputs:
 timeout-minutes: 30
 imports:
   - shared/reporting.md
-  - shared/orchestration.md
 ---
 
 {{#runtime-import? .github/shared-instructions.md}}
