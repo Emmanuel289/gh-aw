@@ -876,7 +876,7 @@ Returns formatted text output showing:
 		// Call the update function directly instead of spawning subprocess
 		// Use a bytes.Buffer to capture output for the MCP response
 		var outputBuf bytes.Buffer
-		
+
 		// Note: The update function requires full parameters, so we set defaults for unspecified ones:
 		// - verbose: false (MCP server doesn't need verbose output)
 		// - engineOverride: "" (no engine override)
@@ -890,16 +890,16 @@ Returns formatted text output showing:
 			ctx,
 			&outputBuf,
 			args.Workflows,
-			args.Major,    // allowMajor
-			args.Force,    // force
-			false,         // verbose
-			"",            // engineOverride
-			false,         // createPR
-			"",            // workflowsDir
-			false,         // noStopAfter
-			"",            // stopAfter
-			false,         // merge
-			false,         // noActions
+			args.Major, // allowMajor
+			args.Force, // force
+			false,      // verbose
+			"",         // engineOverride
+			false,      // createPR
+			"",         // workflowsDir
+			false,      // noStopAfter
+			"",         // stopAfter
+			false,      // merge
+			false,      // noActions
 		)
 
 		if err != nil {
