@@ -62,9 +62,7 @@ async function findCommentsWithTrackerId(github, owner, repo, issueNumber, workf
       page,
     });
 
-    if (data.length === 0) {
-      break;
-    }
+    if (data.length === 0) break;
 
     // Filter comments that contain the workflow-id and are NOT reaction comments
     const filteredComments = data
@@ -73,10 +71,7 @@ async function findCommentsWithTrackerId(github, owner, repo, issueNumber, workf
 
     comments.push(...filteredComments);
 
-    if (data.length < perPage) {
-      break;
-    }
-
+    if (data.length < perPage) break;
     page++;
   }
 
@@ -118,9 +113,7 @@ async function findDiscussionCommentsWithTrackerId(github, owner, repo, discussi
   while (true) {
     const result = await github.graphql(query, { owner, repo, num: discussionNumber, cursor });
 
-    if (!result.repository?.discussion?.comments?.nodes) {
-      break;
-    }
+    if (!result.repository?.discussion?.comments?.nodes) break;
 
     const filteredComments = result.repository.discussion.comments.nodes
       .filter(comment => comment.body?.includes(`<!-- gh-aw-workflow-id: ${workflowId} -->`) && !comment.body.includes(`<!-- gh-aw-comment-type: reaction -->`))
@@ -128,10 +121,7 @@ async function findDiscussionCommentsWithTrackerId(github, owner, repo, discussi
 
     comments.push(...filteredComments);
 
-    if (!result.repository.discussion.comments.pageInfo.hasNextPage) {
-      break;
-    }
-
+    if (!result.repository.discussion.comments.pageInfo.hasNextPage) break;
     cursor = result.repository.discussion.comments.pageInfo.endCursor;
   }
 
@@ -186,12 +176,11 @@ async function hideOlderComments(github, owner, repo, itemNumber, workflowId, is
 
   let hiddenCount = 0;
   for (const comment of comments) {
-    // TypeScript can't narrow the union type here, but we know it's safe due to isDiscussion check
-    // @ts-expect-error - comment has node_id when not a discussion
-    const nodeId = isDiscussion ? String(comment.id) : comment.node_id;
+    // Get node ID based on comment type (discussion vs issue/PR)
+    const nodeId = isDiscussion ? String(comment.id) : /** @type {{ node_id: string }} */ (comment).node_id;
     core.info(`Hiding comment: ${nodeId}`);
 
-    const result = await minimizeComment(github, nodeId, normalizedReason);
+    await minimizeComment(github, nodeId, normalizedReason);
     hiddenCount++;
     core.info(`✓ Hidden comment: ${nodeId}`);
   }
@@ -225,45 +214,32 @@ async function commentOnDiscussion(github, owner, repo, discussionNumber, messag
     { owner, repo, num: discussionNumber }
   );
 
-  if (!repository || !repository.discussion) {
+  if (!repository?.discussion) {
     throw new Error(`Discussion #${discussionNumber} not found in ${owner}/${repo}`);
   }
 
-  const discussionId = repository.discussion.id;
-  const discussionUrl = repository.discussion.url;
+  const { id: discussionId, url: discussionUrl } = repository.discussion;
 
   // 2. Add comment (with optional replyToId for threading)
   const mutation = replyToId
     ? `mutation($dId: ID!, $body: String!, $replyToId: ID!) {
         addDiscussionComment(input: { discussionId: $dId, body: $body, replyToId: $replyToId }) {
-          comment { 
-            id 
-            body 
-            createdAt 
-            url
-          }
+          comment { id, body, createdAt, url }
         }
       }`
     : `mutation($dId: ID!, $body: String!) {
         addDiscussionComment(input: { discussionId: $dId, body: $body }) {
-          comment { 
-            id 
-            body 
-            createdAt 
-            url
-          }
+          comment { id, body, createdAt, url }
         }
       }`;
 
-  const variables = replyToId ? { dId: discussionId, body: message, replyToId } : { dId: discussionId, body: message };
+  const variables = { dId: discussionId, body: message, ...(replyToId && { replyToId }) };
 
-  const result = await github.graphql(mutation, variables);
-
-  const comment = result.addDiscussionComment.comment;
+  const { addDiscussionComment } = await github.graphql(mutation, variables);
 
   return {
-    id: comment.id,
-    html_url: comment.url,
+    id: addDiscussionComment.comment.id,
+    html_url: addDiscussionComment.comment.url,
     discussion_url: discussionUrl,
   };
 }
@@ -405,25 +381,27 @@ async function main(config = {}) {
       }
     }
 
-    // Replace temporary ID references in body
-    let processedBody = replaceTemporaryIdReferences(item.body || "", temporaryIdMap, itemRepo);
+    // Build comment body
+    const bodyParts = [replaceTemporaryIdReferences(item.body || "", temporaryIdMap, itemRepo)];
 
-    // Add tracker ID and footer
+    // Add tracker ID
     const trackerIDComment = getTrackerID("markdown");
     if (trackerIDComment) {
-      processedBody += "\n\n" + trackerIDComment;
+      bodyParts.push(trackerIDComment);
     }
 
+    // Add workflow footer
     const workflowName = process.env.GH_AW_WORKFLOW_NAME || "Workflow";
-    const runId = context.runId;
-    const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${runId}`;
-    processedBody += `\n\n> AI generated by [${workflowName}](${runUrl})`;
+    const runUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+    bodyParts.push(`> AI generated by [${workflowName}](${runUrl})`);
 
-    // Add missing tools and data sections if available
+    // Add missing info sections
     const missingInfoSections = getMissingInfoSections();
     if (missingInfoSections) {
-      processedBody += missingInfoSections;
+      bodyParts.push(missingInfoSections);
     }
+
+    const processedBody = bodyParts.join("\n\n");
 
     core.info(`Adding comment to ${isDiscussion ? "discussion" : "issue/PR"} #${itemNumber} in ${itemRepo}`);
 
@@ -437,40 +415,16 @@ async function main(config = {}) {
       }
 
       /** @type {{ id: string | number, html_url: string }} */
-      let comment;
-      if (isDiscussion) {
-        // Use GraphQL for discussions
-        const discussionQuery = `
-          query($owner: String!, $repo: String!, $number: Int!) {
-            repository(owner: $owner, name: $repo) {
-              discussion(number: $number) {
-                id
-              }
-            }
-          }
-        `;
-        const queryResult = await github.graphql(discussionQuery, {
-          owner: repoParts.owner,
-          repo: repoParts.repo,
-          number: itemNumber,
-        });
-
-        const discussionId = queryResult?.repository?.discussion?.id;
-        if (!discussionId) {
-          throw new Error(`Discussion #${itemNumber} not found in ${itemRepo}`);
-        }
-
-        comment = await commentOnDiscussion(github, repoParts.owner, repoParts.repo, itemNumber, processedBody, null);
-      } else {
-        // Use REST API for issues/PRs
-        const { data } = await github.rest.issues.createComment({
-          owner: repoParts.owner,
-          repo: repoParts.repo,
-          issue_number: itemNumber,
-          body: processedBody,
-        });
-        comment = data;
-      }
+      const comment = isDiscussion
+        ? await commentOnDiscussion(github, repoParts.owner, repoParts.repo, itemNumber, processedBody, null)
+        : (
+            await github.rest.issues.createComment({
+              owner: repoParts.owner,
+              repo: repoParts.repo,
+              issue_number: itemNumber,
+              body: processedBody,
+            })
+          ).data;
 
       core.info(`Created comment: ${comment.html_url}`);
 
@@ -500,8 +454,7 @@ async function main(config = {}) {
       const errorMessage = getErrorMessage(error);
 
       // Check if this is a 404 error (discussion/issue was deleted)
-      // @ts-expect-error - Error handling with optional chaining
-      const is404 = error?.status === 404 || errorMessage.includes("404") || errorMessage.toLowerCase().includes("not found");
+      const is404 = /** @type {{ status?: number }} */ (error)?.status === 404 || errorMessage.includes("404") || errorMessage.toLowerCase().includes("not found");
 
       if (is404) {
         // Treat 404s as warnings - the target was deleted between execution and safe output processing
