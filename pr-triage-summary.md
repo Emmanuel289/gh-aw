@@ -1,25 +1,33 @@
-# PR Triage Summary - February 5, 2026
+# PR Triage Summary - 2026-02-06
 
-**Run:** 21723414047  
-**Date:** 2026-02-05T18:24:58Z
+**Run ID:** 21734096398  
+**Total PRs Triaged:** 2  
+**Status:** ✅ Complete
 
 ## Quick Stats
-- **Total PRs:** 3
-- **Average Priority:** 66/100
-- **All Fast-track:** 3 PRs need urgent review
-- **All Bug Fixes:** 100% bug category
 
-## Top Priority
-1. #13920 (73) - Firewall SSL-bump extraction [READY FOR REVIEW]
-2. #13859 (67) - Serena container selection [DRAFT]
-3. #13969 (58) - MCP parameter rendering [DRAFT]
+- **Fast-track:** 1 PR (#13920)
+- **Defer:** 1 PR (#14007)
+- **Auto-merge:** 0 PRs
+- **Batch Review:** 0 PRs
+- **Close:** 0 PRs
 
-## Trend: Backlog Reduction
-- Previous run: 6 PRs
-- Current run: 3 PRs
-- **50% reduction in < 6 hours** ✅
+## Priority Distribution
+
+- High (70-100): 1 PR
+- Medium (40-69): 1 PR
+- Low (0-39): 0 PRs
+
+## Recent Trends
+
+Compared to previous run (21723414047):
+- Total PRs decreased: 3 → 2
+- PR #13969 (draft, fast-track) - closed or merged
+- PR #13859 (draft, fast-track) - closed or merged
+- Both remaining PRs are from Copilot Agent workflow
 
 ## Next Actions
-1. Review #13920 first (not draft, highest priority)
-2. Wait for CI on all PRs
-3. Re-triage in 6 hours
+
+1. **Fast-track #13920** once CI passes - critical bug fix
+2. **Monitor #14007** - wait for draft to be marked ready
+3. Next triage run recommended in 6 hours
