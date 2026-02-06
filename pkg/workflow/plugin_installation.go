@@ -66,10 +66,14 @@ func generatePluginInstallStep(plugin, engineID, githubToken string) GitHubActio
 	case "copilot":
 		command = fmt.Sprintf("copilot plugin install %s", plugin)
 	case "claude":
-		// TODO: validate the correct claude CLI plugin install command syntax
+		// TODO: Claude CLI uses `/plugin install <name>@<marketplace>` format, not `claude plugin install`.
+		// This is a placeholder until Claude CLI supports GitHub repo-based plugin installation.
+		// Reference: https://code.claude.com/docs/en/discover-plugins
 		command = fmt.Sprintf("claude plugin install %s", plugin)
 	case "codex":
-		// TODO: validate the correct codex CLI plugin install command syntax
+		// TODO: Codex CLI uses MCP (Model Context Protocol) with `codex mcp add` command, not plugin install.
+		// This is a placeholder until Codex CLI supports GitHub repo-based plugin installation.
+		// Reference: https://platform.uno/docs/articles/get-started-ai-codex.html
 		command = fmt.Sprintf("codex plugin install %s", plugin)
 	default:
 		// For unknown engines, use a generic format
