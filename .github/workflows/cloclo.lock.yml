@@ -585,7 +585,6 @@ jobs:
                 "mounts": ["${{ github.workspace }}:${{ github.workspace }}:rw", "/tmp/gh-aw:/tmp/gh-aw:rw"],
                 "env": {
                   "DEBUG": "*",
-                  "GH_TOKEN": "$GH_TOKEN",
                   "GITHUB_TOKEN": "$GITHUB_TOKEN"
                 }
               },
