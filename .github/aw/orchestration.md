@@ -119,12 +119,57 @@ Alternative: Equivalent JSON format for agent output:
 }
 ```
 
+## Custom Job Dependencies
+
+For workflows with multiple custom jobs, use GitHub Actions `needs` syntax to define dependency chains:
+
+```yaml wrap
+jobs:
+  # Pre-processing job that fetches data
+  fetch_data:
+    needs: activation
+    runs-on: ubuntu-latest
+    outputs:
+      api_url: ${{ steps.fetch.outputs.url }}
+    steps:
+      - name: Fetch configuration
+        id: fetch
+        run: |
+          echo "url=https://api.example.com/data" >> $GITHUB_OUTPUT
+  
+  # Validation job depends on data fetch
+  validate_data:
+    needs: fetch_data
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate URL
+        run: echo "Validating ${{ needs.fetch_data.outputs.api_url }}"
+  
+  # Report job runs after agent completes
+  report:
+    needs: [agent, fetch_data]  # Multiple dependencies
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate report
+        run: echo "Report using ${{ needs.fetch_data.outputs.api_url }}"
+```
+
+**Key capabilities:**
+- Jobs without explicit `needs` automatically depend on `activation`
+- Use array syntax for multiple dependencies: `needs: [job1, job2]`
+- Reference job outputs via `${{ needs.job_name.outputs.output_name }}`
+- Use `if: always()` to run cleanup/report jobs regardless of previous job status
+- Compiler validates dependencies and detects circular references
+
+See [frontmatter documentation](/gh-aw/reference/frontmatter/#job-dependencies-needs) for more examples.
+
 ## Design Guidelines for Orchestrator Workflows
 
 When creating orchestrator workflows, follow these best practices:
 
 1. **Clear Separation of Concerns**: Orchestrators should coordinate, not do heavy processing themselves
-2. **Explicit Dependencies**: Document which workers/agents are expected to be available
+2. **Explicit Dependencies**: Document which workers/agents are expected to be available (use `needs` for custom job dependencies)
 3. **Error Handling**: Plan for worker failures and implement retry or fallback strategies
 4. **Progress Tracking**: Use correlation IDs and status updates to track orchestration progress
 5. **Idempotency**: Design workflows to be safely re-runnable without causing duplicate work
