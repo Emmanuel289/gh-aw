@@ -703,6 +703,15 @@ async function updateProject(output, temporaryIdMap = new Map(), githubClient = 
 
       // If no itemId found yet, create a new draft issue
       if (!itemId) {
+        // Require temporary_id for new draft creation (similar to content_number for issues/PRs)
+        if (!output.temporary_id || !isTemporaryId(String(output.temporary_id))) {
+          throw new Error(
+            'When content_type is "draft_issue" and creating a new draft, temporary_id is required. ' +
+              'Provide a valid temporary ID (format: aw_XXXXXXXXXXXX, e.g., "aw_abc123def456"). ' +
+              "To update an existing draft, use draft_issue_id instead."
+          );
+        }
+
         const draftTitle = typeof output.draft_title === "string" ? output.draft_title.trim() : "";
         if (!draftTitle) {
           throw new Error('Invalid draft_title. When content_type is "draft_issue", draft_title is required and must be a non-empty string.');
@@ -726,13 +735,11 @@ async function updateProject(output, temporaryIdMap = new Map(), githubClient = 
         itemId = result.addProjectV2DraftIssue.projectItem.id;
         core.info(`✓ Created new draft issue: "${draftTitle}"`);
 
-        // If temporary_id was provided, store the mapping
-        if (output.temporary_id && isTemporaryId(String(output.temporary_id))) {
-          const normalizedTempId = normalizeTemporaryId(String(output.temporary_id));
-          temporaryIdMap.set(normalizedTempId, itemId);
-          core.setOutput("temporary-id", normalizedTempId);
-          core.info(`✓ Stored temporary ID mapping: ${normalizedTempId} -> ${itemId}`);
-        }
+        // Store the temporary_id mapping
+        const normalizedTempId = normalizeTemporaryId(String(output.temporary_id));
+        temporaryIdMap.set(normalizedTempId, itemId);
+        core.setOutput("temporary-id", normalizedTempId);
+        core.info(`✓ Stored temporary ID mapping: ${normalizedTempId} -> ${itemId}`);
       }
 
       const fieldsToUpdate = output.fields ? { ...output.fields } : {};
@@ -1144,13 +1151,18 @@ async function main(config = {}, githubClient = null) {
 
         // Provide helpful context based on content_type
         if (message.content_type === "draft_issue") {
-          core.error('For draft_issue content_type, you must include: {"type": "update_project", "project": "https://github.com/orgs/myorg/projects/42", "content_type": "draft_issue", "draft_title": "...", "fields": {...}}');
+          core.error(
+            'For draft_issue content_type, you must include: {"type": "update_project", "project": "https://github.com/orgs/myorg/projects/42", "content_type": "draft_issue", "draft_title": "...", "temporary_id": "aw_abc123def456", "fields": {...}}'
+          );
+          core.error('Or to update an existing draft: {"type": "update_project", "project": "https://github.com/orgs/myorg/projects/42", "content_type": "draft_issue", "draft_issue_id": "aw_abc123def456", "fields": {...}}');
         } else if (message.content_type === "issue" || message.content_type === "pull_request") {
           core.error(
             `For ${message.content_type} content_type, you must include: {"type": "update_project", "project": "https://github.com/orgs/myorg/projects/42", "content_type": "${message.content_type}", "content_number": 123, "fields": {...}}`
           );
         } else {
-          core.error('Example: {"type": "update_project", "project": "https://github.com/orgs/myorg/projects/42", "content_type": "draft_issue", "draft_title": "Task Title", "fields": {"Status": "Todo"}}');
+          core.error(
+            'Example: {"type": "update_project", "project": "https://github.com/orgs/myorg/projects/42", "content_type": "draft_issue", "draft_title": "Task Title", "temporary_id": "aw_abc123def456", "fields": {"Status": "Todo"}}'
+          );
         }
 
         return {

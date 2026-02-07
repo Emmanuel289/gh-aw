@@ -600,7 +600,7 @@
   },
   {
     "name": "update_project",
-    "description": "Add or update items in GitHub Projects v2 boards. Can add issues/PRs to a project and update custom field values. Requires the project URL, content type (issue or pull_request), and content number.\n\nThree usage modes:\n1. Add/update project item: Requires project + content_type. For 'issue' or 'pull_request', also requires content_number. For 'draft_issue', requires draft_title (to create) or draft_issue_id (to update existing).\n2. Create project fields: Requires project + operation='create_fields' + field_definitions.\n3. Create project view: Requires project + operation='create_view' + view.",
+    "description": "Add or update items in GitHub Projects v2 boards. Can add issues/PRs to a project and update custom field values. Requires the project URL, content type (issue or pull_request), and content number.\n\nThree usage modes:\n1. Add/update project item: Requires project + content_type. For 'issue' or 'pull_request', also requires content_number. For 'draft_issue', requires draft_title + temporary_id (to create) or draft_issue_id (to update existing).\n2. Create project fields: Requires project + operation='create_fields' + field_definitions.\n3. Create project view: Requires project + operation='create_view' + view.",
     "inputSchema": {
       "type": "object",
       "required": ["project"],
@@ -626,7 +626,7 @@
         },
         "draft_title": {
           "type": "string",
-          "description": "Title for a Projects v2 draft issue. Required when content_type is 'draft_issue' and draft_issue_id is not provided."
+          "description": "Title for a Projects v2 draft issue. Required when content_type is 'draft_issue' and creating a new draft (along with temporary_id). Not required when updating via draft_issue_id."
         },
         "draft_body": {
           "type": "string",
@@ -639,7 +639,7 @@
         "temporary_id": {
           "type": "string",
           "pattern": "^aw_[0-9a-f]{12}$",
-          "description": "Optional temporary identifier for a draft issue being created. Format: 'aw_' followed by 12 hex characters (e.g., 'aw_abc123def456'). Use this to reference the draft issue in subsequent update_project calls via draft_issue_id before it's converted to a real issue."
+          "description": "Temporary identifier for a draft issue being created. Format: 'aw_' followed by 12 hex characters (e.g., 'aw_abc123def456'). REQUIRED when creating a new draft issue (content_type='draft_issue' without draft_issue_id). Use this to reference the draft issue in subsequent update_project calls via draft_issue_id."
         },
         "fields": {
           "type": "object",

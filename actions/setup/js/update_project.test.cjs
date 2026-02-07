@@ -417,7 +417,7 @@ describe("updateProject", () => {
     expect(getOutput("item-id")).toBe("item123");
   });
 
-  it("adds a draft issue to a project board", async () => {
+  it("adds a draft issue to a project board with temporary_id", async () => {
     const projectUrl = "https://github.com/orgs/testowner/projects/60";
     const output = {
       type: "update_project",
@@ -425,6 +425,7 @@ describe("updateProject", () => {
       content_type: "draft_issue",
       draft_title: "Draft title",
       draft_body: "Draft body",
+      temporary_id: "aw_abc123def456",
     };
 
     queueResponses([repoResponse(), viewerResponse(), orgProjectV2Response(projectUrl, 60, "project-draft"), addDraftIssueResponse("draft-item-1")]);
@@ -434,6 +435,22 @@ describe("updateProject", () => {
     expect(mockGithub.graphql.mock.calls.some(([query]) => query.includes("addProjectV2DraftIssue"))).toBe(true);
     expect(mockGithub.rest.issues.addLabels).not.toHaveBeenCalled();
     expect(getOutput("item-id")).toBe("draft-item-1");
+    expect(getOutput("temporary-id")).toBe("aw_abc123def456");
+  });
+
+  it("rejects draft issues without temporary_id", async () => {
+    const projectUrl = "https://github.com/orgs/testowner/projects/60";
+    const output = {
+      type: "update_project",
+      project: projectUrl,
+      content_type: "draft_issue",
+      draft_title: "Draft title",
+      draft_body: "Draft body",
+    };
+
+    queueResponses([repoResponse(), viewerResponse(), orgProjectV2Response(projectUrl, 60, "project-draft")]);
+
+    await expect(updateProject(output)).rejects.toThrow(/temporary_id is required/);
   });
 
   it("rejects draft issues without a title", async () => {
@@ -443,6 +460,7 @@ describe("updateProject", () => {
       project: projectUrl,
       content_type: "draft_issue",
       draft_title: "   ",
+      temporary_id: "aw_abc123def456",
     };
 
     queueResponses([repoResponse(), viewerResponse(), orgProjectV2Response(projectUrl, 60, "project-draft")]);
@@ -569,13 +587,14 @@ describe("updateProject", () => {
     expect(mockGithub.rest.issues.addLabels).not.toHaveBeenCalled();
   });
 
-  it("updates fields on a draft issue item", async () => {
+  it("updates fields on a draft issue item with temporary_id", async () => {
     const projectUrl = "https://github.com/orgs/testowner/projects/60";
     const output = {
       type: "update_project",
       project: projectUrl,
       content_type: "draft_issue",
       draft_title: "Draft title",
+      temporary_id: "aw_def456abc123",
       fields: { Status: "In Progress" },
     };
 
@@ -594,6 +613,7 @@ describe("updateProject", () => {
     expect(updateCall).toBeDefined();
     expect(mockGithub.rest.issues.addLabels).not.toHaveBeenCalled();
     expect(getOutput("item-id")).toBe("draft-item-fields");
+    expect(getOutput("temporary-id")).toBe("aw_def456abc123");
   });
 
   it("creates a draft issue with temporary_id and outputs the mapping", async () => {
@@ -1406,6 +1426,7 @@ describe("updateProject", () => {
       content_type: "draft_issue",
       draft_title: "Test Draft Issue",
       draft_body: "This is a test",
+      temporary_id: "aw_fedcba987654",
     };
 
     queueResponses([repoResponse(), viewerResponse(), orgProjectV2Response(messageProjectUrl, 60, "project-message"), addDraftIssueResponse("draft-item-message")]);
