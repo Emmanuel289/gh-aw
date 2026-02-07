@@ -6,6 +6,7 @@ on:
 engine:
   id: copilot
   model: gpt-5.1-codex-mini
+timeout-minutes: 30
 imports:
   - shared/mood.md
   - shared/mcp/chroma.md
