@@ -3,6 +3,7 @@
 package workflow
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,13 +17,15 @@ func TestFormatCompilerError(t *testing.T) {
 		filePath    string
 		errType     string
 		message     string
+		cause       error
 		wantContain []string
 	}{
 		{
-			name:     "error type with simple message",
+			name:     "error type with simple message and no cause",
 			filePath: "/path/to/workflow.md",
 			errType:  "error",
 			message:  "validation failed",
+			cause:    nil,
 			wantContain: []string{
 				"/path/to/workflow.md",
 				"1:1",
@@ -31,10 +34,25 @@ func TestFormatCompilerError(t *testing.T) {
 			},
 		},
 		{
+			name:     "error type with cause wrapping",
+			filePath: "/path/to/workflow.md",
+			errType:  "error",
+			message:  "validation failed",
+			cause:    errors.New("underlying error"),
+			wantContain: []string{
+				"/path/to/workflow.md",
+				"1:1",
+				"error",
+				"validation failed",
+				"underlying error",
+			},
+		},
+		{
 			name:     "warning type with detailed message",
 			filePath: "/path/to/workflow.md",
 			errType:  "warning",
 			message:  "missing required permission",
+			cause:    nil,
 			wantContain: []string{
 				"/path/to/workflow.md",
 				"1:1",
@@ -47,6 +65,7 @@ func TestFormatCompilerError(t *testing.T) {
 			filePath: "/path/to/workflow.lock.yml",
 			errType:  "error",
 			message:  "failed to write lock file",
+			cause:    nil,
 			wantContain: []string{
 				"/path/to/workflow.lock.yml",
 				"1:1",
@@ -58,19 +77,21 @@ func TestFormatCompilerError(t *testing.T) {
 			name:     "formatted message with error details",
 			filePath: "test.md",
 			errType:  "error",
-			message:  "failed to generate YAML: syntax error",
+			message:  "failed to generate YAML",
+			cause:    errors.New("syntax error"),
 			wantContain: []string{
 				"test.md",
 				"1:1",
 				"error",
-				"failed to generate YAML: syntax error",
+				"failed to generate YAML",
+				"syntax error",
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := formatCompilerError(tt.filePath, tt.errType, tt.message)
+			err := formatCompilerError(tt.filePath, tt.errType, tt.message, tt.cause)
 			require.Error(t, err, "formatCompilerError should return an error")
 
 			errStr := err.Error()
@@ -83,7 +104,7 @@ func TestFormatCompilerError(t *testing.T) {
 
 // TestFormatCompilerError_OutputFormat verifies the output format remains consistent
 func TestFormatCompilerError_OutputFormat(t *testing.T) {
-	err := formatCompilerError("/test/workflow.md", "error", "test message")
+	err := formatCompilerError("/test/workflow.md", "error", "test message", nil)
 	require.Error(t, err)
 
 	errStr := err.Error()
@@ -97,8 +118,8 @@ func TestFormatCompilerError_OutputFormat(t *testing.T) {
 
 // TestFormatCompilerError_ErrorVsWarning tests differentiation between error and warning types
 func TestFormatCompilerError_ErrorVsWarning(t *testing.T) {
-	errorErr := formatCompilerError("test.md", "error", "error message")
-	warningErr := formatCompilerError("test.md", "warning", "warning message")
+	errorErr := formatCompilerError("test.md", "error", "error message", nil)
+	warningErr := formatCompilerError("test.md", "warning", "warning message", nil)
 
 	require.Error(t, errorErr)
 	require.Error(t, warningErr)
@@ -108,6 +129,25 @@ func TestFormatCompilerError_ErrorVsWarning(t *testing.T) {
 
 	// Ensure they produce different outputs
 	assert.NotEqual(t, errorErr.Error(), warningErr.Error(), "Error and warning should have different outputs")
+}
+
+// TestFormatCompilerError_ErrorChaining tests that error chains are preserved
+func TestFormatCompilerError_ErrorChaining(t *testing.T) {
+	originalErr := errors.New("original error")
+	wrappedErr := formatCompilerError("test.md", "error", "validation failed", originalErr)
+
+	require.Error(t, wrappedErr)
+
+	// Verify the error message contains both the formatted message and the original error
+	assert.Contains(t, wrappedErr.Error(), "validation failed", "Should contain formatted message")
+	assert.Contains(t, wrappedErr.Error(), "original error", "Should contain original error")
+
+	// Verify error chain is preserved using errors.Is
+	assert.True(t, errors.Is(wrappedErr, originalErr), "Should preserve error chain")
+
+	// Verify error chain can be unwrapped
+	unwrapped := errors.Unwrap(wrappedErr)
+	assert.Equal(t, originalErr, unwrapped, "Should unwrap to original error")
 }
 
 // TestFormatCompilerMessage tests the formatCompilerMessage helper function
