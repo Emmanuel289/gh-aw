@@ -143,7 +143,7 @@ func TestFormatCompilerError_ErrorChaining(t *testing.T) {
 	assert.Contains(t, wrappedErr.Error(), "original error", "Should contain original error")
 
 	// Verify error chain is preserved using errors.Is
-	assert.True(t, errors.Is(wrappedErr, originalErr), "Should preserve error chain")
+	require.ErrorIs(t, wrappedErr, originalErr, "Should preserve error chain")
 
 	// Verify error chain can be unwrapped
 	unwrapped := errors.Unwrap(wrappedErr)
