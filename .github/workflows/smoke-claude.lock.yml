@@ -32,11 +32,7 @@
 #     - shared/mood.md
 #     - shared/reporting.md
 #
-<<<<<<< HEAD
-# frontmatter-hash: 473fcdd15b69df94d597c84f0f8d300ff892519984a5837c676fd4a83144cfb5
-=======
-# frontmatter-hash: 0837bbb92b5a6973ee2770c91b853a91e6e5113d590fd52ff842d31d1a8bcfd5
->>>>>>> origin/main
+# frontmatter-hash: 814364c13cedc40d83bd313a6a4fb190c33e8b2361c298259e94560c394117ec
 
 name: "Smoke Claude"
 "on":

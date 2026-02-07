@@ -29,11 +29,7 @@
 #     - shared/mood.md
 #     - shared/reporting.md
 #
-<<<<<<< HEAD
-# frontmatter-hash: b0e6887807c131347cebc65a6fa996f0d5dd6a67a6cda403b6261452f665a197
-=======
-# frontmatter-hash: ac29812a15c891a9fb12b2d8e331ba0cbce798cc8d23e5e8b9718a6dfea56e8f
->>>>>>> origin/main
+# frontmatter-hash: bc47a357e02ab180565c78cec6eb95979502b40d34bf033eed4f1ca642fb1ce6
 
 name: "Smoke Codex"
 "on":

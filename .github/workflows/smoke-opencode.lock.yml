@@ -28,11 +28,7 @@
 #     - shared/mood.md
 #     - shared/opencode.md
 #
-<<<<<<< HEAD
-# frontmatter-hash: 49ec83ff9eaad09101bfa12d5bd71c985eaae32c6764a461ec9c7c79e9654cca
-=======
-# frontmatter-hash: 1378f6a6cfb514d196a1e4788301ea292d9944fa5fb9cd9b1750bdd2b19bc278
->>>>>>> origin/main
+# frontmatter-hash: 986e18029968db8cac31be00f1851ee7236b4be8b692ee5960c80b27e9fafc4c
 
 name: "Smoke OpenCode"
 "on":

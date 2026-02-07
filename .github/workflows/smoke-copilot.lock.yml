@@ -28,11 +28,7 @@
 #     - shared/mood.md
 #     - shared/reporting.md
 #
-<<<<<<< HEAD
-# frontmatter-hash: 8e255fd1a453e5db4695257f01d5368dc6d249ab22a41dc7fa885b7a9135e07f
-=======
-# frontmatter-hash: b81319e0683d2730b59ce3601546860e0914e8a155eb123d3c913de9f7737264
->>>>>>> origin/main
+# frontmatter-hash: 875717e5ae342cffe17b69a248ab1eacf41332cc6cb9e332995967f31013e6d8
 
 name: "Smoke Copilot"
 "on":
