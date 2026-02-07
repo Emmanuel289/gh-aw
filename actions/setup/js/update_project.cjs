@@ -838,6 +838,7 @@ async function updateProject(output, temporaryIdMap = new Map(), githubClient = 
       }
 
       core.setOutput("item-id", itemId);
+      core.setOutput("temporary-id", temporaryId);
       return;
     }
     let contentNumber = null;
