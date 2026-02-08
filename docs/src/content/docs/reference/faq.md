@@ -26,6 +26,16 @@ Agentic workflows use AI to interpret natural language instructions in markdown 
 
 While you could install and run a coding agent directly in a standard GitHub Actions workflow, agentic workflows provide a structured framework with simpler markdown format, built-in security controls, pre-defined tools for GitHub operations, and easy switching between AI engines.
 
+### I like deterministic CI/CD. Isn't this non-deterministic?
+
+We fully embrace the need for deterministic CI/CD, especially in build, release, and test pipelines. Agentic workflows are **100% additive** to your existing CI/CD - they don't replace or modify your deterministic pipelines.
+
+Think of it this way: your build, test, and release workflows should remain fully deterministic and reproducible. Agentic workflows complement these by handling tasks that are inherently non-deterministic anyway - like triaging issues, drafting documentation, researching dependencies, or proposing code improvements for human review.
+
+The key insight is that many valuable automation tasks don't require determinism. When an AI reviews an issue and suggests a label, or drafts release notes from commits, the exact wording doesn't need to be reproducible - it needs to be helpful. Agentic workflows excel at these judgment-based tasks while your critical CI/CD pipelines remain unchanged.
+
+Your first call should be reliable, deterministic CI/CD. If you use agentic workflows, you should use them for tasks that benefit from AI's flexibility and creativity, not for core build and release processes that require strict reproducibility.
+
 ### Can agentic workflows write code and create pull requests?
 
 Yes! Agentic workflows can create pull requests using the `create-pull-request` safe output. This allows the workflow to propose code changes, documentation updates, or other modifications as pull requests for human review and merging.
