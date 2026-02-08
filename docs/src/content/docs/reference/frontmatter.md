@@ -100,7 +100,7 @@ See [GitHub Tokens](/gh-aw/reference/tokens/) for complete documentation.
 
 ### Plugins (`plugins:`)
 
-Specifies plugins to install before workflow execution. Plugins are installed using engine-specific CLI commands (`copilot plugin install`, `claude plugin install`, `codex plugin install`).
+Specifies plugins to install before workflow execution. Plugins are installed using engine-specific mechanisms.
 
 **Array format** (simple):
 ```yaml wrap
@@ -123,7 +123,12 @@ plugins:
 - **GitHub repository**: `org/repo` (e.g., `github/test-plugin`)
 - **Sub-plugin path**: `org/repo/path/to/plugin` (e.g., `anthropics/claude-code/plugins/explanatory-output-style`)
 
-**Note**: The plugin format must be compatible with the engine's CLI `plugin install` command. Currently, GitHub repository paths (with optional sub-paths) are the standard format supported across engines.
+**Engine-specific installation:**
+- **Copilot**: Uses `copilot plugin install <plugin>` command
+- **Claude**: Bundled plugins from `anthropics/claude-code/plugins/` are enabled via `.claude/settings.json` configuration; external plugins use `claude plugin install <plugin>`
+- **Codex**: Uses `codex plugin install <plugin>` command
+
+**Note**: For Claude Code bundled plugins (e.g., `anthropics/claude-code/plugins/explanatory-output-style`), the plugin name is extracted and configured in `~/.claude/settings.json` rather than using a CLI install command, as these plugins are included with Claude Code.
 
 **Token precedence** for plugin installation (highest to lowest):
 1. Custom `plugins.github-token` from object format

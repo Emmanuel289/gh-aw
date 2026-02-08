@@ -2,6 +2,8 @@ package workflow
 
 import (
 	"fmt"
+	"path"
+	"strings"
 
 	"github.com/github/gh-aw/pkg/logger"
 )
@@ -57,8 +59,38 @@ func GeneratePluginInstallationSteps(plugins []string, engineID string, githubTo
 	return steps
 }
 
+// generateClaudePluginInstallCommand generates the appropriate installation command for a Claude Code plugin.
+// Claude Code has two types of plugins:
+// 1. Bundled plugins (from anthropics/claude-code/plugins/*) - enabled via .claude/settings.json
+// 2. External plugins (from other repos) - installed via marketplace (not yet fully supported)
+//
+// For bundled plugins, we create a .claude/settings.json file that enables the plugin.
+// This is the recommended approach for CI/CD environments.
+func generateClaudePluginInstallCommand(plugin string) string {
+	// Check if this is a bundled plugin from anthropics/claude-code/plugins/
+	if strings.HasPrefix(plugin, "anthropics/claude-code/plugins/") {
+		// Extract the plugin name (e.g., "explanatory-output-style" from "anthropics/claude-code/plugins/explanatory-output-style")
+		pluginName := path.Base(plugin)
+
+		pluginInstallLog.Printf("Detected bundled Claude Code plugin: %s (from %s)", pluginName, plugin)
+
+		// For bundled plugins, we need to enable them via .claude/settings.json
+		// The command creates the directory and settings file to enable the plugin
+		return fmt.Sprintf(`mkdir -p "$HOME/.claude" && echo '{"plugins":{"enabled":["%s"]}}' > "$HOME/.claude/settings.json"`, pluginName)
+	}
+
+	// For external plugins (not from anthropics/claude-code/plugins/), log a warning
+	// and use a placeholder command since the marketplace-based installation is not yet fully documented
+	pluginInstallLog.Printf("External Claude Code plugin detected: %s (marketplace installation may be needed)", plugin)
+	return fmt.Sprintf("claude plugin install %s", plugin)
+}
+
 // generatePluginInstallStep generates a single GitHub Actions step to install a plugin.
 // The step uses the engine-specific CLI command with proper authentication.
+//
+// For Claude Code plugins from anthropics/claude-code/plugins/, the plugin is enabled via
+// .claude/settings.json configuration rather than using a CLI install command, since these
+// plugins are bundled with Claude Code and just need to be enabled.
 func generatePluginInstallStep(plugin, engineID, githubToken string) GitHubActionStep {
 	// Determine the command based on the engine
 	var command string
@@ -66,8 +98,7 @@ func generatePluginInstallStep(plugin, engineID, githubToken string) GitHubActio
 	case "copilot":
 		command = fmt.Sprintf("copilot plugin install %s", plugin)
 	case "claude":
-		// TODO: validate the correct claude CLI plugin install command syntax
-		command = fmt.Sprintf("claude plugin install %s", plugin)
+		command = generateClaudePluginInstallCommand(plugin)
 	case "codex":
 		// TODO: validate the correct codex CLI plugin install command syntax
 		command = fmt.Sprintf("codex plugin install %s", plugin)

@@ -54,6 +54,19 @@ func TestGeneratePluginInstallationSteps(t *testing.T) {
 			},
 		},
 		{
+			name:        "Claude bundled plugin from anthropics/claude-code/plugins",
+			plugins:     []string{"anthropics/claude-code/plugins/explanatory-output-style"},
+			engineID:    "claude",
+			githubToken: "${{ secrets.CUSTOM_TOKEN }}",
+			expectSteps: 1,
+			expectCmds: []string{
+				`mkdir -p "$HOME/.claude" && echo '{"plugins":{"enabled":["explanatory-output-style"]}}' > "$HOME/.claude/settings.json"`,
+			},
+			expectTokens: []string{
+				"${{ secrets.CUSTOM_TOKEN }}",
+			},
+		},
+		{
 			name:         "Plugin for Codex with cascading token fallback",
 			plugins:      []string{"org/codex-plugin"},
 			engineID:     "codex",

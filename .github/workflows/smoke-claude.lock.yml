@@ -236,7 +236,7 @@ jobs:
       - name: 'Install plugin: anthropics/claude-code/plugins/explanatory-output-style'
         env:
           GITHUB_TOKEN: ${{ secrets.GH_AW_PLUGINS_TOKEN || secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
-        run: claude plugin install anthropics/claude-code/plugins/explanatory-output-style
+        run: mkdir -p "$HOME/.claude" && echo '{"plugins":{"enabled":["explanatory-output-style"]}}' > "$HOME/.claude/settings.json"
       - name: Determine automatic lockdown mode for GitHub MCP server
         id: determine-automatic-lockdown
         env:
