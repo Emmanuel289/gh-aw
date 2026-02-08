@@ -63,11 +63,11 @@ See [MultiRepoOps](/gh-aw/patterns/multirepoops/) for coordinating across reposi
 
 Yes, and in many cases we recommend it. Private repositories are ideal for proprietary code, creating a "sidecar" repository with limited access, testing workflows, and organization-internal automation. See [SideRepoOps](/gh-aw/patterns/siderepoops/) for patterns using private repositories.
 
-## Security & Privacy
+## Guardrails
 
 ### Agentic workflows run in GitHub Actions. Can they access my repository secrets?
 
-Repository secrets are not available to the agentic step by default. The AI agent runs with read-only permissions and cannot directly access your repository secrets unless explicitly configured. You should review workflows carefully, follow [GitHub Actions security guidelines](https://docs.github.com/en/actions/reference/security/secure-use), use least-privilege permissions, and inspect the compiled `.lock.yml` file. See the [Security Guide](/gh-aw/introduction/architecture/) for details.
+Repository secrets are not available to the agentic step by default. The AI agent runs with read-only permissions and cannot directly access your repository secrets unless explicitly configured. You should review workflows carefully, follow [GitHub Actions security guidelines](https://docs.github.com/en/actions/reference/security/secure-use), use least-privilege permissions, and inspect the compiled `.lock.yml` file. See the [Security Architectur](/gh-aw/introduction/architecture/) for details.
 
 Some MCP tools may be configured using secrets, but these are only accessible to the specific tool steps, not the AI agent itself. Minimize the use of tools equipped with highly privileged secrets.
 
@@ -83,20 +83,20 @@ All safe outputs from the AI agent are sanitized before being applied to your re
 
 Additionally, safe outputs enforce permission separation - write operations happen in separate jobs with scoped permissions, never in the agentic job itself.
 
-See [Safe Outputs - Security and Sanitization](/gh-aw/reference/safe-outputs/#security-and-sanitization) for configuration options.
+See [Safe Outputs - Sanitization](/gh-aw/reference/safe-outputs/#security-and-sanitization) for configuration options.
 
-### Tell me more about security
+### Tell me more about guardrails
 
-Security is foundational to the design. Agentic workflows implement defense-in-depth through compilation-time validation (schema checks, expression safety, action SHA pinning), runtime isolation (sandboxed containers with network controls), permission separation (read-only defaults with [safe outputs](/gh-aw/reference/safe-outputs/) for writes), tool allowlisting, and output sanitization. See the [Security Architecture](/gh-aw/introduction/architecture/).
+Guardrails is foundational to the design. Agentic workflows implement defense-in-depth through compilation-time validation (schema checks, expression safety, action SHA pinning), runtime isolation (sandboxed containers with network controls), permission separation (read-only defaults with [safe outputs](/gh-aw/reference/safe-outputs/) for writes), tool allowlisting, and output sanitization. See the [Security Architecture](/gh-aw/introduction/architecture/).
 
 ### How is my code and data processed?
 
-By default, your workflow is processed using your nominated [AI engine](/gh-aw/reference/engines/) (coding agent) and the tool calls it makes. When using the default **GitHub Copilot CLI**, the workflow is processed by the `copilot` CLI tool which uses GitHub Copilot's services and related AI models. The specifics depend on your engine choice:
+By default, your workflow is run on GitHub Actions, like any other GitHub Actions workflow, and as one if its jobs it invokes your nominated [AI Engine (coding agent)](/gh-aw/reference/engines/), run in a container. This engine may in turn make tool calls and MCP calls. When using the default **GitHub Copilot CLI**, the workflow is processed by the `copilot` CLI tool which uses GitHub Copilot's services and related AI models. The specifics depend on your engine choice:
 
 - **GitHub Copilot CLI**: See [GitHub Copilot documentation](https://docs.github.com/en/copilot) for details.
 - **Claude/Codex**: Uses respective providers' APIs with their data handling policies.
 
-See the [Security Architecture](/gh-aw/introduction/architecture/) for details on the data flow.
+See the [Security Architecture](/gh-aw/introduction/architecture/) for details on the execution and data flow.
 
 ### Does the underlying AI engine run in a sandbox?
 
