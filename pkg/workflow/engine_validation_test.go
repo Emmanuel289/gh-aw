@@ -419,22 +419,20 @@ func TestValidatePluginSupport(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name: "plugins with claude engine (not supported)",
+			name: "plugins with claude engine (supported)",
 			pluginInfo: &PluginInfo{
 				Plugins: []string{"org/plugin1"},
 			},
 			engineID:    "claude",
-			expectError: true,
-			errorMsg:    "does not support plugins",
+			expectError: false,
 		},
 		{
-			name: "plugins with codex engine (not supported)",
+			name: "plugins with codex engine (supported)",
 			pluginInfo: &PluginInfo{
 				Plugins: []string{"org/plugin1", "org/plugin2"},
 			},
 			engineID:    "codex",
-			expectError: true,
-			errorMsg:    "does not support plugins",
+			expectError: false,
 		},
 		{
 			name: "plugins with custom engine (not supported)",
@@ -479,24 +477,24 @@ func TestValidatePluginSupport(t *testing.T) {
 // TestValidatePluginSupportErrorMessage verifies the plugin validation error message quality
 func TestValidatePluginSupportErrorMessage(t *testing.T) {
 	compiler := NewCompiler()
-	claudeEngine, err := compiler.engineRegistry.GetEngine("claude")
+	customEngine, err := compiler.engineRegistry.GetEngine("custom")
 	if err != nil {
-		t.Fatalf("Failed to get claude engine: %v", err)
+		t.Fatalf("Failed to get custom engine: %v", err)
 	}
 
 	pluginInfo := &PluginInfo{
 		Plugins: []string{"org/plugin1", "org/plugin2"},
 	}
 
-	err = compiler.validatePluginSupport(pluginInfo, claudeEngine)
+	err = compiler.validatePluginSupport(pluginInfo, customEngine)
 	if err == nil {
-		t.Fatal("Expected validation to fail for plugins with claude engine")
+		t.Fatal("Expected validation to fail for plugins with custom engine")
 	}
 
 	errorMsg := err.Error()
 
 	// Error should mention the engine name
-	if !strings.Contains(errorMsg, "claude") {
+	if !strings.Contains(errorMsg, "custom") {
 		t.Errorf("Error message should mention the engine name, got: %s", errorMsg)
 	}
 
@@ -505,13 +503,84 @@ func TestValidatePluginSupportErrorMessage(t *testing.T) {
 		t.Errorf("Error message should list the plugins, got: %s", errorMsg)
 	}
 
-	// Error should mention copilot as a supported engine (since it's the only one that supports plugins)
+	// Error should mention the engines that support plugins (copilot, claude, codex)
 	if !strings.Contains(errorMsg, "copilot") {
 		t.Errorf("Error message should mention copilot as supported engine, got: %s", errorMsg)
+	}
+	if !strings.Contains(errorMsg, "claude") {
+		t.Errorf("Error message should mention claude as supported engine, got: %s", errorMsg)
+	}
+	if !strings.Contains(errorMsg, "codex") {
+		t.Errorf("Error message should mention codex as supported engine, got: %s", errorMsg)
 	}
 
 	// Error should provide actionable fixes
 	if !strings.Contains(errorMsg, "To fix this") {
 		t.Errorf("Error message should provide actionable fixes, got: %s", errorMsg)
+	}
+}
+
+// TestValidatePluginSupportErrorMessageListsAllSupportedEngines is a regression test
+// that ensures the validation error message dynamically lists all engines that support plugins.
+// This test will fail if a new engine with plugin support is added but the validation message
+// doesn't include it, ensuring the error messages stay in sync with engine capabilities.
+func TestValidatePluginSupportErrorMessageListsAllSupportedEngines(t *testing.T) {
+	compiler := NewCompiler()
+
+	// Get all engines that support plugins from the engine registry
+	var supportedEngines []string
+	for _, engineID := range compiler.engineRegistry.GetSupportedEngines() {
+		if engine, err := compiler.engineRegistry.GetEngine(engineID); err == nil {
+			if engine.SupportsPlugins() {
+				supportedEngines = append(supportedEngines, engineID)
+			}
+		}
+	}
+
+	// Ensure we have at least one engine that supports plugins
+	if len(supportedEngines) == 0 {
+		t.Fatal("Expected at least one engine to support plugins")
+	}
+
+	t.Logf("Engines that support plugins: %v", supportedEngines)
+
+	// Test with an engine that doesn't support plugins (custom engine)
+	customEngine, err := compiler.engineRegistry.GetEngine("custom")
+	if err != nil {
+		t.Fatalf("Failed to get custom engine: %v", err)
+	}
+
+	pluginInfo := &PluginInfo{
+		Plugins: []string{"org/test-plugin"},
+	}
+
+	err = compiler.validatePluginSupport(pluginInfo, customEngine)
+	if err == nil {
+		t.Fatal("Expected validation to fail for plugins with custom engine")
+	}
+
+	errorMsg := err.Error()
+
+	// Verify that the error message includes ALL engines that support plugins
+	for _, engineID := range supportedEngines {
+		if !strings.Contains(errorMsg, engineID) {
+			t.Errorf("Error message should list engine '%s' as supporting plugins, but it's missing.\nError message: %s",
+				engineID, errorMsg)
+		}
+	}
+
+	// Verify the error message uses the correct phrasing based on number of supported engines
+	if len(supportedEngines) == 1 {
+		expectedPhrase := "Only the '" + supportedEngines[0] + "' engine supports plugin installation"
+		if !strings.Contains(errorMsg, expectedPhrase) {
+			t.Errorf("Error message should contain phrase '%s' for single supported engine, got: %s",
+				expectedPhrase, errorMsg)
+		}
+	} else {
+		expectedPhrase := "The following engines support plugin installation:"
+		if !strings.Contains(errorMsg, expectedPhrase) {
+			t.Errorf("Error message should contain phrase '%s' for multiple supported engines, got: %s",
+				expectedPhrase, errorMsg)
+		}
 	}
 }

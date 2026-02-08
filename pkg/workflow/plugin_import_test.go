@@ -308,7 +308,7 @@ This workflow imports plugins from a shared workflow.
 		"Expected Copilot engine to install plugin from import")
 }
 
-func TestCompileWorkflowWithPluginImportsClaudeEngineRejectsPlugins(t *testing.T) {
+func TestCompileWorkflowWithPluginImportsClaudeEngineSupportsPlugins(t *testing.T) {
 	// Create a temporary directory for test files
 	tempDir := testutil.TempDir(t, "test-*")
 
@@ -339,10 +339,67 @@ This workflow uses Claude engine with imported plugins.
 	require.NoError(t, os.WriteFile(workflowPath, []byte(workflowContent), 0644),
 		"Failed to write workflow file")
 
-	// Compile the workflow - should fail because Claude doesn't support plugins
+	// Compile the workflow - should succeed because Claude now supports plugins
 	compiler := workflow.NewCompiler()
-	err := compiler.CompileWorkflow(workflowPath)
-	require.Error(t, err, "CompileWorkflow should fail because Claude doesn't support plugins")
-	assert.Contains(t, err.Error(), "does not support plugins",
-		"Error should mention that Claude doesn't support plugins")
+	require.NoError(t, compiler.CompileWorkflow(workflowPath),
+		"CompileWorkflow should succeed because Claude supports plugins")
+
+	// Read the generated lock file
+	lockFilePath := stringutil.MarkdownToLockFile(workflowPath)
+	lockFileContent, err := os.ReadFile(lockFilePath)
+	require.NoError(t, err, "Failed to read lock file")
+
+	workflowData := string(lockFileContent)
+
+	// Verify that Claude engine installs the plugin from import
+	assert.Contains(t, workflowData, "claude plugin install anthropic/plugin-one",
+		"Expected Claude engine to install plugin from import")
+}
+
+func TestCompileWorkflowWithPluginImportsCodexEngineSupportsPlugins(t *testing.T) {
+	// Create a temporary directory for test files
+	tempDir := testutil.TempDir(t, "test-*")
+
+	// Create a shared plugins file
+	sharedPluginsPath := filepath.Join(tempDir, "shared-plugins.md")
+	sharedPluginsContent := `---
+on: push
+plugins:
+  - openai/plugin-one
+---
+`
+	require.NoError(t, os.WriteFile(sharedPluginsPath, []byte(sharedPluginsContent), 0644),
+		"Failed to write shared plugins file")
+
+	// Create a workflow file that imports plugins and uses Codex engine
+	workflowPath := filepath.Join(tempDir, "test-workflow.md")
+	workflowContent := `---
+on: issues
+engine: codex
+imports:
+  - shared-plugins.md
+---
+
+# Test Workflow
+
+This workflow uses Codex engine with imported plugins.
+`
+	require.NoError(t, os.WriteFile(workflowPath, []byte(workflowContent), 0644),
+		"Failed to write workflow file")
+
+	// Compile the workflow - should succeed because Codex now supports plugins
+	compiler := workflow.NewCompiler()
+	require.NoError(t, compiler.CompileWorkflow(workflowPath),
+		"CompileWorkflow should succeed because Codex supports plugins")
+
+	// Read the generated lock file
+	lockFilePath := stringutil.MarkdownToLockFile(workflowPath)
+	lockFileContent, err := os.ReadFile(lockFilePath)
+	require.NoError(t, err, "Failed to read lock file")
+
+	workflowData := string(lockFileContent)
+
+	// Verify that Codex engine installs the plugin from import
+	assert.Contains(t, workflowData, "codex plugin install openai/plugin-one",
+		"Expected Codex engine to install plugin from import")
 }
