@@ -2511,8 +2511,8 @@
             "oneOf": [
               {
                 "type": "string",
-                "pattern": "^([a-zA-Z0-9_-]+(/[a-zA-Z0-9_-]+)+|[a-zA-Z0-9_-]+)(@[a-zA-Z0-9_-]+)?$",
-                "description": "Plugin identifier in GitHub repository format: 'org/repo' or 'org/repo/path/to/plugin' (e.g., 'github/example-plugin', 'anthropics/claude-code/plugins/explanatory-output-style'). The pattern allows @marketplace syntax for potential future support, but current engines only support GitHub repository paths."
+                "pattern": "^(https?://[^\\s]+|[a-zA-Z0-9_.-]+(/[a-zA-Z0-9_.-]+)+(@[a-zA-Z0-9_-]+)?|[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+)$",
+                "description": "Plugin identifier in one of three formats: 1) GitHub repository path: 'org/repo' or 'org/repo/path/to/plugin' (e.g., 'github/example-plugin', 'anthropics/claude-code/plugins/explanatory-output-style'), 2) Marketplace format: 'plugin-name@marketplace-name', or 3) URL: 'https://github.com/org/repo/path' or 'https://example.com/plugin.tar.gz'. Plugins with sub-paths will be automatically converted to URLs during compilation for CLI compatibility."
               },
               {
                 "type": "object",
@@ -2521,8 +2521,8 @@
                 "properties": {
                   "id": {
                     "type": "string",
-                    "pattern": "^([a-zA-Z0-9_-]+(/[a-zA-Z0-9_-]+)+|[a-zA-Z0-9_-]+)(@[a-zA-Z0-9_-]+)?$",
-                    "description": "Plugin repository slug in GitHub repository format: 'org/repo' or 'org/repo/path/to/plugin' (e.g., 'github/example-plugin', 'anthropics/claude-code/plugins/explanatory-output-style')"
+                    "pattern": "^(https?://[^\\s]+|[a-zA-Z0-9_.-]+(/[a-zA-Z0-9_.-]+)+(@[a-zA-Z0-9_-]+)?|[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+)$",
+                    "description": "Plugin identifier in one of three formats: 1) GitHub repository path: 'org/repo' or 'org/repo/path/to/plugin' (e.g., 'github/example-plugin', 'anthropics/claude-code/plugins/explanatory-output-style'), 2) Marketplace format: 'plugin-name@marketplace-name', or 3) URL: 'https://github.com/org/repo/path' or 'https://example.com/plugin.tar.gz'. Plugins with sub-paths will be automatically converted to URLs during compilation for CLI compatibility."
                   },
                   "mcp": {
                     "type": "object",
@@ -2562,8 +2562,8 @@
                 "oneOf": [
                   {
                     "type": "string",
-                    "pattern": "^([a-zA-Z0-9_-]+(/[a-zA-Z0-9_-]+)+|[a-zA-Z0-9_-]+)(@[a-zA-Z0-9_-]+)?$",
-                    "description": "Plugin identifier in GitHub repository format: 'org/repo' or 'org/repo/path/to/plugin' (e.g., 'github/example-plugin', 'anthropics/claude-code/plugins/explanatory-output-style'). The pattern allows @marketplace syntax for potential future support, but current engines only support GitHub repository paths."
+                    "pattern": "^(https?://[^\\s]+|[a-zA-Z0-9_.-]+(/[a-zA-Z0-9_.-]+)+(@[a-zA-Z0-9_-]+)?|[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+)$",
+                    "description": "Plugin identifier in one of three formats: 1) GitHub repository path: 'org/repo' or 'org/repo/path/to/plugin' (e.g., 'github/example-plugin', 'anthropics/claude-code/plugins/explanatory-output-style'), 2) Marketplace format: 'plugin-name@marketplace-name', or 3) URL: 'https://github.com/org/repo/path' or 'https://example.com/plugin.tar.gz'. Plugins with sub-paths will be automatically converted to URLs during compilation for CLI compatibility."
                   },
                   {
                     "type": "object",
@@ -2572,7 +2572,7 @@
                     "properties": {
                       "id": {
                         "type": "string",
-                        "pattern": "^([a-zA-Z0-9_-]+(/[a-zA-Z0-9_-]+)+|[a-zA-Z0-9_-]+)(@[a-zA-Z0-9_-]+)?$",
+                        "pattern": "^(https?://[^\\s]+|[a-zA-Z0-9_.-]+(/[a-zA-Z0-9_.-]+)+(@[a-zA-Z0-9_-]+)?|[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+)$",
                         "description": "Plugin repository slug in the format 'org/repo', 'org/repo/path/to/plugin', 'plugin-name@marketplace', or 'org/repo@marketplace' (e.g., 'github/example-plugin', 'anthropics/claude-code/plugins/explanatory-output-style')"
                       },
                       "mcp": {

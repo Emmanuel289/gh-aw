@@ -301,3 +301,91 @@ func TestPluginObjectFormatWithCustomToken(t *testing.T) {
 		})
 	}
 }
+
+func TestNormalizePluginSpec(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "Simple owner/repo format",
+			input:    "github/copilot-plugin",
+			expected: "github/copilot-plugin",
+		},
+		{
+			name:     "Already a URL",
+			input:    "https://github.com/github/copilot-plugin",
+			expected: "https://github.com/github/copilot-plugin",
+		},
+		{
+			name:     "Marketplace format",
+			input:    "explanatory-output-style@claude-plugins-official",
+			expected: "explanatory-output-style@claude-plugins-official",
+		},
+		{
+			name:     "Sub-path format converted to URL",
+			input:    "anthropics/claude-code/plugins/explanatory-output-style",
+			expected: "https://github.com/anthropics/claude-code/plugins/explanatory-output-style",
+		},
+		{
+			name:     "Deep sub-path converted to URL",
+			input:    "org/repo/path/to/nested/plugin",
+			expected: "https://github.com/org/repo/path/to/nested/plugin",
+		},
+		{
+			name:     "HTTP URL unchanged",
+			input:    "http://example.com/plugin.tar.gz",
+			expected: "http://example.com/plugin.tar.gz",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := normalizePluginSpec(tt.input)
+			assert.Equal(t, tt.expected, result, "Normalized plugin spec should match expected")
+		})
+	}
+}
+
+func TestPluginSubPathInstallation(t *testing.T) {
+	// Test that plugins with sub-paths are converted to URLs
+	engines := []struct {
+		engineID string
+		engine   CodingAgentEngine
+	}{
+		{"copilot", NewCopilotEngine()},
+		{"claude", NewClaudeEngine()},
+		{"codex", NewCodexEngine()},
+	}
+
+	for _, e := range engines {
+		t.Run(e.engineID, func(t *testing.T) {
+			// Create workflow data with a plugin that has a sub-path
+			workflowData := &WorkflowData{
+				Name: "test-workflow",
+				PluginInfo: &PluginInfo{
+					Plugins: []string{"anthropics/claude-code/plugins/explanatory-output-style"},
+				},
+			}
+
+			// Get installation steps
+			steps := e.engine.GetInstallationSteps(workflowData)
+
+			// Convert steps to string for searching
+			var allStepsText string
+			for _, step := range steps {
+				allStepsText += strings.Join(step, "\n") + "\n"
+			}
+
+			// Verify plugin installation uses URL format
+			expectedURL := "https://github.com/anthropics/claude-code/plugins/explanatory-output-style"
+			assert.Contains(t, allStepsText, fmt.Sprintf("%s plugin install %s", e.engineID, expectedURL),
+				"Installation steps should convert sub-path to URL")
+
+			// Verify step name still shows original plugin spec
+			assert.Contains(t, allStepsText, "Install plugin: anthropics/claude-code/plugins/explanatory-output-style",
+				"Step name should show original plugin spec")
+		})
+	}
+}

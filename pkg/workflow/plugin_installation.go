@@ -2,6 +2,7 @@ package workflow
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/github/gh-aw/pkg/logger"
 )
@@ -57,23 +58,58 @@ func GeneratePluginInstallationSteps(plugins []string, engineID string, githubTo
 	return steps
 }
 
+// normalizePluginSpec normalizes a plugin specification for CLI installation.
+// The Copilot CLI accepts:
+// - plugin-name@marketplace-name (marketplace format)
+// - owner/repo (GitHub repository)
+// - URL (HTTP/HTTPS URL)
+//
+// For plugins with sub-paths (e.g., "anthropics/claude-code/plugins/explanatory-output-style"),
+// this function converts them to GitHub URLs since the CLI doesn't accept path-based specs.
+func normalizePluginSpec(plugin string) string {
+	// Check if it's already a URL
+	if strings.HasPrefix(plugin, "http://") || strings.HasPrefix(plugin, "https://") {
+		return plugin
+	}
+
+	// Check if it's a marketplace format (contains @)
+	if strings.Contains(plugin, "@") {
+		return plugin
+	}
+
+	// Count slashes to detect sub-paths
+	slashCount := strings.Count(plugin, "/")
+
+	// If it has more than one slash, it's a sub-path (e.g., owner/repo/path/to/plugin)
+	// Convert to GitHub URL
+	if slashCount > 1 {
+		return fmt.Sprintf("https://github.com/%s", plugin)
+	}
+
+	// Otherwise, it's a simple owner/repo format
+	return plugin
+}
+
 // generatePluginInstallStep generates a single GitHub Actions step to install a plugin.
 // The step uses the engine-specific CLI command with proper authentication.
 func generatePluginInstallStep(plugin, engineID, githubToken string) GitHubActionStep {
+	// Normalize the plugin spec for CLI compatibility
+	normalizedPlugin := normalizePluginSpec(plugin)
+
 	// Determine the command based on the engine
 	var command string
 	switch engineID {
 	case "copilot":
-		command = fmt.Sprintf("copilot plugin install %s", plugin)
+		command = fmt.Sprintf("copilot plugin install %s", normalizedPlugin)
 	case "claude":
 		// TODO: validate the correct claude CLI plugin install command syntax
-		command = fmt.Sprintf("claude plugin install %s", plugin)
+		command = fmt.Sprintf("claude plugin install %s", normalizedPlugin)
 	case "codex":
 		// TODO: validate the correct codex CLI plugin install command syntax
-		command = fmt.Sprintf("codex plugin install %s", plugin)
+		command = fmt.Sprintf("codex plugin install %s", normalizedPlugin)
 	default:
 		// For unknown engines, use a generic format
-		command = fmt.Sprintf("%s plugin install %s", engineID, plugin)
+		command = fmt.Sprintf("%s plugin install %s", engineID, normalizedPlugin)
 	}
 
 	// Quote the step name to avoid YAML syntax issues with special characters
