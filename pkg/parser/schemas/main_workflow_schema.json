@@ -334,60 +334,16 @@
                   }
                 }
               },
-              "oneOf": [
-                {
-                  "required": ["branches"],
-                  "not": {
-                    "required": ["branches-ignore"]
-                  }
-                },
-                {
-                  "required": ["branches-ignore"],
-                  "not": {
-                    "required": ["branches"]
-                  }
-                },
-                {
-                  "not": {
-                    "anyOf": [
-                      {
-                        "required": ["branches"]
-                      },
-                      {
-                        "required": ["branches-ignore"]
-                      }
-                    ]
-                  }
-                }
-              ],
               "allOf": [
                 {
-                  "oneOf": [
-                    {
-                      "required": ["paths"],
-                      "not": {
-                        "required": ["paths-ignore"]
-                      }
-                    },
-                    {
-                      "required": ["paths-ignore"],
-                      "not": {
-                        "required": ["paths"]
-                      }
-                    },
-                    {
-                      "not": {
-                        "anyOf": [
-                          {
-                            "required": ["paths"]
-                          },
-                          {
-                            "required": ["paths-ignore"]
-                          }
-                        ]
-                      }
-                    }
-                  ]
+                  "not": {
+                    "allOf": [{ "required": ["branches"] }, { "required": ["branches-ignore"] }]
+                  }
+                },
+                {
+                  "not": {
+                    "allOf": [{ "required": ["paths"] }, { "required": ["paths-ignore"] }]
+                  }
                 }
               ]
             },
@@ -500,60 +456,16 @@
                 }
               },
               "additionalProperties": false,
-              "oneOf": [
-                {
-                  "required": ["branches"],
-                  "not": {
-                    "required": ["branches-ignore"]
-                  }
-                },
-                {
-                  "required": ["branches-ignore"],
-                  "not": {
-                    "required": ["branches"]
-                  }
-                },
-                {
-                  "not": {
-                    "anyOf": [
-                      {
-                        "required": ["branches"]
-                      },
-                      {
-                        "required": ["branches-ignore"]
-                      }
-                    ]
-                  }
-                }
-              ],
               "allOf": [
                 {
-                  "oneOf": [
-                    {
-                      "required": ["paths"],
-                      "not": {
-                        "required": ["paths-ignore"]
-                      }
-                    },
-                    {
-                      "required": ["paths-ignore"],
-                      "not": {
-                        "required": ["paths"]
-                      }
-                    },
-                    {
-                      "not": {
-                        "anyOf": [
-                          {
-                            "required": ["paths"]
-                          },
-                          {
-                            "required": ["paths-ignore"]
-                          }
-                        ]
-                      }
-                    }
-                  ]
+                  "not": {
+                    "allOf": [{ "required": ["branches"] }, { "required": ["branches-ignore"] }]
+                  }
+                },
+                {
+                  "not": {
+                    "allOf": [{ "required": ["paths"] }, { "required": ["paths-ignore"] }]
+                  }
                 }
               ]
             },
@@ -768,29 +680,10 @@
                   }
                 }
               },
-              "oneOf": [
-                {
-                  "required": ["branches"],
-                  "not": {
-                    "required": ["branches-ignore"]
-                  }
-                },
-                {
-                  "required": ["branches-ignore"],
-                  "not": {
-                    "required": ["branches"]
-                  }
-                },
+              "allOf": [
                 {
                   "not": {
-                    "anyOf": [
-                      {
-                        "required": ["branches"]
-                      },
-                      {
-                        "required": ["branches-ignore"]
-                      }
-                    ]
+                    "allOf": [{ "required": ["branches"] }, { "required": ["branches-ignore"] }]
                   }
                 }
               ]
@@ -1104,60 +997,16 @@
                 }
               },
               "additionalProperties": false,
-              "oneOf": [
-                {
-                  "required": ["branches"],
-                  "not": {
-                    "required": ["branches-ignore"]
-                  }
-                },
-                {
-                  "required": ["branches-ignore"],
-                  "not": {
-                    "required": ["branches"]
-                  }
-                },
-                {
-                  "not": {
-                    "anyOf": [
-                      {
-                        "required": ["branches"]
-                      },
-                      {
-                        "required": ["branches-ignore"]
-                      }
-                    ]
-                  }
-                }
-              ],
               "allOf": [
                 {
-                  "oneOf": [
-                    {
-                      "required": ["paths"],
-                      "not": {
-                        "required": ["paths-ignore"]
-                      }
-                    },
-                    {
-                      "required": ["paths-ignore"],
-                      "not": {
-                        "required": ["paths"]
-                      }
-                    },
-                    {
-                      "not": {
-                        "anyOf": [
-                          {
-                            "required": ["paths"]
-                          },
-                          {
-                            "required": ["paths-ignore"]
-                          }
-                        ]
-                      }
-                    }
-                  ]
+                  "not": {
+                    "allOf": [{ "required": ["branches"] }, { "required": ["branches-ignore"] }]
+                  }
+                },
+                {
+                  "not": {
+                    "allOf": [{ "required": ["paths"] }, { "required": ["paths-ignore"] }]
+                  }
                 }
               ]
             },
