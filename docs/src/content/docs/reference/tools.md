@@ -216,6 +216,44 @@ tools:
   repo-memory:
 ```
 
+### Serena (`serena:`)
+
+[Serena](https://github.com/oraios/serena) is an MCP server that provides semantic code analysis and intelligent editing capabilities through Language Server Protocol (LSP) integration. It supports **30+ programming languages** including Go, TypeScript, Python, Java, Rust, and C#.
+
+**Short syntax** (recommended):
+```yaml wrap
+tools:
+  serena: ["go", "typescript", "python"]
+```
+
+**Long syntax** with language-specific configuration:
+```yaml wrap
+tools:
+  serena:
+    version: latest
+    mode: docker  # "docker" (default) or "local" (uses uvx)
+    args: ["--verbose"]
+    languages:
+      go:
+        version: "1.21"
+        go-mod-file: "go.mod"  # Path to go.mod (use subdirectory path if needed)
+        gopls-version: "v0.14.2"
+      typescript:
+        version: "5.0"
+      python:
+        version: "3.12"
+```
+
+**Valid languages**: `go`, `typescript`, `python`, `java`, `rust`, `csharp` (and 25+ more)
+
+**Use cases**:
+- Navigate codebases using symbol search and relationship analysis
+- Perform IDE-like code edits at the symbol level
+- Analyze code structure without reading entire files
+- Language-aware refactoring and code intelligence
+
+See [Using Serena](/gh-aw/guides/serena/) for complete documentation, advanced features, and best practices.
+
 ## Custom MCP Servers (`mcp-servers:`)
 
 Integrate custom Model Context Protocol servers for third-party services:
