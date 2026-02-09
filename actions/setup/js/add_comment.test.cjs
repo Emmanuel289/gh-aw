@@ -110,7 +110,7 @@ describe("add_comment", () => {
         body: "Test comment on triggering PR",
       };
 
-      const result = await handler(message, {});
+      const result = await handler(message, {}, {});
 
       expect(result.success).toBe(true);
       expect(capturedIssueNumber).toBe(8535);
@@ -139,7 +139,7 @@ describe("add_comment", () => {
         body: "Test comment on explicit PR",
       };
 
-      const result = await handler(message, {});
+      const result = await handler(message, {}, {});
 
       expect(result.success).toBe(true);
       expect(capturedIssueNumber).toBe(21);
@@ -169,7 +169,7 @@ describe("add_comment", () => {
         body: "Test comment on item_number PR",
       };
 
-      const result = await handler(message, {});
+      const result = await handler(message, {}, {});
 
       expect(result.success).toBe(true);
       expect(capturedIssueNumber).toBe(999);
@@ -186,7 +186,7 @@ describe("add_comment", () => {
         body: "Test comment without item_number",
       };
 
-      const result = await handler(message, {});
+      const result = await handler(message, {}, {});
 
       expect(result.success).toBe(false);
       expect(result.error).toMatch(/no.*item_number/i);
@@ -215,7 +215,7 @@ describe("add_comment", () => {
         body: "Test comment with explicit item_number",
       };
 
-      const result = await handler(message, {});
+      const result = await handler(message, {}, {});
 
       expect(result.success).toBe(true);
       expect(capturedIssueNumber).toBe(777);
@@ -244,7 +244,7 @@ describe("add_comment", () => {
         body: "Test comment without item_number, should use PR from context",
       };
 
-      const result = await handler(message, {});
+      const result = await handler(message, {}, {});
 
       expect(result.success).toBe(true);
       expect(capturedIssueNumber).toBe(8535); // Should use PR number from mockContext
@@ -280,7 +280,7 @@ describe("add_comment", () => {
         body: "Test comment on issue",
       };
 
-      const result = await handler(message, {});
+      const result = await handler(message, {}, {});
 
       expect(result.success).toBe(true);
       expect(capturedIssueNumber).toBe(42);
@@ -339,7 +339,7 @@ describe("add_comment", () => {
         body: "Test comment on discussion",
       };
 
-      const result = await handler(message, {});
+      const result = await handler(message, {}, {});
 
       expect(result.success).toBe(true);
       expect(capturedDiscussionNumber).toBe(10);
@@ -381,7 +381,7 @@ describe("add_comment", () => {
         body: "## Smoke Test: Copilot Safe Inputs\n\n✅ Test passed",
       };
 
-      const result = await handler(message, {});
+      const result = await handler(message, {}, {});
 
       expect(result.success).toBe(true);
       expect(capturedIssueNumber).toBe(8535);
@@ -448,7 +448,7 @@ describe("add_comment", () => {
         body: "New comment - should not hide old ones",
       };
 
-      const result = await handler(message, {});
+      const result = await handler(message, {}, {});
 
       expect(result.success).toBe(true);
       expect(hideCommentsWasCalled).toBe(false);
@@ -516,7 +516,7 @@ describe("add_comment", () => {
         body: "New comment - should hide old ones",
       };
 
-      const result = await handler(message, {});
+      const result = await handler(message, {}, {});
 
       expect(result.success).toBe(true);
       expect(hideCommentsWasCalled).toBe(true);
@@ -558,7 +558,7 @@ describe("add_comment", () => {
         body: "Test comment",
       };
 
-      const result = await handler(message, {});
+      const result = await handler(message, {}, {});
 
       expect(result.success).toBe(true);
       expect(result.warning).toBeTruthy();
@@ -610,7 +610,7 @@ describe("add_comment", () => {
         body: "Test comment on deleted discussion",
       };
 
-      const result = await handler(message, {});
+      const result = await handler(message, {}, {});
 
       // The error message contains "not found" so it should be treated as a warning
       expect(result.success).toBe(true);
@@ -641,7 +641,7 @@ describe("add_comment", () => {
         body: "Test comment",
       };
 
-      const result = await handler(message, {});
+      const result = await handler(message, {}, {});
 
       expect(result.success).toBe(true);
       expect(result.warning).toBeTruthy();
@@ -669,7 +669,7 @@ describe("add_comment", () => {
         body: "Test comment",
       };
 
-      const result = await handler(message, {});
+      const result = await handler(message, {}, {});
 
       expect(result.success).toBe(true);
       expect(result.warning).toBeTruthy();
@@ -705,7 +705,7 @@ describe("add_comment", () => {
         body: "Test comment",
       };
 
-      const result = await handler(message, {});
+      const result = await handler(message, {}, {});
 
       expect(result.success).toBe(false);
       expect(result.error).toBeTruthy();
@@ -737,7 +737,7 @@ describe("add_comment", () => {
         body: "Test comment",
       };
 
-      const result = await handler(message, {});
+      const result = await handler(message, {}, {});
 
       expect(result.success).toBe(false);
       expect(result.error).toBeTruthy();
@@ -803,7 +803,7 @@ describe("add_comment", () => {
         body: "Test comment on discussion",
       };
 
-      const result = await handler(message, {});
+      const result = await handler(message, {}, {});
 
       expect(result.success).toBe(true);
       expect(result.isDiscussion).toBe(true);
@@ -853,7 +853,7 @@ describe("add_comment", () => {
         body: "Test comment",
       };
 
-      const result = await handler(message, {});
+      const result = await handler(message, {}, {});
 
       expect(result.success).toBe(true);
       expect(result.skipped).toBe(true);
@@ -895,7 +895,7 @@ describe("add_comment", () => {
         body: "Test comment",
       };
 
-      const result = await handler(message, {});
+      const result = await handler(message, {}, {});
 
       expect(result.success).toBe(true);
       expect(result.skipped).toBe(true);
@@ -943,7 +943,7 @@ describe("add_comment", () => {
         body: "Test comment",
       };
 
-      const result = await handler(message, {});
+      const result = await handler(message, {}, {});
 
       expect(result.success).toBe(true);
       expect(result.skipped).toBe(true);
@@ -1113,34 +1113,6 @@ describe("add_comment", () => {
       // Verify they're different arrays
       expect(batchContext1._addCommentState.createdComments[0]._tracking.commentId).toBe(40000);
       expect(batchContext2._addCommentState.createdComments[0]._tracking.commentId).toBe(40000);
-    });
-
-    it("should work correctly without batchContext (backward compatibility)", async () => {
-      const addCommentScript = fs.readFileSync(path.join(__dirname, "add_comment.cjs"), "utf8");
-
-      let commentCount = 0;
-      mockGithub.rest.issues.createComment = async () => {
-        commentCount++;
-        return {
-          data: {
-            id: 50000 + commentCount,
-            html_url: `https://github.com/owner/repo/issues/42#issuecomment-${50000 + commentCount}`,
-          },
-        };
-      };
-
-      const handler = await eval(`(async () => { ${addCommentScript}; return await main({ max: 2 }); })()`);
-
-      // Call without batchContext (backward compatibility)
-      const result1 = await handler({ body: "Comment 1" }, {});
-      const result2 = await handler({ body: "Comment 2" }, {});
-      const result3 = await handler({ body: "Comment 3" }, {});
-
-      // Should still work (each call gets its own empty batchContext)
-      expect(result1.success).toBe(true);
-      expect(result2.success).toBe(true);
-      expect(result3.success).toBe(true); // All succeed because each call has independent state
-      expect(commentCount).toBe(3);
     });
   });
 });

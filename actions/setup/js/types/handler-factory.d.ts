@@ -52,14 +52,24 @@ interface HandlerErrorResult {
 type HandlerResult = HandlerSuccessResult | HandlerErrorResult;
 
 /**
+ * Batch context object shared across all handlers in a single batch execution
+ * Provides state isolation between different batch executions
+ */
+interface BatchContext {
+  /** Handler-specific state stored under namespaced keys */
+  [key: string]: any;
+}
+
+/**
  * Message handler function returned by the main() factory function
  * Processes a single safe output message
  *
  * @param message - The safe output message to process
  * @param resolvedTemporaryIds - Map of temporary IDs that have been resolved to actual issue/PR/discussion numbers
+ * @param batchContext - Batch context for state isolation (must be provided by caller)
  * @returns Promise resolving to result with success status and details
  */
-type MessageHandlerFunction = (message: any, resolvedTemporaryIds: ResolvedTemporaryIds) => Promise<HandlerResult>;
+type MessageHandlerFunction = (message: any, resolvedTemporaryIds: ResolvedTemporaryIds, batchContext: BatchContext) => Promise<HandlerResult>;
 
 /**
  * Main factory function signature for safe output handlers
@@ -70,4 +80,4 @@ type MessageHandlerFunction = (message: any, resolvedTemporaryIds: ResolvedTempo
  */
 type HandlerFactoryFunction = (config?: HandlerConfig) => Promise<MessageHandlerFunction>;
 
-export { HandlerConfig, ResolvedTemporaryIds, HandlerSuccessResult, HandlerErrorResult, HandlerResult, MessageHandlerFunction, HandlerFactoryFunction };
+export { HandlerConfig, ResolvedTemporaryIds, BatchContext, HandlerSuccessResult, HandlerErrorResult, HandlerResult, MessageHandlerFunction, HandlerFactoryFunction };

@@ -303,10 +303,10 @@ async function main(config = {}) {
    * Message handler function
    * @param {Object} message - The add_comment message
    * @param {Object} resolvedTemporaryIds - Resolved temporary IDs
-   * @param {Object} [batchContext] - Optional batch context for state isolation
+   * @param {Object} batchContext - Batch context for state isolation (must be provided by caller)
    * @returns {Promise<Object>} Result
    */
-  return async function handleAddComment(message, resolvedTemporaryIds, batchContext = {}) {
+  return async function handleAddComment(message, resolvedTemporaryIds, batchContext) {
     // Initialize batch-local state on first access
     // This provides state isolation per batch execution
     if (!batchContext._addCommentState) {
