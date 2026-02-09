@@ -16,6 +16,8 @@
 
 **Key Finding:** The system exhibits ~94,824 lines of orchestration JavaScript + 1,133 lines of custom instructions in AGENTS.md, indicating high complexity in instruction assembly. Salience is primarily controlled through **position** (what's seen last) and **structure** (how it's formatted).
 
+**Critical Engine-Specific Observation:** Claude models (particularly claude-sonnet-4.5) have been observed to disregard AGENTS.md instructions, requiring critical requirements to be repeated in workflow-specific prompts or imported agent files for reliable compliance.
+
 ---
 
 ## 1. Architecture Overview
@@ -541,6 +543,33 @@ tools:
 
 **Recommendation:** Inject allowed tools summary into prompt
 
+### 6.5 Engine-Specific Instruction Disregard
+
+**Problem:** Certain AI engines exhibit selective attention to AGENTS.md instructions
+
+**Observed Behavior:**
+- **Claude (claude-sonnet-4.5):** Observed to disregard or de-prioritize AGENTS.md custom instructions in certain contexts
+- **Root Causes:**
+  1. Constitutional AI principles may override custom instructions
+  2. AGENTS.md positioned early in prompt (low temporal recency)
+  3. Model-level filtering of overly prescriptive/lengthy instructions
+  4. Attention mechanism prioritizes task-specific over general instructions
+
+**Evidence:**
+- Workflows using Claude engine show lower compliance with AGENTS.md requirements compared to Copilot engine
+- Critical instructions from AGENTS.md often ignored unless repeated in workflow-specific prompts
+- Imported agent files (higher temporal recency) show better compliance than AGENTS.md
+
+**Impact:** HIGH for Claude workflows - Critical instructions may be ignored
+
+**Mitigation:**
+- **For Claude workflows:** Repeat critical instructions in imported agent files or workflow prompts
+- Use imported agents (`.github/agents/*.md`) for domain-specific requirements
+- Keep workflow prompts self-contained with essential instructions
+- Monitor compliance rates across different engines
+
+**Recommendation:** Engine-specific instruction profiles with adjusted salience strategies
+
 ---
 
 ## 7. Recommendations for Instruction Tuning
@@ -947,6 +976,14 @@ Last 500 chars:  ████████████ 40% attention
 - Claude: Constitutional principles are model-level
 - gh-aw: Safety constraints are workflow-level (threat detection, safe-outputs)
 
+**Observed Behavior (Claude Sonnet 4.5):**
+- **AGENTS.md Disregard:** Claude models (particularly claude-sonnet-4.5) have been observed to disregard or de-prioritize AGENTS.md custom instructions in certain contexts, despite the instructions being present in the prompt. This may be due to:
+  1. Claude's stronger constitutional AI principles overriding custom instructions
+  2. Position-based attention where AGENTS.md (injected early) has lower salience
+  3. Model-level filtering of overly prescriptive instructions
+- **Implication:** When using Claude engine, critical instructions should be repeated in workflow-specific prompts or imported agent files (which have higher temporal recency) rather than relying solely on AGENTS.md.
+- **Mitigation:** Use imported agents (`.github/agents/*.md`) for domain-specific instructions, as these are positioned after AGENTS.md and have higher salience.
+
 ### 12.3 LangChain Agents
 
 **Instruction Mechanism:**
@@ -1070,6 +1107,8 @@ Consider adding documentation
 
 5. **Runtime Context is King:** Concrete data (test results, PR comments, file diffs) has highest salience (8-10/10) regardless of position
 
+6. **Engine-Specific Behavior:** Claude models (claude-sonnet-4.5) disregard AGENTS.md in certain contexts, requiring critical instructions to be repeated in workflow prompts or imported agents
+
 ### 14.2 Salience Hierarchy (Empirical)
 
 ```
@@ -1111,6 +1150,7 @@ Tier 5 (Salience 0-2/10):  Early sections of AGENTS.md, low-emphasis text
 - ⚠️ No explicit instruction priority system for conflict resolution
 - ⚠️ Tool permissions not explicitly stated in prompt (model discovers through trial/error)
 - ⚠️ Compliance tracking not implemented (can't measure instruction effectiveness)
+- ⚠️ Engine-specific behavior (Claude disregards AGENTS.md) creates inconsistent compliance across engines
 
 **Risks:**
 - ❌ Critical instructions in early AGENTS.md sections may be ignored
