@@ -11,6 +11,7 @@ const HANDLER_TYPE = "update_pull_request";
 const { updateBody } = require("./update_pr_description_helpers.cjs");
 const { resolveTarget } = require("./safe_output_helpers.cjs");
 const { createUpdateHandlerFactory } = require("./update_handler_factory.cjs");
+const { buildUpdatePayloadData } = require("./update_payload_builder.cjs");
 
 /**
  * Execute the pull request update API call
@@ -96,46 +97,19 @@ function resolvePRNumber(item, updateTarget, context) {
  * @returns {{success: true, data: Object} | {success: true, skipped: true, reason: string} | {success: false, error: string}} Update data result
  */
 function buildPRUpdateData(item, config) {
-  const canUpdateTitle = config.allow_title !== false; // Default true
-  const canUpdateBody = config.allow_body !== false; // Default true
+  // Use shared helper with PR-specific configuration
+  const result = buildUpdatePayloadData(item, config, {
+    defaultOperation: "replace", // PRs default to "replace" operation
+    additionalFields: ["base"], // PR-specific fields
+    requireUpdates: true, // Return skip result if no updates provided
+  });
 
-  const updateData = {};
-  let hasUpdates = false;
-
-  if (canUpdateTitle && item.title !== undefined) {
-    updateData.title = item.title;
-    hasUpdates = true;
+  // PR handler also sets updateData.body = item.body for backwards compatibility
+  if (result.success && !("skipped" in result) && result.data._rawBody !== undefined) {
+    result.data.body = item.body;
   }
 
-  if (canUpdateBody && item.body !== undefined) {
-    // Store operation information
-    // Use operation from item, or fall back to config default, or use "replace" as final default
-    const operation = item.operation || config.default_operation || "replace";
-    updateData._operation = operation;
-    updateData._rawBody = item.body;
-    updateData.body = item.body;
-    hasUpdates = true;
-  }
-
-  // Other fields (always allowed)
-  if (item.state !== undefined) {
-    updateData.state = item.state;
-    hasUpdates = true;
-  }
-  if (item.base !== undefined) {
-    updateData.base = item.base;
-    hasUpdates = true;
-  }
-
-  if (!hasUpdates) {
-    return {
-      success: true,
-      skipped: true,
-      reason: "No update fields provided or all fields are disabled",
-    };
-  }
-
-  return { success: true, data: updateData };
+  return result;
 }
 
 /**

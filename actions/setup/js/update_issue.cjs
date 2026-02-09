@@ -12,6 +12,7 @@ const { resolveTarget } = require("./safe_output_helpers.cjs");
 const { createUpdateHandlerFactory } = require("./update_handler_factory.cjs");
 const { updateBody } = require("./update_pr_description_helpers.cjs");
 const { loadTemporaryProjectMap, replaceTemporaryProjectReferences } = require("./temporary_id.cjs");
+const { buildUpdatePayloadData } = require("./update_payload_builder.cjs");
 
 /**
  * Execute the issue update API call
@@ -106,35 +107,16 @@ function resolveIssueNumber(item, updateTarget, context) {
  * @returns {{success: true, data: Object} | {success: false, error: string}} Update data result
  */
 function buildIssueUpdateData(item, config) {
-  const updateData = {};
+  // Use shared helper with issue-specific configuration
+  // Note: Issues don't use requireUpdates, so the result will never have skipped property
+  const result = buildUpdatePayloadData(item, config, {
+    defaultOperation: "append", // Default to "append" to preserve original issue text
+    acceptStateAndStatus: true, // Accept both 'state' and 'status' for compatibility
+    additionalFields: ["labels", "assignees", "milestone"], // Issue-specific fields
+  });
 
-  if (item.title !== undefined) {
-    updateData.title = item.title;
-  }
-  if (item.body !== undefined) {
-    // Store operation information for consistent footer/append behavior.
-    // Default to "append" so we preserve the original issue text.
-    updateData._operation = item.operation || "append";
-    updateData._rawBody = item.body;
-  }
-  // The safe-outputs schema uses "status" (open/closed), while the GitHub API uses "state".
-  // Accept both for compatibility.
-  if (item.state !== undefined) {
-    updateData.state = item.state;
-  } else if (item.status !== undefined) {
-    updateData.state = item.status;
-  }
-  if (item.labels !== undefined) {
-    updateData.labels = item.labels;
-  }
-  if (item.assignees !== undefined) {
-    updateData.assignees = item.assignees;
-  }
-  if (item.milestone !== undefined) {
-    updateData.milestone = item.milestone;
-  }
-
-  return { success: true, data: updateData };
+  // Type assertion: Since requireUpdates is not set, result will never have skipped
+  return /** @type {{success: true, data: Object}} */ result;
 }
 
 /**

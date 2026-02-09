@@ -7,6 +7,7 @@
 
 const { isDiscussionContext, getDiscussionNumber } = require("./update_context_helpers.cjs");
 const { createUpdateHandlerFactory } = require("./update_handler_factory.cjs");
+const { buildUpdatePayloadData } = require("./update_payload_builder.cjs");
 
 /**
  * Execute the discussion update API call using GraphQL
@@ -123,16 +124,22 @@ function resolveDiscussionNumber(item, updateTarget, context) {
  * @returns {{success: true, data: Object} | {success: false, error: string}} Update data result
  */
 function buildDiscussionUpdateData(item, config) {
-  const updateData = {};
+  // Use shared helper with discussion-specific configuration
+  // Discussions only support title and body updates, no operation handling or additional fields
+  const result = buildUpdatePayloadData(item, config, {
+    defaultOperation: "replace", // Discussions don't use operations but we set a default
+    additionalFields: [], // No additional fields for discussions
+  });
 
-  if (item.title !== undefined) {
-    updateData.title = item.title;
-  }
-  if (item.body !== undefined) {
-    updateData.body = item.body;
+  // Type assertion: Since requireUpdates is not set, result will never have skipped
+  const typedResult = /** @type {{success: true, data: Object}} */ result;
+
+  // Discussion handler also sets updateData.body = item.body for the GraphQL mutation
+  if (typedResult.data._rawBody !== undefined) {
+    typedResult.data.body = item.body;
   }
 
-  return { success: true, data: updateData };
+  return typedResult;
 }
 
 /**
