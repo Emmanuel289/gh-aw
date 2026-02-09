@@ -656,6 +656,10 @@ async function processRuntimeImport(filepathOrUrl, optional, workspaceDir, start
   }
   // Note: We don't allow ../ paths as they would escape the base folder
 
+  // Normalize path separators to forward slashes (Unix style)
+  // This ensures consistent behavior across platforms
+  filepath = filepath.replace(/\\/g, "/");
+
   // Construct the path within the base folder (.github or .agents)
   const targetFolder = path.join(workspaceDir, baseFolder);
   const absolutePath = path.resolve(targetFolder, filepath);
