@@ -4,6 +4,7 @@
 const fs = require("fs");
 const { getMissingInfoSections } = require("./missing_messages_helper.cjs");
 const { getBlockedDomains, generateBlockedDomainsSection } = require("./firewall_blocked_domains.cjs");
+const { generateInfoFooter } = require("./create_footer.cjs");
 
 /**
  * Generates a standalone workflow-id XML comment marker for searchability.
@@ -102,6 +103,12 @@ function generateFooter(workflowName, runUrl, workflowSource, workflowSourceURL,
     footer += ` for #${triggeringPRNumber}`;
   } else if (triggeringDiscussionNumber) {
     footer += ` for discussion #${triggeringDiscussionNumber}`;
+  }
+
+  // Add informational footer with agent, model, cost if available
+  const infoFooter = generateInfoFooter();
+  if (infoFooter) {
+    footer += ` (${infoFooter})`;
   }
 
   if (workflowSource && workflowSourceURL) {

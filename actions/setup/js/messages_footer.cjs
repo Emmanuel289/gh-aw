@@ -11,6 +11,7 @@
 const { getMessages, renderTemplate, toSnakeCase } = require("./messages_core.cjs");
 const { getMissingInfoSections } = require("./missing_messages_helper.cjs");
 const { getBlockedDomains, generateBlockedDomainsSection } = require("./firewall_blocked_domains.cjs");
+const { generateInfoFooter } = require("./create_footer.cjs");
 
 /**
  * @typedef {Object} FooterContext
@@ -41,6 +42,12 @@ function getFooterMessage(ctx) {
   // Add triggering reference if available
   if (ctx.triggeringNumber) {
     footer += ` for issue #{triggering_number}`.replace("{triggering_number}", String(ctx.triggeringNumber));
+  }
+
+  // Add informational footer with agent, model, cost if available
+  const infoFooter = generateInfoFooter();
+  if (infoFooter) {
+    footer += ` (${infoFooter})`;
   }
 
   return footer;
