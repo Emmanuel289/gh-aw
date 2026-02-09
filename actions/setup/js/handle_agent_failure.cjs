@@ -323,16 +323,16 @@ function buildMissingDataContext() {
 }
 
 /**
- * Check if the agent failure was likely due to missing agent token configuration
+ * Check if the agent failure was likely due to missing Copilot token configuration
  * This should only return true when we have no other explanation for the failure
  * @param {boolean} hasAssignmentErrors - Whether there are assignment errors
  * @param {boolean} hasCreateDiscussionErrors - Whether there are discussion creation errors
  * @param {boolean} hasSecretVerificationFailed - Whether secret verification failed
- * @returns {boolean} True if missing agent token is suspected
+ * @returns {boolean} True if missing Copilot token is suspected
  */
-function checkForMissingAgentToken(hasAssignmentErrors, hasCreateDiscussionErrors, hasSecretVerificationFailed) {
+function checkForMissingCopilotToken(hasAssignmentErrors, hasCreateDiscussionErrors, hasSecretVerificationFailed) {
   // If agent job failed and the agent output file doesn't exist,
-  // it's likely that the agent token was not configured
+  // it's likely that the Copilot token was not configured
   const agentConclusion = process.env.GH_AW_AGENT_CONCLUSION || "";
 
   if (agentConclusion !== "failure") {
@@ -354,13 +354,13 @@ function checkForMissingAgentToken(hasAssignmentErrors, hasCreateDiscussionError
     if (agentOutputResult.error) {
       const errorMessage = agentOutputResult.error.toLowerCase();
       if (errorMessage.includes("enoent") || errorMessage.includes("no such file or directory")) {
-        core.info("Detected missing agent output file (ENOENT) - possible missing agent token");
+        core.info("Detected missing agent output file (ENOENT) - possible missing Copilot token");
         return true;
       }
     } else {
       // No error but also no success - likely GH_AW_AGENT_OUTPUT not set
       // This happens when agent fails before creating output file
-      core.info("Detected missing agent output (no GH_AW_AGENT_OUTPUT) - possible missing agent token");
+      core.info("Detected missing agent output (no GH_AW_AGENT_OUTPUT) - possible missing Copilot token");
       return true;
     }
   }
@@ -369,40 +369,40 @@ function checkForMissingAgentToken(hasAssignmentErrors, hasCreateDiscussionError
 }
 
 /**
- * Build missing agent token context string for display in failure issues/comments
+ * Build missing Copilot token context string for display in failure issues/comments
  * @param {boolean} hasAssignmentErrors - Whether there are assignment errors
  * @param {boolean} hasCreateDiscussionErrors - Whether there are discussion creation errors
  * @param {boolean} hasSecretVerificationFailed - Whether secret verification failed
- * @returns {string} Formatted missing agent token context
+ * @returns {string} Formatted missing Copilot token context
  */
-function buildMissingAgentTokenContext(hasAssignmentErrors, hasCreateDiscussionErrors, hasSecretVerificationFailed) {
-  const hasMissingToken = checkForMissingAgentToken(hasAssignmentErrors, hasCreateDiscussionErrors, hasSecretVerificationFailed);
+function buildMissingCopilotTokenContext(hasAssignmentErrors, hasCreateDiscussionErrors, hasSecretVerificationFailed) {
+  const hasMissingToken = checkForMissingCopilotToken(hasAssignmentErrors, hasCreateDiscussionErrors, hasSecretVerificationFailed);
 
   if (!hasMissingToken) {
     return "";
   }
 
-  let context = "\n**⚠️ Missing Agent Token**: The agent job failed early, likely due to a missing or improperly configured agent token.\n\n";
+  let context = "\n**⚠️ Missing Copilot Token**: The agent job failed early, likely due to a missing or improperly configured Copilot token.\n\n";
   context += "**Possible Causes:**\n";
-  context += "- The `GH_AW_AGENT_TOKEN` secret is not set in your repository\n";
-  context += "- The token lacks required permissions (actions, contents, issues, pull requests)\n";
+  context += "- The `COPILOT_GITHUB_TOKEN` secret is not set in your repository\n";
+  context += "- The token lacks required permissions (Copilot Requests scope)\n";
   context += "- The token is expired or invalid\n\n";
   context += "**How to Fix:**\n\n";
   context += "1. Create a fine-grained Personal Access Token (PAT) with the following permissions:\n";
-  context += "   - Actions: Read and Write\n";
-  context += "   - Contents: Read and Write\n";
-  context += "   - Issues: Read and Write\n";
-  context += "   - Pull Requests: Read and Write\n\n";
+  context += "   - **Copilot Requests**: Read and Write (required)\n";
+  context += "   - For organization-owned repositories, also grant:\n";
+  context += "     - **Members**: Read-only\n";
+  context += "     - **GitHub Copilot Business**: Read-only\n\n";
   context += "2. Add the token as a secret:\n";
   context += "   ```bash\n";
-  context += '   gh aw secrets set GH_AW_AGENT_TOKEN --value "YOUR_TOKEN"\n';
+  context += '   gh aw secrets set COPILOT_GITHUB_TOKEN --value "YOUR_TOKEN"\n';
   context += "   ```\n\n";
   context += "3. Alternatively, set the secret in your repository settings:\n";
   context += "   - Go to Settings → Secrets and variables → Actions\n";
   context += '   - Click "New repository secret"\n';
-  context += "   - Name: `GH_AW_AGENT_TOKEN`\n";
+  context += "   - Name: `COPILOT_GITHUB_TOKEN`\n";
   context += "   - Value: Your PAT\n\n";
-  context += "For more information, see: https://github.github.io/gh-aw/reference/tokens/#gh_aw_agent_token-agent-assignment\n\n";
+  context += "For more information, see: https://github.github.io/gh-aw/reference/tokens/#copilot_github_token-copilot-authentication\n\n";
 
   return context;
 }
@@ -549,9 +549,9 @@ async function main() {
         // Build missing_data context
         const missingDataContext = buildMissingDataContext();
 
-        // Build missing agent token context
+        // Build missing Copilot token context
         const hasSecretVerificationFailed = secretVerificationResult === "failed";
-        const missingAgentTokenContext = buildMissingAgentTokenContext(hasAssignmentErrors, hasCreateDiscussionErrors, hasSecretVerificationFailed);
+        const missingCopilotTokenContext = buildMissingCopilotTokenContext(hasAssignmentErrors, hasCreateDiscussionErrors, hasSecretVerificationFailed);
 
         // Build missing safe outputs context
         let missingSafeOutputsContext = "";
@@ -577,7 +577,7 @@ async function main() {
           assignment_errors_context: assignmentErrorsContext,
           create_discussion_errors_context: createDiscussionErrorsContext,
           missing_data_context: missingDataContext,
-          missing_agent_token_context: missingAgentTokenContext,
+          missing_copilot_token_context: missingCopilotTokenContext,
           missing_safe_outputs_context: missingSafeOutputsContext,
         };
 
@@ -639,9 +639,9 @@ async function main() {
         // Build missing_data context
         const missingDataContext = buildMissingDataContext();
 
-        // Build missing agent token context
+        // Build missing Copilot token context
         const hasSecretVerificationFailed = secretVerificationResult === "failed";
-        const missingAgentTokenContext = buildMissingAgentTokenContext(hasAssignmentErrors, hasCreateDiscussionErrors, hasSecretVerificationFailed);
+        const missingCopilotTokenContext = buildMissingCopilotTokenContext(hasAssignmentErrors, hasCreateDiscussionErrors, hasSecretVerificationFailed);
 
         // Build missing safe outputs context
         let missingSafeOutputsContext = "";
@@ -667,7 +667,7 @@ async function main() {
           assignment_errors_context: assignmentErrorsContext,
           create_discussion_errors_context: createDiscussionErrorsContext,
           missing_data_context: missingDataContext,
-          missing_agent_token_context: missingAgentTokenContext,
+          missing_copilot_token_context: missingCopilotTokenContext,
           missing_safe_outputs_context: missingSafeOutputsContext,
         };
 
