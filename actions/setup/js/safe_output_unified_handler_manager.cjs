@@ -360,6 +360,11 @@ async function processMessages(messageHandlers, messages, projectOctokit = null)
   /** @type {Array<{type: string, message: any, messageIndex: number, handler: Function}>} */
   const deferredMessages = [];
 
+  // Initialize batch context for state isolation across handlers
+  // This object is shared across all handlers in a single batch execution
+  // but is isolated between different batch executions
+  const batchContext = {};
+
   core.info(`Processing ${sortedMessages.length} message(s) in topologically sorted order...`);
 
   // Process messages in topologically sorted order
@@ -434,8 +439,8 @@ async function processMessages(messageHandlers, messages, projectOctokit = null)
         // Note: Project handlers already have the project Octokit bound during initialization
         result = await messageHandler(message, temporaryIdMap, resolvedTemporaryIds);
       } else {
-        // Regular handlers receive: (message, resolvedTemporaryIds)
-        result = await messageHandler(message, resolvedTemporaryIds);
+        // Regular handlers receive: (message, resolvedTemporaryIds, batchContext)
+        result = await messageHandler(message, resolvedTemporaryIds, batchContext);
       }
 
       // Check if the handler explicitly returned a failure
@@ -575,8 +580,18 @@ async function processMessages(messageHandlers, messages, projectOctokit = null)
         // Record the temp ID map size before processing to detect new IDs
         const tempIdMapSizeBefore = temporaryIdMap.size;
 
+        // Determine if this is a project-related handler
+        const isProjectHandler = PROJECT_RELATED_TYPES.has(deferred.type);
+
         // Call the handler again with updated temp ID map
-        const result = await deferred.handler(deferred.message, resolvedTemporaryIds);
+        let result;
+        if (isProjectHandler) {
+          // Project handlers receive: (message, temporaryIdMap, resolvedTemporaryIds)
+          result = await deferred.handler(deferred.message, temporaryIdMap, resolvedTemporaryIds);
+        } else {
+          // Regular handlers receive: (message, resolvedTemporaryIds, batchContext)
+          result = await deferred.handler(deferred.message, resolvedTemporaryIds, batchContext);
+        }
 
         // Check if the handler explicitly returned a failure
         if (result && result.success === false && !result.deferred) {

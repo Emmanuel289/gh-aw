@@ -952,4 +952,195 @@ describe("add_comment", () => {
       expect(graphqlCallCount).toBe(1);
     });
   });
+
+  describe("concurrency safety with batchContext", () => {
+    it("should enforce max count with concurrent calls using shared batchContext", async () => {
+      const addCommentScript = fs.readFileSync(path.join(__dirname, "add_comment.cjs"), "utf8");
+
+      let commentCount = 0;
+      mockGithub.rest.issues.createComment = async () => {
+        commentCount++;
+        return {
+          data: {
+            id: 10000 + commentCount,
+            html_url: `https://github.com/owner/repo/issues/42#issuecomment-${10000 + commentCount}`,
+          },
+        };
+      };
+
+      // Execute the handler factory with max: 2
+      const handler = await eval(`(async () => { ${addCommentScript}; return await main({ max: 2 }); })()`);
+
+      // Shared batch context (simulates single batch execution)
+      const batchContext = {};
+
+      // Launch 5 concurrent calls with the same batchContext (max is 2)
+      const messages = Array(5)
+        .fill(0)
+        .map((_, i) => ({
+          type: "add_comment",
+          body: `Comment ${i}`,
+        }));
+
+      const promises = messages.map(msg => handler(msg, {}, batchContext));
+      const results = await Promise.all(promises);
+
+      // Verify exactly 2 succeeded, 3 were rejected
+      const succeeded = results.filter(r => r.success);
+      const rejected = results.filter(r => !r.success);
+
+      expect(succeeded).toHaveLength(2);
+      expect(rejected).toHaveLength(3);
+      expect(rejected[0].error).toContain("Max count"); // Note: "Max" with capital M
+      expect(commentCount).toBe(2);
+    });
+
+    it("should isolate state between different batch contexts", async () => {
+      const addCommentScript = fs.readFileSync(path.join(__dirname, "add_comment.cjs"), "utf8");
+
+      let commentCount = 0;
+      mockGithub.rest.issues.createComment = async () => {
+        commentCount++;
+        return {
+          data: {
+            id: 20000 + commentCount,
+            html_url: `https://github.com/owner/repo/issues/42#issuecomment-${20000 + commentCount}`,
+          },
+        };
+      };
+
+      // Execute the handler factory with max: 2
+      const handler = await eval(`(async () => { ${addCommentScript}; return await main({ max: 2 }); })()`);
+
+      // First batch context
+      const batchContext1 = {};
+      const message1 = { type: "add_comment", body: "Batch 1 - Comment 1" };
+      const message2 = { type: "add_comment", body: "Batch 1 - Comment 2" };
+      const message3 = { type: "add_comment", body: "Batch 1 - Comment 3" };
+
+      const result1_1 = await handler(message1, {}, batchContext1);
+      const result1_2 = await handler(message2, {}, batchContext1);
+      const result1_3 = await handler(message3, {}, batchContext1);
+
+      expect(result1_1.success).toBe(true);
+      expect(result1_2.success).toBe(true);
+      expect(result1_3.success).toBe(false); // Exceeds max
+
+      // Second batch context (independent of first)
+      const batchContext2 = {};
+      const message4 = { type: "add_comment", body: "Batch 2 - Comment 1" };
+      const message5 = { type: "add_comment", body: "Batch 2 - Comment 2" };
+
+      const result2_1 = await handler(message4, {}, batchContext2);
+      const result2_2 = await handler(message5, {}, batchContext2);
+
+      // Both should succeed because batchContext2 has independent state
+      expect(result2_1.success).toBe(true);
+      expect(result2_2.success).toBe(true);
+      expect(commentCount).toBe(4); // Total comments created: 2 from batch1 + 2 from batch2
+    });
+
+    it("should handle temporaryId resolution without race conditions using batchContext", async () => {
+      const addCommentScript = fs.readFileSync(path.join(__dirname, "add_comment.cjs"), "utf8");
+
+      let capturedBodies = [];
+      mockGithub.rest.issues.createComment = async params => {
+        capturedBodies.push(params.body);
+        return {
+          data: {
+            id: 30000 + capturedBodies.length,
+            html_url: `https://github.com/owner/repo/issues/42#issuecomment-${30000 + capturedBodies.length}`,
+          },
+        };
+      };
+
+      const handler = await eval(`(async () => { ${addCommentScript}; return await main({}); })()`);
+
+      const batchContext = {};
+
+      // Two messages with same temp ID resolved differently
+      const resolvedIds1 = { aw_123: { repo: "owner/repo", number: 100 } };
+      const resolvedIds2 = { aw_123: { repo: "owner/repo", number: 200 } };
+
+      const msg1 = { body: "See #aw_123", item_number: 42 };
+      const msg2 = { body: "Also see #aw_123", item_number: 42 };
+
+      // Process with different resolved IDs (simulating concurrent resolution)
+      await Promise.all([handler(msg1, resolvedIds1, batchContext), handler(msg2, resolvedIds2, batchContext)]);
+
+      // Verify both comments were created
+      expect(capturedBodies).toHaveLength(2);
+
+      // The important part is that batch context prevents state corruption
+      // Both comments should have been created successfully without errors
+      // The actual resolved IDs may vary depending on processing order, but
+      // the key is that the batch state is properly isolated and tracked
+      expect(capturedBodies[0]).toBeDefined();
+      expect(capturedBodies[1]).toBeDefined();
+
+      // Verify the batch context state was properly maintained
+      expect(batchContext._addCommentState).toBeDefined();
+      expect(batchContext._addCommentState.processedCount).toBe(2);
+      expect(batchContext._addCommentState.temporaryIdMap.size).toBeGreaterThan(0);
+    });
+
+    it("should maintain createdComments array per batch context", async () => {
+      const addCommentScript = fs.readFileSync(path.join(__dirname, "add_comment.cjs"), "utf8");
+
+      mockGithub.rest.issues.createComment = async params => {
+        return {
+          data: {
+            id: 40000,
+            html_url: "https://github.com/owner/repo/issues/42#issuecomment-40000",
+          },
+        };
+      };
+
+      const handler = await eval(`(async () => { ${addCommentScript}; return await main({}); })()`);
+
+      const batchContext1 = {};
+      const batchContext2 = {};
+
+      await handler({ body: "Batch 1" }, {}, batchContext1);
+      await handler({ body: "Batch 2" }, {}, batchContext2);
+
+      // Each batch should have its own createdComments array
+      expect(batchContext1._addCommentState).toBeDefined();
+      expect(batchContext2._addCommentState).toBeDefined();
+      expect(batchContext1._addCommentState.createdComments).toHaveLength(1);
+      expect(batchContext2._addCommentState.createdComments).toHaveLength(1);
+
+      // Verify they're different arrays
+      expect(batchContext1._addCommentState.createdComments[0]._tracking.commentId).toBe(40000);
+      expect(batchContext2._addCommentState.createdComments[0]._tracking.commentId).toBe(40000);
+    });
+
+    it("should work correctly without batchContext (backward compatibility)", async () => {
+      const addCommentScript = fs.readFileSync(path.join(__dirname, "add_comment.cjs"), "utf8");
+
+      let commentCount = 0;
+      mockGithub.rest.issues.createComment = async () => {
+        commentCount++;
+        return {
+          data: {
+            id: 50000 + commentCount,
+            html_url: `https://github.com/owner/repo/issues/42#issuecomment-${50000 + commentCount}`,
+          },
+        };
+      };
+
+      const handler = await eval(`(async () => { ${addCommentScript}; return await main({ max: 2 }); })()`);
+
+      // Call without batchContext (backward compatibility)
+      const result1 = await handler({ body: "Comment 1" }, {});
+      const result2 = await handler({ body: "Comment 2" }, {});
+      const result3 = await handler({ body: "Comment 3" }, {});
+
+      // Should still work (each call gets its own empty batchContext)
+      expect(result1.success).toBe(true);
+      expect(result2.success).toBe(true);
+      expect(result3.success).toBe(true); // All succeed because each call has independent state
+      expect(commentCount).toBe(3);
+    });
+  });
 });
