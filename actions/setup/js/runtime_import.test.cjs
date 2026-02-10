@@ -124,88 +124,58 @@ describe("runtime_import", () => {
         expect(isSafeExpression("vars.SECRET || 'fallback'")).toBe(!1);
       });
       it("should reject OR with unsafe right side (non-literal)", () => {
-        expect(isSafeExpression("inputs.value || secrets.TOKEN")).toBe(!1);
-        expect(isSafeExpression("github.actor || vars.NAME")).toBe(!1);
+        expect(isSafeExpression("inputs.value || secrets.TOKEN")).toBe(false);
+        expect(isSafeExpression("github.actor || vars.NAME")).toBe(false);
       });
-      it("should block dangerous property names - constructor", () => {
-        expect(isSafeExpression("github.constructor")).toBe(!1);
-        expect(isSafeExpression("inputs.constructor")).toBe(!1);
-        expect(isSafeExpression("github.event.constructor")).toBe(!1);
-        expect(isSafeExpression("needs.job.constructor")).toBe(!1);
-      });
-      it("should block dangerous property names - __proto__", () => {
-        expect(isSafeExpression("github.__proto__")).toBe(!1);
-        expect(isSafeExpression("inputs.__proto__")).toBe(!1);
-        expect(isSafeExpression("github.event.__proto__")).toBe(!1);
-      });
-      it("should block dangerous property names - prototype", () => {
-        expect(isSafeExpression("github.prototype")).toBe(!1);
-        expect(isSafeExpression("inputs.prototype")).toBe(!1);
-        expect(isSafeExpression("github.event.prototype")).toBe(!1);
-      });
-      it("should block dangerous property names - __defineGetter__", () => {
-        expect(isSafeExpression("github.__defineGetter__")).toBe(!1);
-        expect(isSafeExpression("inputs.__defineGetter__")).toBe(!1);
-      });
-      it("should block dangerous property names - __defineSetter__", () => {
-        expect(isSafeExpression("github.__defineSetter__")).toBe(!1);
-        expect(isSafeExpression("inputs.__defineSetter__")).toBe(!1);
-      });
-      it("should block dangerous property names - __lookupGetter__", () => {
-        expect(isSafeExpression("github.__lookupGetter__")).toBe(!1);
-        expect(isSafeExpression("inputs.__lookupGetter__")).toBe(!1);
-      });
-      it("should block dangerous property names - __lookupSetter__", () => {
-        expect(isSafeExpression("github.__lookupSetter__")).toBe(!1);
-        expect(isSafeExpression("inputs.__lookupSetter__")).toBe(!1);
-      });
-      it("should block dangerous property names - hasOwnProperty", () => {
-        expect(isSafeExpression("github.hasOwnProperty")).toBe(!1);
-        expect(isSafeExpression("inputs.hasOwnProperty")).toBe(!1);
-      });
-      it("should block dangerous property names - isPrototypeOf", () => {
-        expect(isSafeExpression("github.isPrototypeOf")).toBe(!1);
-        expect(isSafeExpression("inputs.isPrototypeOf")).toBe(!1);
-      });
-      it("should block dangerous property names - propertyIsEnumerable", () => {
-        expect(isSafeExpression("github.propertyIsEnumerable")).toBe(!1);
-        expect(isSafeExpression("inputs.propertyIsEnumerable")).toBe(!1);
-      });
-      it("should block dangerous property names - toString", () => {
-        expect(isSafeExpression("github.toString")).toBe(!1);
-        expect(isSafeExpression("inputs.toString")).toBe(!1);
-      });
-      it("should block dangerous property names - valueOf", () => {
-        expect(isSafeExpression("github.valueOf")).toBe(!1);
-        expect(isSafeExpression("inputs.valueOf")).toBe(!1);
-      });
-      it("should block dangerous property names - toLocaleString", () => {
-        expect(isSafeExpression("github.toLocaleString")).toBe(!1);
-        expect(isSafeExpression("inputs.toLocaleString")).toBe(!1);
-      });
-      it("should block dangerous properties in array access", () => {
-        expect(isSafeExpression("github.event.release.assets[0].constructor")).toBe(!1);
-        expect(isSafeExpression("github.event.release.assets[0].__proto__")).toBe(!1);
+      it("should block dangerous property names", () => {
+        const dangerousProps = [
+          "constructor",
+          "__proto__",
+          "prototype",
+          "__defineGetter__",
+          "__defineSetter__",
+          "__lookupGetter__",
+          "__lookupSetter__",
+          "hasOwnProperty",
+          "isPrototypeOf",
+          "propertyIsEnumerable",
+          "toString",
+          "valueOf",
+          "toLocaleString",
+        ];
+
+        for (const prop of dangerousProps) {
+          expect(isSafeExpression(`github.${prop}`)).toBe(false);
+          expect(isSafeExpression(`inputs.${prop}`)).toBe(false);
+          expect(isSafeExpression(`github.event.${prop}`)).toBe(false);
+        }
+
+        // Additional tests for constructor
+        expect(isSafeExpression("needs.job.constructor")).toBe(false);
+
+        // Tests for dangerous properties in array access
+        expect(isSafeExpression("github.event.release.assets[0].constructor")).toBe(false);
+        expect(isSafeExpression("github.event.release.assets[0].__proto__")).toBe(false);
       });
       it("should reject excessive nesting depth (more than 5 levels)", () => {
         // Valid: max 5 levels (needs.job.outputs.foo.bar)
-        expect(isSafeExpression("needs.job.outputs.foo.bar")).toBe(!0);
-        expect(isSafeExpression("steps.step.outputs.foo.bar")).toBe(!0);
+        expect(isSafeExpression("needs.job.outputs.foo.bar")).toBe(true);
+        expect(isSafeExpression("steps.step.outputs.foo.bar")).toBe(true);
         // Invalid: 6 levels
-        expect(isSafeExpression("needs.job.outputs.foo.bar.baz")).toBe(!1);
-        expect(isSafeExpression("steps.step.outputs.foo.bar.baz")).toBe(!1);
+        expect(isSafeExpression("needs.job.outputs.foo.bar.baz")).toBe(false);
+        expect(isSafeExpression("steps.step.outputs.foo.bar.baz")).toBe(false);
         // Invalid: 7+ levels
-        expect(isSafeExpression("needs.job.outputs.foo.bar.baz.qux")).toBe(!1);
+        expect(isSafeExpression("needs.job.outputs.foo.bar.baz.qux")).toBe(false);
       });
       it("should allow valid nested expressions within depth limit", () => {
         // 2 levels
-        expect(isSafeExpression("needs.job.outputs")).toBe(!0);
+        expect(isSafeExpression("needs.job.outputs")).toBe(true);
         // 3 levels
-        expect(isSafeExpression("needs.job.outputs.result")).toBe(!0);
+        expect(isSafeExpression("needs.job.outputs.result")).toBe(true);
         // 4 levels
-        expect(isSafeExpression("needs.job.outputs.foo.value")).toBe(!0);
+        expect(isSafeExpression("needs.job.outputs.foo.value")).toBe(true);
         // 5 levels (max)
-        expect(isSafeExpression("needs.job.outputs.foo.bar")).toBe(!0);
+        expect(isSafeExpression("needs.job.outputs.foo.bar")).toBe(true);
       });
     }),
     describe("evaluateExpression", () => {

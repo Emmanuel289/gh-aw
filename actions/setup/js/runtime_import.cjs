@@ -109,29 +109,43 @@ const ALLOWED_EXPRESSIONS = [
 ];
 
 /**
+ * Dangerous JavaScript built-in property names that could be used for
+ * prototype pollution or prototype chain traversal attacks.
+ * These properties are blocked in all expressions.
+ */
+const DANGEROUS_PROPS = [
+  "constructor",
+  "__proto__",
+  "prototype",
+  "__defineGetter__",
+  "__defineSetter__",
+  "__lookupGetter__",
+  "__lookupSetter__",
+  "hasOwnProperty",
+  "isPrototypeOf",
+  "propertyIsEnumerable",
+  "toString",
+  "valueOf",
+  "toLocaleString",
+];
+
+/**
+ * Safely checks if an object has a property without accessing the prototype chain
+ * @param {any} obj - The object to check
+ * @param {string} prop - The property name to check
+ * @returns {boolean} - True if the object has the property (not inherited)
+ */
+function hasSafeProperty(obj, prop) {
+  return obj && typeof obj === "object" && Object.prototype.hasOwnProperty.call(obj, prop);
+}
+
+/**
  * Checks if an expression is in the safe list
  * @param {string} expr - The expression to check (without ${{ }})
  * @returns {boolean} - True if expression is safe
  */
 function isSafeExpression(expr) {
   const trimmed = expr.trim();
-
-  // Block dangerous JavaScript built-in property names
-  const DANGEROUS_PROPS = [
-    "constructor",
-    "__proto__",
-    "prototype",
-    "__defineGetter__",
-    "__defineSetter__",
-    "__lookupGetter__",
-    "__lookupSetter__",
-    "hasOwnProperty",
-    "isPrototypeOf",
-    "propertyIsEnumerable",
-    "toString",
-    "valueOf",
-    "toLocaleString",
-  ];
 
   // Split expression into parts and check each for dangerous properties
   // Handle both dot notation (e.g., "github.event.issue") and bracket notation (e.g., "release.assets[0].id")
@@ -294,8 +308,7 @@ function evaluateExpression(expr) {
         if (arrayMatch) {
           const key = arrayMatch[1];
           const index = parseInt(arrayMatch[2], 10);
-          // Use Object.prototype.hasOwnProperty.call() to prevent prototype chain access
-          if (value && typeof value === "object" && Object.prototype.hasOwnProperty.call(value, key)) {
+          if (hasSafeProperty(value, key)) {
             const arrayValue = value[key];
             if (Array.isArray(arrayValue) && index >= 0 && index < arrayValue.length) {
               value = arrayValue[index];
@@ -308,8 +321,7 @@ function evaluateExpression(expr) {
             break;
           }
         } else {
-          // Use Object.prototype.hasOwnProperty.call() to prevent prototype chain access
-          if (value && typeof value === "object" && Object.prototype.hasOwnProperty.call(value, part)) {
+          if (hasSafeProperty(value, part)) {
             value = value[part];
           } else {
             value = undefined;
