@@ -1,22 +1,35 @@
 # Shared Alerts - Meta-Orchestrator Coordination
-**Updated:** 2026-02-10T01:53:00Z
+**Updated:** 2026-02-10T11:42:00Z
 
 ## Workflow Health Manager Alerts
 
-**Status:** 🟢 EXCELLENT
+**Status:** 🟡 WARNING
 
-### Current Assessment (2026-02-09)
-- **Health Score:** 97/100 (↑ +1 from 96/100)
-- **Healthy Workflows:** 148/148 (100%)
-- **Critical Issues:** 0 (sustained excellence)
+### Current Assessment (2026-02-10)
+- **Health Score:** 78/100 (↓ -19 from 97/100)
+- **Healthy Workflows:** 137/148 (92.6%)
+- **Critical Issues:** 1 (daily-fact failing)
+- **Warnings:** 11 (outdated lock files)
 - **Compilation Coverage:** 100% (148/148)
 - **Systemic Issues:** 0
-- **New Workflows:** +1 since yesterday (147 → 148)
+
+### Critical Issue
+**daily-fact workflow failing** (P1):
+- Error: Missing `handle_noop_message.cjs` module
+- Conclusion job fails on every run
+- Auto-created issue: [#14763](https://github.com/github/gh-aw/issues/14763)
+- Needs immediate fix: Create missing module or update workflow
+
+### Warnings
+**11 workflows with outdated lock files** need recompilation:
+- auto-triage-issues, daily-code-metrics, daily-observability-report
+- daily-secrets-analysis, deep-report, mergefest, pdf-summary
+- repository-quality-improver, security-guard, smoke-claude, test-workflow
 
 ### Recommendations for Other Orchestrators
-- ✅ **For Campaign Manager:** All 148 workflows available, zero blockers, +1 new workflow
-- ✅ **For Agent Performance:** Ecosystem health excellent (97/100), aligned with 91/100 agent quality
-- 📊 **For Metrics Collector:** System stable, ideal for comprehensive metrics collection
+- ⚠️ **For Campaign Manager:** 1 workflow failing (daily-fact), 11 need recompilation
+- ⚠️ **For Agent Performance:** Health score dropped -19 points, needs attention
+- 📊 **For Metrics Collector:** System mostly stable, 92.6% healthy
 
 ---
 
@@ -34,10 +47,10 @@
 
 ---
 
-**Coordination Status:** ✅ EXCELLENT - All orchestrators aligned, ecosystem performing at optimal levels
+**Coordination Status:** ⚠️ WARNING - Workflow health declined, needs attention (1 failure, 11 outdated)
 
-**Overall Ecosystem Health:** 97/100 (workflow health) + 91/100 (agent quality) + 85/100 (agent effectiveness) = **EXCELLENT** across all dimensions
+**Overall Ecosystem Health:** 78/100 (workflow health) + 91/100 (agent quality) + 85/100 (agent effectiveness) = **WARNING** - workflow health needs attention
 
-**Release Mode Assessment:** ✅ PASS - Zero critical issues, production-ready, stable, and improving
+**Release Mode Assessment:** ⚠️ WARNING - Fix daily-fact module issue and recompile 11 outdated workflows
 
-**Trend:** ↑ Sustained excellence with growth (8th consecutive period with zero critical issues)
+**Trend:** ↓ Decline from excellent (97/100) to warning (78/100) - fixable issues
