@@ -132,14 +132,14 @@ describe("add_copilot_reviewer", () => {
     expect(mockCore.summary.write).toHaveBeenCalled();
   });
 
-  it("should handle API errors gracefully", async () => {
+  it("should throw API errors without catching", async () => {
     process.env.PR_NUMBER = "123";
     mockGithub.rest.pulls.requestReviewers.mockRejectedValueOnce(new Error("API Error"));
 
-    await runScript();
+    await expect(runScript()).rejects.toThrow("API Error");
 
-    expect(mockCore.error).toHaveBeenCalledWith(expect.stringContaining("Failed to add Copilot as reviewer"));
-    expect(mockCore.setFailed).toHaveBeenCalledWith(expect.stringContaining("Failed to add Copilot as reviewer"));
+    expect(mockCore.info).toHaveBeenCalledWith("Adding Copilot as reviewer to PR #123");
+    expect(mockGithub.rest.pulls.requestReviewers).toHaveBeenCalled();
   });
 
   it("should trim whitespace from PR_NUMBER", async () => {

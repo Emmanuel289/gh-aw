@@ -1,8 +1,6 @@
 // @ts-check
 /// <reference types="@actions/github-script" />
 
-const { getErrorMessage } = require("./error_helpers.cjs");
-
 /**
  * Add Copilot as a reviewer to a pull request.
  *
@@ -34,29 +32,23 @@ async function main() {
 
   core.info(`Adding Copilot as reviewer to PR #${prNumber}`);
 
-  try {
-    const { owner, repo } = context.repo;
-    await github.rest.pulls.requestReviewers({
-      owner,
-      repo,
-      pull_number: prNumber,
-      reviewers: [COPILOT_REVIEWER_BOT],
-    });
+  const { owner, repo } = context.repo;
+  await github.rest.pulls.requestReviewers({
+    owner,
+    repo,
+    pull_number: prNumber,
+    reviewers: [COPILOT_REVIEWER_BOT],
+  });
 
-    core.info(`Successfully added Copilot as reviewer to PR #${prNumber}`);
+  core.info(`Successfully added Copilot as reviewer to PR #${prNumber}`);
 
-    await core.summary
-      .addRaw(
-        `## Copilot Reviewer Added
+  await core.summary
+    .addRaw(
+      `## Copilot Reviewer Added
 
 Successfully added Copilot as a reviewer to PR #${prNumber}.`
-      )
-      .write();
-  } catch (error) {
-    const errorMessage = getErrorMessage(error);
-    core.error(`Failed to add Copilot as reviewer: ${errorMessage}`);
-    core.setFailed(`Failed to add Copilot as reviewer to PR #${prNumber}: ${errorMessage}`);
-  }
+    )
+    .write();
 }
 
 module.exports = { main };
