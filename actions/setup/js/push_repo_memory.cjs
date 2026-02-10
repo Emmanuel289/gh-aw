@@ -3,7 +3,6 @@
 
 const fs = require("fs");
 const path = require("path");
-const { execSync } = require("child_process");
 const { getErrorMessage } = require("./error_helpers.cjs");
 const { globPatternToRegex } = require("./glob_pattern_helpers.cjs");
 
@@ -95,7 +94,7 @@ async function main() {
   // This is necessary because checkout was configured with sparse-checkout
   core.info(`Disabling sparse checkout...`);
   try {
-    execSync("git sparse-checkout disable", { stdio: "pipe" });
+    await exec.exec("git", ["sparse-checkout", "disable"], { ignoreReturnCode: true, silent: true });
   } catch (error) {
     // Ignore if sparse checkout wasn't enabled
     core.info("Sparse checkout was not enabled or already disabled");
@@ -108,14 +107,14 @@ async function main() {
 
     // Try to fetch the branch
     try {
-      execSync(`git fetch "${repoUrl}" "${branchName}:${branchName}"`, { stdio: "pipe" });
-      execSync(`git checkout "${branchName}"`, { stdio: "inherit" });
+      await exec.exec("git", ["fetch", repoUrl, `${branchName}:${branchName}`], { silent: true });
+      await exec.exec("git", ["checkout", branchName]);
       core.info(`Checked out existing branch: ${branchName}`);
     } catch (fetchError) {
       // Branch doesn't exist, create orphan branch
       core.info(`Branch ${branchName} does not exist, creating orphan branch...`);
-      execSync(`git checkout --orphan "${branchName}"`, { stdio: "inherit" });
-      execSync("git rm -rf . || true", { stdio: "pipe" });
+      await exec.exec("git", ["checkout", "--orphan", branchName]);
+      await exec.exec("git", ["rm", "-rf", "."], { ignoreReturnCode: true, silent: true });
       core.info(`Created orphan branch: ${branchName}`);
     }
   } catch (error) {
