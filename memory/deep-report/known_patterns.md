@@ -1,7 +1,8 @@
-## Known Patterns (2026-02-03)
+## Known Patterns (2026-02-10)
 
-- Token usage is now tracked daily; spend concentrates in a small set of high-volume workflows (Test YAML Import, Test Dispatcher Workflow, Issue Monster), while per-run outliers (Agent Persona Explorer, jsweep, CI Failure Doctor) dominate cost/run.
-- Copilot session outcomes skew toward "action_required" and "skipped" with low completion rates; successful sessions correlate strongly with high-quality, long-context prompts and 4-12 minute run durations.
-- GitHub MCP structural analysis confirms extreme response bloat for list_code_scanning_alerts (~95K tokens) and continued verbosity for list_releases/list_pull_requests; core repo tools remain efficient.
-- Remote GitHub MCP auth-test failures continue to be tool-loading issues (toolsets not available), not authentication failures.
-- Workflow lockfiles remain highly standardized in size/structure (149 lockfiles, 50-100 KB cluster), with strong adoption of schedule + workflow_dispatch and minimal workflow-level permissions.
+- Copilot token usage remains concentrated in a small set of workflows; CI Failure Doctor and Chroma Issue Indexer dominate token share, while Test Dispatcher Workflow drives run volume.
+- Copilot session outcomes are heavily "action_required" by design; executor-style agents show higher completion, while advisory agents remain non-autonomous.
+- GitHub MCP tool response bloat persists for list_code_scanning_alerts and list_workflows; GraphQL tools (list_discussions, list_issues) remain efficient.
+- Firewall reports show consistent high block rates dominated by unresolved DNS entries, with proxy.golang.org repeatedly blocked for Go-related workflows.
+- Safe output pipeline health is strong with 100% success in the last 24h and no MCP/API failures.
+- Copilot agent PR success rate is trending down (55% to 45% over 3 days) despite improved turnaround time.

@@ -1,7 +1,9 @@
-## Trend Data (as of 2026-02-03T15:23:35Z)
+## Trend Data (as of 2026-02-10T15:37:36Z)
 
-- Copilot token report (30 days ending 2026-02-03): 158.7M tokens, $1,586.65, 500 runs, 56 workflows; top consumers: Test YAML Import (22.2M), Test Dispatcher Workflow (20.9M), Issue Monster (15.5M). Prior report (2026-01-26) listed 187.4M tokens across 58 workflows, suggesting a lower total in the current 30-day window.
-- Copilot session insights (2026-02-03): 50 sessions, 16% completion rate, 18% failed, 44% action_required, 20% skipped; 56% of sessions missing logs. Prior (2026-01-26) completion rate was 20%.
-- Workflow lockfile corpus (2026-02-03): 149 workflows, avg size 63.4 KB, 91.9% between 50-100 KB; schedule + workflow_dispatch in 57%.
-- Issues (last 7 days dataset): 500 total, 46 open / 454 closed; 56 unlabeled total, 1 open unlabeled.
-- Top issue labels (7 days): cookie (251), automation (209), code-quality (154), task-mining (141), documentation (64).
+- Copilot token report (30 days ending 2026-02-10): 220.7M tokens, $220.65, 437 runs, 59 workflows. Top consumers: CI Failure Doctor (60.3M), Chroma Issue Indexer (35.0M), Security Guard Agent (13.5M). Top 3 account for 49.3% of tokens.
+- Copilot session insights (Feb 6-10): 250 sessions, 2.8% completion, 91.2% action_required (by design), 3.6% failed. test-workflow.yml shows 100% failure (7/7).
+- Daily code metrics (2026-02-10): 794,742 LOC across 2,832 files; quality score 84.95/100; test-to-source ratio 2.14:1; 446 commits in last 7 days with +25,663 net LOC.
+- Firewall report (Feb 3-10): 1,753 requests, 66.5% blocked; proxy.golang.org blocked 283 times (24% of blocks), primarily from Changeset Generator.
+- Safe output health (last 24h): 41 safe output jobs, 100% success; 25 tool calls; 0 API/MCP failures.
+- Issues (last 7 days dataset): 500 total; 68 open / 432 closed; 81 unlabeled total with 6 open unlabeled. Top labels: automation (211), cookie (209), code-quality (121), task-mining (110), testing (58).
+- Workflow logs (last 24h only; 7d logs timed out): 8 runs, 3.60M tokens, 3 errors, 32.1m total duration.
