@@ -5,6 +5,7 @@
  * Redacts secrets from files in /tmp/gh-aw and /opt/gh-aw directories before uploading artifacts
  * This script processes all .txt, .json, .log, .md, .mdx, .yml, .jsonl files under /tmp/gh-aw and /opt/gh-aw
  * and redacts any strings matching the actual secret values provided via environment variables.
+ * Also cleans up engine working folders (~/.copilot/, ~/.claude/, ~/.codex/, ~/.custom/) to remove secrets.
  */
 const fs = require("fs");
 const path = require("path");
@@ -167,6 +168,46 @@ function processFile(filePath, secretValues) {
 }
 
 /**
+ * Deletes engine working folders to clean up secrets
+ * Removes ~/.copilot/, ~/.claude/, ~/.codex/, ~/.custom/ if they exist
+ * Ignores missing folders (no error)
+ */
+function cleanupEngineWorkingFolders() {
+  const os = require("os");
+  const homeDir = os.homedir();
+
+  // Known engine IDs - based on pkg/constants/constants.go
+  const engineIds = ["copilot", "claude", "codex", "custom"];
+
+  let foldersDeleted = 0;
+  let foldersNotFound = 0;
+
+  for (const engineId of engineIds) {
+    const engineFolder = path.join(homeDir, `.${engineId}`);
+
+    try {
+      if (fs.existsSync(engineFolder)) {
+        // Recursively delete the folder
+        fs.rmSync(engineFolder, { recursive: true, force: true });
+        core.info(`Deleted engine working folder: ${engineFolder}`);
+        foldersDeleted++;
+      } else {
+        foldersNotFound++;
+      }
+    } catch (error) {
+      core.warning(`Failed to delete engine working folder ${engineFolder}: ${getErrorMessage(error)}`);
+    }
+  }
+
+  if (foldersDeleted > 0) {
+    core.info(`Cleaned up ${foldersDeleted} engine working folder(s)`);
+  }
+  if (foldersNotFound > 0) {
+    core.info(`Skipped ${foldersNotFound} engine folder(s) (not found)`);
+  }
+}
+
+/**
  * Main function
  */
 async function main() {
@@ -219,6 +260,10 @@ async function main() {
     } else {
       core.info("Secret redaction complete: no secrets found");
     }
+
+    // Clean up engine working folders to remove any secrets stored there
+    core.info("Cleaning up engine working folders");
+    cleanupEngineWorkingFolders();
   } catch (error) {
     core.setFailed(`Secret redaction failed: ${getErrorMessage(error)}`);
   }
@@ -226,4 +271,4 @@ async function main() {
 
 const { getErrorMessage } = require("./error_helpers.cjs");
 
-module.exports = { main, redactSecrets, redactBuiltInPatterns, BUILT_IN_PATTERNS };
+module.exports = { main, redactSecrets, redactBuiltInPatterns, cleanupEngineWorkingFolders, BUILT_IN_PATTERNS };

@@ -454,4 +454,145 @@ Custom secret: my-secret-123456789012`;
         });
       });
     }));
+
+  describe("cleanupEngineWorkingFolders", () => {
+    let originalHomedir;
+    let testHomeDir;
+
+    beforeEach(() => {
+      // Mock os.homedir() to use a test directory
+      originalHomedir = os.homedir;
+      testHomeDir = fs.mkdtempSync(path.join(os.tmpdir(), "home-test-"));
+      os.homedir = () => testHomeDir;
+    });
+
+    afterEach(() => {
+      // Restore original homedir
+      os.homedir = originalHomedir;
+      // Clean up test home directory
+      if (testHomeDir && fs.existsSync(testHomeDir)) {
+        fs.rmSync(testHomeDir, { recursive: true, force: true });
+      }
+    });
+
+    it("should delete existing engine folders", async () => {
+      // Create engine folders
+      const copilotDir = path.join(testHomeDir, ".copilot");
+      const claudeDir = path.join(testHomeDir, ".claude");
+      const codexDir = path.join(testHomeDir, ".codex");
+
+      fs.mkdirSync(copilotDir, { recursive: true });
+      fs.mkdirSync(claudeDir, { recursive: true });
+      fs.mkdirSync(codexDir, { recursive: true });
+
+      // Add some files to ensure recursive delete works
+      fs.writeFileSync(path.join(copilotDir, "session.json"), "{}");
+      fs.writeFileSync(path.join(claudeDir, "config.json"), "{}");
+
+      // Run the cleanup function
+      await eval(`(async () => { ${redactScript}; cleanupEngineWorkingFolders(); })()`);
+
+      // Verify folders are deleted
+      expect(fs.existsSync(copilotDir)).toBe(false);
+      expect(fs.existsSync(claudeDir)).toBe(false);
+      expect(fs.existsSync(codexDir)).toBe(false);
+
+      // Verify logging
+      expect(mockCore.info).toHaveBeenCalledWith(expect.stringContaining("Deleted engine working folder"));
+      expect(mockCore.info).toHaveBeenCalledWith(expect.stringContaining("Cleaned up"));
+    });
+
+    it("should handle missing engine folders gracefully", async () => {
+      // Don't create any folders - they should be missing
+
+      // Run the cleanup function
+      await eval(`(async () => { ${redactScript}; cleanupEngineWorkingFolders(); })()`);
+
+      // Should not fail, should log about skipped folders
+      expect(mockCore.info).toHaveBeenCalledWith(expect.stringContaining("Skipped"));
+      expect(mockCore.warning).not.toHaveBeenCalled();
+    });
+
+    it("should handle mix of existing and missing folders", async () => {
+      // Create only some engine folders
+      const copilotDir = path.join(testHomeDir, ".copilot");
+      const customDir = path.join(testHomeDir, ".custom");
+
+      fs.mkdirSync(copilotDir, { recursive: true });
+      fs.mkdirSync(customDir, { recursive: true });
+
+      // Run the cleanup function
+      await eval(`(async () => { ${redactScript}; cleanupEngineWorkingFolders(); })()`);
+
+      // Verify existing folders are deleted
+      expect(fs.existsSync(copilotDir)).toBe(false);
+      expect(fs.existsSync(customDir)).toBe(false);
+
+      // Should log about both deleted and skipped folders
+      expect(mockCore.info).toHaveBeenCalledWith(expect.stringContaining("Cleaned up 2 engine working folder"));
+      expect(mockCore.info).toHaveBeenCalledWith(expect.stringContaining("Skipped 2 engine folder"));
+    });
+
+    it("should handle nested files and directories in engine folders", async () => {
+      // Create complex directory structure
+      const copilotDir = path.join(testHomeDir, ".copilot");
+      const sessionDir = path.join(copilotDir, "session-state");
+
+      fs.mkdirSync(sessionDir, { recursive: true });
+      fs.writeFileSync(path.join(sessionDir, "session1.jsonl"), "data");
+      fs.writeFileSync(path.join(sessionDir, "session2.jsonl"), "data");
+      fs.writeFileSync(path.join(copilotDir, "mcp-config.json"), "{}");
+
+      // Run the cleanup function
+      await eval(`(async () => { ${redactScript}; cleanupEngineWorkingFolders(); })()`);
+
+      // Verify entire directory tree is deleted
+      expect(fs.existsSync(copilotDir)).toBe(false);
+      expect(fs.existsSync(sessionDir)).toBe(false);
+    });
+
+    it("should warn on deletion errors but not fail", async () => {
+      // Create a folder
+      const copilotDir = path.join(testHomeDir, ".copilot");
+      fs.mkdirSync(copilotDir, { recursive: true });
+
+      // Make the folder read-only to trigger an error (platform-dependent)
+      try {
+        fs.chmodSync(copilotDir, 0o444);
+      } catch (e) {
+        // Skip test if chmod not supported
+        return;
+      }
+
+      // Run the cleanup function
+      await eval(`(async () => { ${redactScript}; cleanupEngineWorkingFolders(); })()`);
+
+      // Should log warning but not throw
+      // Note: This behavior is platform-dependent, so we just verify no crash
+      expect(mockCore.setFailed).not.toHaveBeenCalled();
+
+      // Restore permissions for cleanup
+      try {
+        fs.chmodSync(copilotDir, 0o755);
+      } catch (e) {
+        // Ignore
+      }
+    });
+
+    it("should be called as part of main function", async () => {
+      const testFile = path.join(tempDir, "test.txt");
+      fs.writeFileSync(testFile, "No secrets here");
+
+      // Create an engine folder
+      const copilotDir = path.join(testHomeDir, ".copilot");
+      fs.mkdirSync(copilotDir, { recursive: true });
+
+      const modifiedScript = redactScript.replace('findFiles("/tmp/gh-aw", targetExtensions)', `findFiles("${tempDir.replace(/\\/g, "\\\\")}", targetExtensions)`);
+      await eval(`(async () => { ${modifiedScript}; await main(); })()`);
+
+      // Verify engine folder was deleted as part of main
+      expect(fs.existsSync(copilotDir)).toBe(false);
+      expect(mockCore.info).toHaveBeenCalledWith("Cleaning up engine working folders");
+    });
+  });
 });
