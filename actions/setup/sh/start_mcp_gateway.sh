@@ -413,6 +413,16 @@ else
 fi
 echo ""
 
+# Delete MCP server configuration file after gateway is launched
+echo "Cleaning up MCP server configuration file..."
+if [ -f /home/runner/.copilot/mcp-config.json ]; then
+  rm /home/runner/.copilot/mcp-config.json
+  echo "MCP server configuration file deleted"
+else
+  echo "MCP server configuration file not found (already deleted or never created)"
+fi
+echo ""
+
 echo "MCP gateway is running:"
 echo "  - From host: http://localhost:${MCP_GATEWAY_PORT}"
 echo "  - From containers: http://${MCP_GATEWAY_DOMAIN}:${MCP_GATEWAY_PORT}"
