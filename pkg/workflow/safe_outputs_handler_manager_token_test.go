@@ -369,7 +369,7 @@ func TestSafeOutputsLevelGitHubToken(t *testing.T) {
 	frontmatter := map[string]any{
 		"name": "Test Safe-Outputs Level Token",
 		"safe-outputs": map[string]any{
-			"github-token": "${{ secrets.SAFE_OUTPUT_GITHUB_TOKEN }}",
+			"github-token": "${{ secrets.SAFE_OUTPUTS_GITHUB_TOKEN }}",
 			"create-issue": map[string]any{
 				"title-prefix": "[dependabot-burner] ",
 				"assignees":    []string{"copilot"},
