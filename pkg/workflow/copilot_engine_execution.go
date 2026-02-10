@@ -127,16 +127,9 @@ func (e *CopilotEngine) GetExecutionSteps(workflowData *WorkflowData, logFile st
 	copilotArgs = append(copilotArgs, "--share", shareFilePath)
 	copilotExecLog.Printf("Added --share flag with path: %s", shareFilePath)
 
-	// Add --additional-mcp-config flag when MCP servers are configured
-	// This passes the MCP configuration inline instead of reading from ~/.copilot/mcp-config.json
-	// The JSON comes from the start-mcp-gateway step output via environment variable
-	hasMCPServers := HasMCPServers(workflowData)
-	if hasMCPServers {
-		// The JSON is passed via GH_AW_COPILOT_MCP_CONFIG environment variable
-		// which is set from the step output to prevent template injection
-		copilotArgs = append(copilotArgs, "--additional-mcp-config", "\"$GH_AW_COPILOT_MCP_CONFIG\"")
-		copilotExecLog.Print("Added --additional-mcp-config flag to pass MCP configuration inline from environment variable")
-	}
+	// Note: --additional-mcp-config is NOT added to copilotArgs here
+	// It will be added later with proper shell escaping to handle JSON quotes
+	// See the command building section below for MCP config handling
 
 	// Add prompt argument - inline for sandbox modes, variable for non-sandbox
 	if sandboxEnabled {
