@@ -129,13 +129,13 @@ func (e *CopilotEngine) GetExecutionSteps(workflowData *WorkflowData, logFile st
 
 	// Add --additional-mcp-config flag when MCP servers are configured
 	// This passes the MCP configuration inline instead of reading from ~/.copilot/mcp-config.json
-	// The JSON is read from the converted gateway output and properly escaped for shell
+	// The JSON comes from the start-mcp-gateway step output via environment variable
 	hasMCPServers := HasMCPServers(workflowData)
 	if hasMCPServers {
-		// The JSON will be read from /tmp/gh-aw/mcp-config/copilot-mcp-config.json at runtime
-		// Using command substitution with proper quoting to ensure safe JSON handling
-		copilotArgs = append(copilotArgs, "--additional-mcp-config", "\"$(cat /tmp/gh-aw/mcp-config/copilot-mcp-config.json)\"")
-		copilotExecLog.Print("Added --additional-mcp-config flag to pass MCP configuration inline")
+		// The JSON is passed via GH_AW_COPILOT_MCP_CONFIG environment variable
+		// which is set from the step output to prevent template injection
+		copilotArgs = append(copilotArgs, "--additional-mcp-config", "\"$GH_AW_COPILOT_MCP_CONFIG\"")
+		copilotExecLog.Print("Added --additional-mcp-config flag to pass MCP configuration inline from environment variable")
 	}
 
 	// Add prompt argument - inline for sandbox modes, variable for non-sandbox
@@ -399,8 +399,11 @@ COPILOT_CLI_INSTRUCTION="$(cat /tmp/gh-aw/aw-prompts/prompt.txt)"
 	// Always add GH_AW_PROMPT for agentic workflows
 	env["GH_AW_PROMPT"] = "/tmp/gh-aw/aw-prompts/prompt.txt"
 
-	// Note: GH_AW_MCP_CONFIG is no longer set as MCP configuration is passed inline
-	// via --additional-mcp-config flag instead of writing to ~/.copilot/mcp-config.json
+	// Add GH_AW_COPILOT_MCP_CONFIG when MCP servers are configured
+	// This is set from the start-mcp-gateway step output to prevent template injection
+	if hasMCPServers {
+		env["GH_AW_COPILOT_MCP_CONFIG"] = "${{ steps.start-mcp-gateway.outputs.copilot-mcp-config }}"
+	}
 
 	if hasGitHubTool(workflowData.ParsedTools) {
 		customGitHubToken := getGitHubToken(workflowData.Tools["github"])

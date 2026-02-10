@@ -355,13 +355,13 @@ echo "Detected engine type: $ENGINE_TYPE"
 case "$ENGINE_TYPE" in
   copilot)
     echo "Using Copilot converter..."
-    # Convert gateway output to Copilot format and save to file for --additional-mcp-config flag
-    # The converted JSON will be read and passed inline to copilot CLI
-    mkdir -p /tmp/gh-aw/mcp-config
-    bash /opt/gh-aw/actions/convert_gateway_config_copilot.sh > /tmp/gh-aw/mcp-config/copilot-mcp-config.json
-    echo "Copilot MCP configuration saved to /tmp/gh-aw/mcp-config/copilot-mcp-config.json"
-    echo "Configuration preview:"
-    head -c 500 /tmp/gh-aw/mcp-config/copilot-mcp-config.json
+    # Convert gateway output to Copilot format and store in environment variable
+    # The converted JSON will be passed to copilot CLI via --additional-mcp-config flag
+    GH_AW_COPILOT_MCP_CONFIG=$(bash /opt/gh-aw/actions/convert_gateway_config_copilot.sh)
+    export GH_AW_COPILOT_MCP_CONFIG
+    echo "Copilot MCP configuration stored in environment variable"
+    echo "Configuration preview (first 500 chars):"
+    echo "$GH_AW_COPILOT_MCP_CONFIG" | head -c 500
     echo "..."
     ;;
   codex)
@@ -430,8 +430,16 @@ echo ""
 
 # Output PID as GitHub Actions step output for use in cleanup
 # Output port and API key for use in stop script (per MCP Gateway Specification v1.1.0)
+# Output MCP config for Copilot engine (only if GH_AW_COPILOT_MCP_CONFIG is set)
 {
   echo "gateway-pid=$GATEWAY_PID"
   echo "gateway-port=${MCP_GATEWAY_PORT}"
   echo "gateway-api-key=${MCP_GATEWAY_API_KEY}"
+  if [ -n "$GH_AW_COPILOT_MCP_CONFIG" ]; then
+    # Use multiline string output syntax for JSON content
+    # See: https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#multiline-strings
+    echo "copilot-mcp-config<<EOF"
+    echo "$GH_AW_COPILOT_MCP_CONFIG"
+    echo "EOF"
+  fi
 } >> $GITHUB_OUTPUT
