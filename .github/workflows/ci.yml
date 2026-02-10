@@ -16,6 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      actions: write
     concurrency:
       group: ci-${{ github.ref }}-test
       cancel-in-progress: true
@@ -163,6 +164,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      actions: write
     strategy:
       fail-fast: false
       matrix:
@@ -414,6 +416,7 @@ jobs:
     if: always()  # Run even if some tests fail to report coverage
     permissions:
       contents: read
+      actions: write
     steps:
       - name: Checkout code
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
@@ -530,6 +533,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      actions: write
     concurrency:
       group: ci-${{ github.ref }}-build
       cancel-in-progress: true
@@ -723,6 +727,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      actions: write
     concurrency:
       group: ci-${{ github.ref }}-bench
       cancel-in-progress: true
@@ -914,6 +919,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      actions: write
     concurrency:
       group: ci-${{ github.ref }}-audit
       cancel-in-progress: true
@@ -1068,6 +1074,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      actions: write
     concurrency:
       group: ci-${{ github.ref }}-fuzz
       cancel-in-progress: true
