@@ -1,134 +1,113 @@
 {
-  "run_date": "2026-02-11T12:29:09.783493Z",
-  "run_id": "21904909325",
-  "total_prs_triaged": 7,
-  "new_prs": 3,
-  "re_triaged": 4,
+  "run_date": "2026-02-11T18:30:00Z",
+  "run_id": "21917749368",
+  "total_prs_triaged": 3,
+  "new_prs": 2,
+  "re_triaged": 1,
   "results": [
     {
-      "number": 14935,
-      "title": "Remove generic fallback from cache-memory restore-keys",
-      "category": "bug",
-      "risk": "high",
-      "priority_score": 83,
-      "action": "fast_track",
-      "ci_status": "pending",
-      "files_changed": 69,
-      "draft": false
-    },
-    {
-      "number": 14937,
-      "title": "docs: fix tokens page build errors - stable anchor IDs and proper image containers",
+      "number": 14998,
+      "title": "[WIP] Remove CSS styling and implement built-in Astro cards",
       "category": "docs",
       "risk": "low",
-      "priority_score": 38,
-      "action": "batch_review",
+      "priority_score": 15,
+      "impact_score": 8,
+      "urgency_score": 2,
+      "quality_score": 5,
+      "impact_rationale": "Documentation styling improvement, minimal impact on functionality",
+      "urgency_rationale": "WIP draft, very new (< 1 hour old), low urgency",
+      "quality_rationale": "Draft PR with CI pending, incomplete checklist, basic description",
+      "action": "defer",
+      "action_explanation": "WIP draft PR for documentation styling. Wait for author to complete checklist and mark ready for review.",
       "ci_status": "pending",
-      "files_changed": 2,
-      "draft": false
+      "files_changed": 0,
+      "additions": 0,
+      "deletions": 0,
+      "draft": true,
+      "created_at": "2026-02-11T18:23:45Z",
+      "age_days": 0,
+      "batch_id": null,
+      "labels_to_add": ["pr-type:docs", "pr-risk:low", "pr-priority:low", "pr-action:defer", "pr-agent:unknown"],
+      "labels_to_remove": []
+    },
+    {
+      "number": 14993,
+      "title": "Fix heredoc tests and production code to use GenerateHeredocDelimiter",
+      "category": "bug",
+      "risk": "medium",
+      "priority_score": 72,
+      "impact_score": 35,
+      "urgency_score": 25,
+      "quality_score": 12,
+      "impact_rationale": "CI test failures blocking development, affects 151 workflow lock files and core delimiter generation logic",
+      "urgency_rationale": "Fixes CI failures blocking other work (+5), affects multiple workflows, recent creation (6 hours old) (+5), important for maintaining CI health (+15)",
+      "quality_rationale": "Good PR description with clear root cause analysis (+5), includes testing section (+3), but CI still pending (+4)",
+      "action": "fast_track",
+      "action_explanation": "Critical CI fix affecting 30 files including test infrastructure and all workflow lock files. Well-documented with clear root cause. Needs fast-track review to unblock CI.",
+      "ci_status": "pending",
+      "files_changed": 30,
+      "additions": 0,
+      "deletions": 0,
+      "draft": true,
+      "created_at": "2026-02-11T17:35:22Z",
+      "age_days": 0,
+      "batch_id": null,
+      "labels_to_add": ["pr-type:bug", "pr-risk:medium", "pr-priority:high", "pr-action:fast-track", "pr-agent:unknown"],
+      "labels_to_remove": []
     },
     {
       "number": 14940,
-      "title": "[WIP] Add support for user per workflow rate limiting",
+      "title": "Add per-user per-workflow rate limiting for programmatic events",
       "category": "feature",
-      "risk": "low",
-      "priority_score": 32,
-      "action": "defer",
+      "risk": "medium",
+      "priority_score": 58,
+      "impact_score": 32,
+      "urgency_score": 12,
+      "quality_score": 14,
+      "impact_rationale": "New feature adding rate limiting capability - important security/stability feature affecting core workflow orchestration",
+      "urgency_rationale": "6 hours old (+3), enhances security and prevents abuse (+7), already has some triage labels (+2)",
+      "quality_rationale": "Excellent description with clear features and implementation details (+5), includes tests (+3), comprehensive documentation (+3), CI passing evidence (+3)",
+      "action": "fast_track",
+      "action_explanation": "Complete feature implementation with security implications. Well-documented with tests and comprehensive description. Already labeled from previous triage. Ready for review.",
       "ci_status": "pending",
-      "files_changed": 0,
-      "draft": true
-    },
-    {
-      "number": 14939,
-      "title": "[docs] Consolidate developer specifications into instructions file",
-      "category": "docs",
-      "risk": "low",
-      "priority_score": 30,
-      "action": "batch_review",
-      "ci_status": "pending",
-      "files_changed": 1,
-      "draft": false
-    },
-    {
-      "number": 14920,
-      "title": "[docs] Update documentation for features from 2026-02-11",
-      "category": "docs",
-      "risk": "low",
-      "priority_score": 28,
-      "action": "defer",
-      "ci_status": "pending",
-      "files_changed": 4,
-      "draft": false
-    },
-    {
-      "number": 14913,
-      "title": "[specs] Update layout specification - 2026-02-11",
-      "category": "docs",
-      "risk": "low",
-      "priority_score": 28,
-      "action": "defer",
-      "ci_status": "pending",
-      "files_changed": 1,
-      "draft": false
-    },
-    {
-      "number": 14914,
-      "title": "[jsweep] Clean collect_ndjson_output.cjs",
-      "category": "formatting",
-      "risk": "low",
-      "priority_score": 20,
-      "action": "defer",
-      "ci_status": "pending",
-      "files_changed": 1,
-      "draft": true
+      "files_changed": 14,
+      "additions": 1823,
+      "deletions": 2,
+      "draft": false,
+      "created_at": "2026-02-11T12:20:26Z",
+      "age_days": 0,
+      "batch_id": null,
+      "labels_to_add": ["pr-type:feature", "pr-risk:medium", "pr-priority:medium", "pr-action:fast-track", "pr-agent:unknown"],
+      "labels_to_remove": []
     }
   ],
   "statistics": {
     "by_category": {
+      "docs": 1,
       "bug": 1,
-      "docs": 4,
-      "feature": 1,
-      "formatting": 1
+      "feature": 1
     },
     "by_risk": {
-      "low": 6,
-      "high": 1
+      "low": 1,
+      "medium": 2,
+      "high": 0
     },
     "by_priority": {
       "high": 1,
-      "medium": 0,
-      "low": 6
+      "medium": 1,
+      "low": 1
     },
     "by_action": {
-      "fast_track": 1,
-      "batch_review": 2,
-      "defer": 4,
+      "defer": 1,
+      "fast_track": 2,
       "auto_merge": 0,
+      "batch_review": 0,
       "close": 0
     }
   },
   "auto_merge_candidates": [],
-  "fast_track_needed": [
-    14935
-  ],
-  "batches": {
-    "batch-docs-001": [
-      14937,
-      14939
-    ]
-  },
+  "fast_track_needed": [14993, 14940],
+  "batches": {},
   "close_candidates": [],
-  "defer_candidates": [
-    14940,
-    14920,
-    14913,
-    14914
-  ],
-  "previous_run": {
-    "run_date": "2026-02-11T06:32:00Z",
-    "run_id": "21895125075",
-    "total_prs_triaged": 4
-  },
-  "backlog_status": "active",
-  "notes": "7 PRs triaged. 1 critical security fix (#14935) needs fast-track. 2 docs PRs batched. 4 PRs deferred (2 WIP drafts, 2 routine docs)."
+  "defer_candidates": [14998]
 }
