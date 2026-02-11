@@ -275,8 +275,8 @@ func TestApplyJqFilter_SecurityValidation(t *testing.T) {
 			// Use a simple JSON input for testing
 			jsonInput := `{"name":"test","value":123,"active":true}`
 
-			// Special case for recurse test - needs numeric input
-			if strings.Contains(tt.jqFilter, "recurse") {
+			// Special case for bounded recurse test - needs numeric input
+			if tt.name == "allow bounded recurse with condition" {
 				jsonInput = `2`
 			}
 
