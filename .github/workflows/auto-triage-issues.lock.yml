@@ -42,7 +42,7 @@ name: "Auto-Triage Issues"
 permissions: {}
 
 concurrency:
-  group: "gh-aw-${{ github.workflow }}-${{ github.event.issue.number }}"
+  group: "gh-aw-${{ github.workflow }}"
 
 run-name: "Auto-Triage Issues"
 

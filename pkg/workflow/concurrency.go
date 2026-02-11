@@ -145,8 +145,8 @@ func buildConcurrencyGroupKeys(workflowData *WorkflowData, isCommandTrigger bool
 		// Pure PR workflows: use PR number if available, otherwise fall back to ref for compatibility
 		keys = append(keys, "${{ github.event.pull_request.number || github.ref }}")
 	} else if isIssueWorkflow(workflowData.On) {
-		// Issue workflows: use issue number
-		keys = append(keys, "${{ github.event.issue.number }}")
+		// Issue workflows: sequentialized per workflow (no issue number)
+		// Multiple runs on the same workflow queue sequentially
 	} else if isDiscussionWorkflow(workflowData.On) {
 		// Discussion workflows: use discussion number
 		keys = append(keys, "${{ github.event.discussion.number }}")
