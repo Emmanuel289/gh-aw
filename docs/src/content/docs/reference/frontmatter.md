@@ -379,10 +379,6 @@ runs-on: ubuntu-latest               # Defaults to ubuntu-latest (main job only)
 timeout-minutes: 30                  # Defaults to 20 minutes
 ```
 
-> [!CAUTION]
-> Breaking Change: `timeout_minutes` Removed
-> The underscore variant `timeout_minutes` has been removed and is no longer supported. Use `timeout-minutes` (with hyphen) instead. Workflows using `timeout_minutes` will fail compilation with an "Unknown property" error.
-
 ### Workflow Concurrency Control (`concurrency:`)
 
 Automatically generates concurrency policies for the agent job. See [Concurrency Control](/gh-aw/reference/concurrency/).
