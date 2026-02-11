@@ -1050,11 +1050,11 @@ func RenderJSONMCPConfigDirect(
 	generatedConfig := configBuilder.String()
 
 	// Write the configuration directly to the file
-	yaml.WriteString(fmt.Sprintf("          cat << MCPCONFIG_EOF > %s\n", options.ConfigPath))
+	fmt.Fprintf(yaml, "          cat << MCPCONFIG_EOF > %s\n", options.ConfigPath)
 	yaml.WriteString(generatedConfig)
 	yaml.WriteString("          MCPCONFIG_EOF\n")
 	yaml.WriteString("          \n")
-	yaml.WriteString(fmt.Sprintf("          echo \"MCP config written to %s\"\n", options.ConfigPath))
+	fmt.Fprintf(yaml, "          echo \"MCP config written to %s\"\n", options.ConfigPath)
 
 	return nil
 }
