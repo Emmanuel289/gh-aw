@@ -1,30 +1,97 @@
 {
-  "run_date": "2026-02-11T00:44:13.341Z",
-  "run_id": "21888181686",
-  "total_prs_triaged": 0,
-  "new_prs": 0,
+  "run_date": "2026-02-11T06:32:00Z",
+  "run_id": "21895125075",
+  "total_prs_triaged": 4,
+  "new_prs": 4,
   "re_triaged": 0,
-  "results": [],
+  "results": [
+    {
+      "number": 14888,
+      "title": "Remove sandbox: false, add sandbox.agent: false for firewall-only disable",
+      "category": "feature",
+      "risk": "high",
+      "priority_score": 75,
+      "action": "fast_track",
+      "ci_status": "clean",
+      "files_changed": 23,
+      "draft": false
+    },
+    {
+      "number": 14901,
+      "title": "[WIP] Fix error messages display in gh aw compile command",
+      "category": "bug",
+      "risk": "low",
+      "priority_score": 50,
+      "action": "defer",
+      "ci_status": "pending",
+      "files_changed": 4,
+      "draft": true
+    },
+    {
+      "number": 14899,
+      "title": "Extract duplicate expires preprocessing logic into shared helper",
+      "category": "refactor",
+      "risk": "medium",
+      "priority_score": 45,
+      "action": "batch_review",
+      "ci_status": "pending",
+      "files_changed": 4,
+      "draft": false,
+      "batch_id": "batch-refactor-001"
+    },
+    {
+      "number": 14900,
+      "title": "Verify roles: all is valid and compiles correctly",
+      "category": "chore",
+      "risk": "low",
+      "priority_score": 20,
+      "action": "close",
+      "ci_status": "pending",
+      "files_changed": 0,
+      "draft": true
+    }
+  ],
   "statistics": {
-    "by_category": {},
-    "by_risk": {},
-    "by_priority": {},
-    "by_action": {}
+    "by_category": {
+      "bug": 1,
+      "feature": 1,
+      "refactor": 1,
+      "chore": 1
+    },
+    "by_risk": {
+      "low": 2,
+      "medium": 1,
+      "high": 1
+    },
+    "by_priority": {
+      "high": 1,
+      "medium": 2,
+      "low": 1
+    },
+    "by_action": {
+      "fast_track": 1,
+      "batch_review": 1,
+      "defer": 1,
+      "close": 1,
+      "auto_merge": 0
+    }
   },
   "auto_merge_candidates": [],
-  "fast_track_needed": [],
-  "batches": {},
-  "close_candidates": [],
+  "fast_track_needed": [14888],
+  "batches": {
+    "batch-refactor-001": [14899]
+  },
+  "close_candidates": [14900],
+  "defer_candidates": [14901],
   "previous_run": {
-    "run_date": "2026-02-10T18:33:07.614884+00:00",
-    "run_id": "21877444406",
-    "total_prs_triaged": 3,
-    "prs_resolved": [
+    "run_date": "2026-02-11T00:44:13.341Z",
+    "run_id": "21888181686",
+    "total_prs_triaged": 0,
+    "prs_resolved_since_then": [
       {
         "number": 14820,
         "title": "Make discussion categories case-insensitive",
-        "status": "merged",
-        "closed_at": "2026-02-10T18:47:43Z"
+        "status": "merged"
       },
       {
         "number": 14819,
@@ -38,6 +105,6 @@
       }
     ]
   },
-  "backlog_status": "clear",
-  "notes": "All PRs from previous triage run have been resolved. No open agent-created PRs remaining."
+  "backlog_status": "active",
+  "notes": "4 new PRs triaged. 1 high-priority breaking change (#14888) needs fast-track review. 2 draft PRs in progress. 1 investigation PR should be closed. Previous backlog fully cleared."
 }

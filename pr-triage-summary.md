@@ -1,31 +1,24 @@
-# PR Triage Summary - Latest Run
+# PR Triage Summary
 
-**Run Date:** 2026-02-11T00:44:13.341Z  
-**Run ID:** 21888181686
+**Last Run:** 2026-02-11T06:32:00Z (Run #21895125075)
 
-## Quick Status
+## Current Status
+- **Total Open PRs:** 4
+- **Fast-track:** 1 (#14888 - breaking change)
+- **Batch Review:** 1 (#14899 - refactor)
+- **Deferred:** 1 (#14901 - WIP draft)
+- **To Close:** 1 (#14900 - investigation, no code)
 
-🎉 **BACKLOG CLEAR** - Zero open agent-created PRs
+## Priority Actions
+1. ⚡ **URGENT:** Review #14888 (breaking change, CI clean, priority 75/100)
+2. 🗑️ Close #14900 (investigation PR, no code changes)
+3. 👀 Monitor #14901 (WIP draft - defer until ready)
+4. 📦 Batch review #14899 when CI passes
 
-## Current State
-- Open PRs: **0**
-- New PRs: **0**  
-- Re-triaged: **0**
+## Trends
+- 4 PRs created in last 2 hours (high velocity)
+- Previous backlog cleared (3 PRs resolved)
+- Balanced mix of categories (bug, feature, refactor, chore)
+- 50% draft PRs indicate active development
 
-## Previous Run Resolution (2026-02-10)
-All 3 PRs from previous triage successfully resolved:
-- ✅ #14820 - Merged (bug fix, fast-track)
-- ✅ #14819 - Merged (bug fix, fast-track)
-- ✅ #14682 - Closed (test workflow, batch review)
-
-## Metrics
-- **Backlog Reduction:** -3 PRs (-100%)
-- **Resolution Time:** ~14 minutes (fast-track PRs)
-- **Success Rate:** 100%
-
-## Repository Health: A+ (100/100)
-
-No action items - continue monitoring for new PRs.
-
----
-*Last updated: 2026-02-11T00:44:13.341Z*
+**Next Triage:** 2026-02-11T12:32:00Z
