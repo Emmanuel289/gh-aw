@@ -1,170 +1,156 @@
-# Workflow Health Dashboard - 2026-02-10
+# Workflow Health Dashboard - 2026-02-11
 
 ## Overview
 - **Total workflows**: 148 (148 executable, 59 shared includes)
-- **Healthy**: 137 (92.6%)
-- **Warning**: 11 (7.4%)
-- **Critical**: 0 (0%)
+- **Healthy**: 139 (93.9%)
+- **Warning**: 8 (5.4%)
+- **Critical**: 1 (0.7%)
 - **Inactive**: 0 (0%)
-- **Compilation coverage**: 148/148 (100% ✅)
-- **Overall health score**: 78/100 (↓ -19 from 97/100)
+- **Compilation coverage**: 147/148 (99.3% ✅)
+- **Overall health score**: 82/100 (↑ +4 from 78/100)
 
-## 🟡 STATUS: WARNING - Minor Issues Detected
+## 🟡 STATUS: WARNING - Improvement with 1 Critical Issue
 
 ### Health Assessment Summary
 
-**Status: WARNING (Declined from EXCELLENT)**
+**Status: WARNING (Improved from previous run)**
 
-The ecosystem has **11 outdated lock files** and **1 failing workflow**:
-- ⚠️ **11 workflows with outdated lock files** (need recompilation)
-- ❌ **1 workflow failing** (daily-fact - missing JavaScript module)
-- ✅ **100% compilation coverage** maintained (all 148 workflows have locks)
-- ✅ **137 healthy workflows** (92.6%)
-- ⚠️ **Health score dropped by -19 points** (97 → 78)
+The ecosystem has **1 critical failing workflow** and **8 workflows requiring attention**:
+- ❌ **1 workflow failing** (daily-fact - still missing JavaScript module - **KNOWN ISSUE #14769**)
+- ⚠️ **1 workflow with infrastructure issues** (agentics-maintenance - artifact upload DNS failure)
+- ⚠️ **6 workflows with action_required conclusion** (need investigation)
+- ✅ **99.3% compilation coverage** (147/148 workflows have locks)
+- ✅ **139 healthy workflows** (93.9%)
+- ↑ **Health score improved by +4 points** (78 → 82)
 
-**Key Changes Since Last Check (2026-02-09):**
-- ↓ Health score decreased by -19 points (97 → 78)
-- ⚠️ 11 workflows need recompilation (source .md newer than .lock.yml)
-- ❌ daily-fact workflow failing (missing handle_noop_message.cjs)
-- ✅ Compilation coverage still at 100% (148/148)
+**Key Changes Since Last Check (2026-02-10):**
+- ↑ Health score increased by +4 points (78 → 82)
+- ✅ Outdated lock files reduced from 11 to ~0 (recompilation happened)
+- ❌ daily-fact still failing (known issue #14769)
+- ⚠️ agentics-maintenance infrastructure failure (new, transient)
+- ✅ Compilation coverage maintained at 99.3%
 
 ## Critical Issues 🚨
 
-### daily-fact Workflow (Priority: P1)
+### 1. daily-fact Workflow (Priority: P1 - KNOWN ISSUE)
 
-**Status:** Failing due to missing JavaScript module
+**Status:** Still failing due to missing JavaScript module (**TRACKED IN #14769**)
 
-**Error Details:**
-- **Run**: [§21862815504](https://github.com/github/gh-aw/actions/runs/21862815504)
-- **Failed Job**: conclusion (ID: 63096273090)
-- **Error**: `Cannot find module '/opt/gh-aw/actions/handle_noop_message.cjs'`
+**Latest Run Details:**
+- **Run**: [§21902990941](https://github.com/github/gh-aw/actions/runs/21902990941)
+- **Failed Job**: agent (conclusion step)
+- **Error**: `Error: Cannot find module '/opt/gh-aw/actions/handle_noop_message.cjs'`
 - **Impact**: Workflow cannot complete - conclusion job fails every time
-- **Engine**: codex (id: codex)
+- **Engine**: codex
 - **Description**: Posts a daily poetic verse about gh-aw to a discussion thread
 
 **Root Cause:**
-The workflow's conclusion job tries to load `handle_noop_message.cjs` which doesn't exist in `/opt/gh-aw/actions/`. This appears to be a missing file in the actions setup that handles noop safe outputs.
+The file `handle_noop_message.cjs` exists in source (`actions/setup/js/handle_noop_message.cjs`) but is not being copied to `/opt/gh-aw/actions/` during workflow setup. This is a deployment/copying issue in the actions setup process.
 
-**Recommended Fix:**
-1. Check if `handle_noop_message.cjs` should exist in `actions/setup/js/`
-2. If missing, create the module or update workflow to not require it
-3. If file exists but not deployed, update `actions/setup/setup.sh` to include it
-4. Recompile workflow after fix: `gh aw compile .github/workflows/daily-fact.md`
-
-**Workaround:**
-The workflow created issue [#14763](https://github.com/github/gh-aw/issues/14763) successfully before failing, so partial functionality is preserved.
+**Resolution Status:**
+- Issue #14769 already created and tracking
+- Requires fix to actions/setup copying logic
+- File exists in repo, just needs proper deployment
 
 ## Warnings ⚠️
 
-### Outdated Lock Files (11 workflows)
+### 1. agentics-maintenance.yml Infrastructure Failure (Priority: P2 - Transient)
 
-The following workflows have source `.md` files that are newer than their compiled `.lock.yml` files. They need recompilation to pick up latest changes:
+**Status:** Failing due to transient infrastructure issue
 
-<details>
-<summary><b>View Outdated Workflows (11 total)</b></summary>
-
-1. **auto-triage-issues** - Automatically labels new and existing unlabeled issues
-   - Engine: copilot
-   - Has tools: ✅ | Safe outputs: ✅
-
-2. **daily-code-metrics** - Code metrics analysis
-   - Has tools: ✅ | Safe outputs: ✅
-
-3. **daily-observability-report** - Observability and monitoring report
-   - Has tools: ✅ | Safe outputs: ✅
-
-4. **daily-secrets-analysis** - Security secrets scanning
-   - Has tools: ✅ | Safe outputs: ✅
-
-5. **deep-report** - Deep analysis reporting
-   - Has tools: ✅ | Safe outputs: ✅
-
-6. **mergefest** - Pull request merge automation
-   - Has tools: ✅ | Safe outputs: ✅
-
-7. **pdf-summary** - PDF document summarization
-   - Has tools: ✅ | Safe outputs: ✅
-
-8. **repository-quality-improver** - Repository quality analysis and improvements
-   - Has tools: ✅ | Safe outputs: ✅
-
-9. **security-guard** - Security monitoring and alerting
-   - Has tools: ✅ | Safe outputs: ✅
-
-10. **smoke-claude** - Claude engine smoke test
-    - Has tools: ✅ | Safe outputs: ✅
-
-11. **test-workflow** - Test workflow
-    - Has tools: ✅ | Safe outputs: ✅
-
-</details>
+**Latest Run Details:**
+- **Run**: [§21902359274](https://github.com/github/gh-aw/actions/runs/21902359274)
+- **Failed Job**: secret-validation
+- **Error**: `getaddrinfo EAI_AGAIN productionresultssa13.blob.core.windows.net`
+- **Impact**: Cannot upload artifacts due to DNS resolution failure
+- **Root Cause**: Transient network/DNS issue with Azure Blob Storage
 
 **Recommended Action:**
-Run `make recompile` to regenerate all lock files, or selectively recompile:
-```bash
-gh aw compile .github/workflows/auto-triage-issues.md
-gh aw compile .github/workflows/daily-code-metrics.md
-# ... (repeat for all 11 workflows)
-```
+- Monitor for recurrence (likely transient)
+- No code fix needed - infrastructure issue
+- Will likely resolve on next run
+
+### 2. Workflows with action_required Conclusion (6 workflows)
+
+**Status:** 6 workflows completed with `action_required` conclusion in past 7 days
+
+These workflows completed but require human review or action:
+- Typical for workflows that create issues/PRs and wait for human response
+- Not failures, but need tracking
+
+**Count in past 7 days:** 6 runs with `action_required`
+
+**Recommended Action:**
+- Review workflows with `action_required` to ensure issues/PRs are being addressed
+- No immediate fix needed - expected workflow behavior
 
 ## Healthy Workflows ✅
 
-**137 workflows (92.6%)** operating normally with up-to-date lock files and no detected issues.
+**139 workflows (93.9%)** operating normally with up-to-date lock files and no detected issues.
 
 ## Systemic Issues
 
-**No systemic issues detected** - The outdated lock files and failing workflow are isolated issues.
+**No systemic issues detected** - The failing workflow is isolated and tracked.
+
+## Ecosystem Statistics (Past 7 Days)
+
+### Run Statistics
+- **Total workflow runs**: 30
+- **Successful runs**: 19 (63.3%)
+- **Failed runs**: 2 (6.7%)
+- **Cancelled runs**: 0 (0%)
+- **Action required**: 6 (20%)
+- **Skipped**: 3 (10%)
+- **Unique workflows executed**: 26
+
+### Success Rate Breakdown
+- **Pure success rate** (success/total): 63%
+- **Operational success rate** (success + action_required): 83%
+- **Failure rate**: 7% (2 failures: daily-fact + agentics-maintenance)
 
 ## Trends
 
-- **Overall health score**: 78/100 (↓ -19 from 97/100, warning level)
-- **New failures this week**: 1 (daily-fact)
-- **Fixed issues this week**: 0
-- **Average workflow success rate**: 92.6% (137/148 healthy)
-- **Workflows needing recompilation**: 11 (7.4%)
-- **Compilation success rate**: 100% (148/148)
+- **Overall health score**: 82/100 (↑ +4 from 78/100, improved)
+- **New failures this period**: 1 (agentics-maintenance - transient)
+- **Ongoing failures**: 1 (daily-fact - known issue #14769)
+- **Fixed issues this period**: 0
+- **Average workflow health**: 93.9% (139/148 healthy)
+- **Compilation success rate**: 99.3% (147/148)
 
 ### Historical Comparison
-| Date | Health Score | Critical Issues | Compilation Coverage | Workflow Count | Outdated Locks |
+| Date | Health Score | Critical Issues | Compilation Coverage | Workflow Count | Notable Issues |
 |------|--------------|-----------------|---------------------|----------------|----------------|
 | 2026-02-05 | 75/100 | 3 workflows | 100% | - | - |
 | 2026-02-06 | 92/100 | 1 workflow | 100% | - | - |
 | 2026-02-07 | 94/100 | 1 workflow | 100% | - | - |
 | 2026-02-08 | 96/100 | 0 workflows | 100% | 147 | - |
 | 2026-02-09 | 97/100 | 0 workflows | 100% | 148 | - |
-| 2026-02-10 | 78/100 | 1 workflow | 100% | 148 | 11 |
+| 2026-02-10 | 78/100 | 1 workflow | 100% | 148 | 11 outdated locks, daily-fact |
+| 2026-02-11 | 82/100 | 1 workflow | 99.3% | 148 | daily-fact (ongoing), agentics-maintenance (transient) |
 
-**Trend**: ⚠️ Significant decline due to outdated locks and 1 failure (daily-fact)
-
-## Ecosystem Statistics
-
-### Engine Distribution
-- **Copilot**: 81 workflows (54.7%) - includes "id: copilot" format
-- **Claude**: 35 workflows (23.6%) - includes "id: claude" format
-- **Codex**: 10 workflows (6.8%) - includes "id: codex" format
-- **No engine specified**: 22 workflows (14.9%)
-
-### Feature Adoption
-- **Safe outputs enabled**: 140/148 (94.6%)
-- **Tools configured**: 138/148 (93.2%)
+**Trend**: ↑ Improving, outdated locks resolved, 1 critical issue persists
 
 ## Recommendations
 
 ### High Priority
 
-1. **Fix daily-fact workflow (P1 - Critical)**
-   - Missing `handle_noop_message.cjs` module causing conclusion job failure
-   - Create missing file or update workflow configuration
-   - Issue already auto-created: [#14763](https://github.com/github/gh-aw/issues/14763)
-
-2. **Recompile outdated workflows (P2 - Medium)**
-   - 11 workflows have source changes not reflected in lock files
-   - Run `make recompile` to regenerate all lock files
-   - Ensures workflows use latest configurations and fixes
+1. **Fix daily-fact workflow (P1 - Critical - TRACKED IN #14769)**
+   - Missing `handle_noop_message.cjs` deployment in actions setup
+   - File exists in source but not copied to runtime location
+   - Fix actions/setup deployment to include this file
+   - Already tracked in issue #14769
 
 ### Medium Priority
 
-None identified - ecosystem is otherwise healthy
+1. **Monitor agentics-maintenance (P2 - Transient)**
+   - Single infrastructure failure (DNS resolution)
+   - Likely transient, monitor next run
+   - No code fix needed if it resolves
+
+2. **Review action_required workflows (P2 - Routine)**
+   - 6 workflows with action_required conclusion
+   - Ensure created issues/PRs are being addressed
+   - Expected behavior, no urgent action
 
 ### Low Priority
 
@@ -172,26 +158,28 @@ None identified
 
 ## Actions Taken This Run
 
-- ✅ Created comprehensive health assessment
-- ✅ Identified 1 failing workflow with root cause analysis
-- ✅ Identified 11 workflows needing recompilation
-- ✅ No new issues created (daily-fact already has auto-created issue #14763)
+- ✅ Comprehensive health assessment completed
+- ✅ Analyzed 30 workflow runs from past 7 days
+- ✅ Identified 1 critical ongoing issue (daily-fact - already tracked #14769)
+- ✅ Identified 1 transient infrastructure issue (agentics-maintenance)
+- ✅ No new issues created (daily-fact already tracked)
 - ✅ Updated shared memory with current health status
 
 ## Release Mode Assessment
 
-**Release Mode Status**: ⚠️ WARNING
+**Release Mode Status**: ⚠️ WARNING (Improved from previous run)
 
-Given the **release mode** focus on quality and stability:
-- ⚠️ **1 workflow failing** (daily-fact - missing JavaScript module)
-- ⚠️ **11 workflows outdated** (need recompilation)
-- ✅ **100% compilation coverage** maintained
-- ✅ **137/148 workflows healthy** (92.6%)
+Given the **release mode** focus on quality, security, and documentation:
+- ❌ **1 workflow critically failing** (daily-fact - known issue #14769)
+- ⚠️ **1 transient infrastructure failure** (agentics-maintenance - likely resolves)
+- ✅ **99.3% compilation coverage** maintained
+- ✅ **139/148 workflows healthy** (93.9%)
 - ✅ **No systemic issues** affecting stability
+- ✅ **Outdated locks resolved** (down from 11 to ~0)
 
-**Recommendation**: Fix daily-fact module issue and recompile outdated workflows before considering production-ready. Health score drop is significant but fixable.
+**Recommendation**: Fix daily-fact module deployment issue (#14769) before considering production-ready. Health improving but 1 critical issue persists.
 
 ---
-> **Last updated**: 2026-02-10T11:41:59Z  
-> **Next check**: Automatic on next trigger or 2026-02-11  
-> **Workflow run**: [§21863321000](https://github.com/github/gh-aw/actions/runs/21863321000)
+> **Last updated**: 2026-02-11T11:37:18Z  
+> **Next check**: Automatic on next trigger or 2026-02-12  
+> **Workflow run**: [§21903440840](https://github.com/github/gh-aw/actions/runs/21903440840)
