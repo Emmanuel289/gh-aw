@@ -16,6 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      GOTOOLCHAIN: local
     concurrency:
       group: ci-${{ github.ref }}-test
       cancel-in-progress: true
@@ -163,6 +165,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      GOTOOLCHAIN: local
     strategy:
       fail-fast: false
       matrix:
@@ -530,6 +534,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      GOTOOLCHAIN: local
     concurrency:
       group: ci-${{ github.ref }}-build
       cancel-in-progress: true
@@ -798,6 +804,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      GOTOOLCHAIN: local
     concurrency:
       group: ci-${{ github.ref }}-lint-go
       cancel-in-progress: true
@@ -1068,6 +1076,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      GOTOOLCHAIN: local
     concurrency:
       group: ci-${{ github.ref }}-fuzz
       cancel-in-progress: true
@@ -1240,6 +1250,8 @@ jobs:
     timeout-minutes: 10  # Prevent jobs from hanging indefinitely
     permissions:
       contents: read
+    env:
+      GOTOOLCHAIN: local
     strategy:
       fail-fast: false
       matrix:
@@ -1407,6 +1419,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      GOTOOLCHAIN: local
     concurrency:
       group: ci-${{ github.ref }}-mcp-server-compile-test
       cancel-in-progress: true
@@ -1578,6 +1592,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
+    env:
+      GOTOOLCHAIN: local
     strategy:
       fail-fast: false
       matrix:
@@ -1706,6 +1722,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      GOTOOLCHAIN: local
     concurrency:
       group: ci-${{ github.ref }}-alpine-container
       cancel-in-progress: true
