@@ -10,11 +10,11 @@ disable-agentic-editing: true
 
 GitHub Actions automatically provides a default `GITHUB_TOKEN` that works for most workflows. However, depending on what your workflow needs to do, you may need additional tokens:
 
-- **Cross-repo access or remote GitHub tools** – Add [`GH_AW_GITHUB_TOKEN`](#ghawaithubtoken-enhanced-pat-for-cross-repo-and-remote-tools)
-- **Copilot engine and agent operations** – Add [`COPILOT_GITHUB_TOKEN`](#copilotwithubtoken-copilot-authentication)
-- **GitHub Projects v2 operations** – Add [`GH_AW_PROJECT_GITHUB_TOKEN`](#ghawprojectwithubtoken-github-projects-v2)
-- **Assign Copilot agents to issues/PRs** – Add [`GH_AW_AGENT_TOKEN`](#ghawagenttoken-agent-assignment)
-- **MCP server with isolated permissions** (optional) – Add [`GH_AW_GITHUB_MCP_SERVER_TOKEN`](#ghawgithubmcpservertoken-github-mcp-server)
+- **Cross-repo access or remote GitHub tools** – Add [`GH_AW_GITHUB_TOKEN`](#gh_aw_github_token)
+- **Copilot engine and agent operations** – Add [`COPILOT_GITHUB_TOKEN`](#copilot_github_token)
+- **GitHub Projects v2 operations** – Add [`GH_AW_PROJECT_GITHUB_TOKEN`](#gh_aw_project_github_token)
+- **Assign Copilot agents to issues/PRs** – Add [`GH_AW_AGENT_TOKEN`](#gh_aw_agent_token)
+- **MCP server with isolated permissions** (optional) – Add [`GH_AW_GITHUB_MCP_SERVER_TOKEN`](#gh_aw_github_mcp_server_token)
 
 ## How do I add tokens to my repository?
 
