@@ -9,6 +9,8 @@ on:
         required: true
 permissions:
   contents: read
+  issues: read
+  pull-requests: read
 imports:
   - shared/mood.md
 ---

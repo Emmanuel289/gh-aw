@@ -24,7 +24,7 @@
 #   Imports:
 #     - shared/mood.md
 #
-# frontmatter-hash: 0ab621d7838eb806df720a797690c94e631a8cae96aa11319915409788e78707
+# frontmatter-hash: 07f84500c79f2ecef60f41f206c1f327e85360961ec8d0878b508f6c03fc6d0c
 
 name: "Test Dispatcher Workflow"
 "on": issues
@@ -74,6 +74,7 @@ jobs:
     permissions:
       contents: read
       issues: read
+      pull-requests: read
     env:
       DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
       GH_AW_ASSETS_ALLOWED_EXTS: ""

@@ -3,6 +3,7 @@ on: issues
 permissions:
   contents: read
   issues: read
+  pull-requests: read
 safe-outputs:
   dispatch-workflow:
     workflows:

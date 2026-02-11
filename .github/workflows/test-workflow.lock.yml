@@ -24,7 +24,7 @@
 #   Imports:
 #     - shared/mood.md
 #
-# frontmatter-hash: 7e28df1a5884fe8ab7987791066296378c3d879a1c3674706d645017734ec3de
+# frontmatter-hash: afab778c2dcdfb7d219be65817a0910f248a1d4b149c3ed496f1ad9d77001138
 
 name: "Test Workflow"
 "on":
@@ -77,6 +77,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      issues: read
+      pull-requests: read
     concurrency:
       group: "gh-aw-copilot-${{ github.workflow }}"
     outputs:

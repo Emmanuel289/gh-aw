@@ -3,6 +3,10 @@ name: Test Project URL Explicit Requirement
 engine: copilot
 on:
   workflow_dispatch:
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
 
 safe-outputs:
   update-project:

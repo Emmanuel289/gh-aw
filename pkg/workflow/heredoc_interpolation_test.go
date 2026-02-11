@@ -26,6 +26,8 @@ func TestHeredocInterpolation(t *testing.T) {
 on: issues
 permissions:
   contents: read
+  issues: read
+  pull-requests: read
 engine: copilot
 ---
 
@@ -121,6 +123,8 @@ func TestHeredocInterpolationMainPrompt(t *testing.T) {
 on: issues
 permissions:
   contents: read
+  issues: read
+  pull-requests: read
 engine: copilot
 ---
 

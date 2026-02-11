@@ -24,7 +24,7 @@
 #   Imports:
 #     - shared/mood.md
 #
-# frontmatter-hash: 4b8eb1036171f89a3f37409cafdf433cf2dab9a4199718beb62624953b63c1a5
+# frontmatter-hash: db2aef2be664cad0b9f4535b3d869655dfb2f55bde5ffe249e54c2ddd707f072
 
 name: "Test Project URL Explicit Requirement"
 "on":
@@ -72,6 +72,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      issues: read
+      pull-requests: read
     concurrency:
       group: "gh-aw-copilot-${{ github.workflow }}"
     env:
