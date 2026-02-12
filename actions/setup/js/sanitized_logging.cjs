@@ -22,9 +22,10 @@ function neutralizeWorkflowCommands(text) {
     return String(text);
   }
   // Replace :: only at the start of a line (after start or newline)
+  // The ^ anchor with 'm' flag matches at the start of the string AND after each newline
   // This matches GitHub Actions' actual command parsing behavior
   // Preserves :: in normal text like "12:30", "C++::function", etc.
-  return text.replace(/^::/gm, ":\u200B:").replace(/\n::/g, "\n:\u200B:");
+  return text.replace(/^::/gm, ":\u200B:");
 }
 
 /**
