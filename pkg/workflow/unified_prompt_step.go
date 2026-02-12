@@ -492,7 +492,7 @@ func writeGroupedPromptSections(yaml *strings.Builder, sections []PromptSection,
 	i := 0
 	for i < len(sections) {
 		section := sections[i]
-		
+
 		if section.ShellCondition != "" {
 			// Conditional section - write individually (can't group across conditionals)
 			writeConditionalPromptSection(yaml, section, delimiter, indent, isFirstContent)
@@ -501,15 +501,15 @@ func writeGroupedPromptSections(yaml *strings.Builder, sections []PromptSection,
 			// Start grouping consecutive unconditional sections
 			groupStart := i
 			groupEnd := i + 1
-			
+
 			// Find consecutive unconditional sections
 			for groupEnd < len(sections) && sections[groupEnd].ShellCondition == "" {
 				groupEnd++
 			}
-			
+
 			groupSize := groupEnd - groupStart
 			unifiedPromptLog.Printf("Grouping %d consecutive unconditional sections starting at index %d", groupSize, groupStart)
-			
+
 			if groupSize == 1 {
 				// Single section - write directly without grouping braces
 				writeUnconditionalPromptSection(yaml, section, delimiter, indent, isFirstContent)
@@ -520,14 +520,14 @@ func writeGroupedPromptSections(yaml *strings.Builder, sections []PromptSection,
 					redirectOp = ">"
 					*isFirstContent = false
 				}
-				
+
 				yaml.WriteString(indent + "{\n")
 				for j := groupStart; j < groupEnd; j++ {
 					writeUnconditionalPromptSectionContent(yaml, sections[j], delimiter, indent+"  ")
 				}
 				yaml.WriteString(indent + "} " + redirectOp + " \"$GH_AW_PROMPT\"\n")
 			}
-			
+
 			i = groupEnd
 		}
 	}
@@ -536,13 +536,13 @@ func writeGroupedPromptSections(yaml *strings.Builder, sections []PromptSection,
 // writeConditionalPromptSection writes a single conditional prompt section
 func writeConditionalPromptSection(yaml *strings.Builder, section PromptSection, delimiter string, indent string, isFirstContent *bool) {
 	fmt.Fprintf(yaml, "%sif %s; then\n", indent, section.ShellCondition)
-	
+
 	redirectOp := ">>"
 	if *isFirstContent {
 		redirectOp = ">"
 		*isFirstContent = false
 	}
-	
+
 	if section.IsFile {
 		// File reference inside conditional
 		promptPath := fmt.Sprintf("%s/%s", promptsDir, section.Content)
@@ -558,7 +558,7 @@ func writeConditionalPromptSection(yaml *strings.Builder, section PromptSection,
 		}
 		yaml.WriteString(indent + "  " + delimiter + "\n")
 	}
-	
+
 	yaml.WriteString(indent + "fi\n")
 }
 
@@ -569,7 +569,7 @@ func writeUnconditionalPromptSection(yaml *strings.Builder, section PromptSectio
 		redirectOp = ">"
 		*isFirstContent = false
 	}
-	
+
 	if section.IsFile {
 		// File reference - simple cat with redirect
 		promptPath := fmt.Sprintf("%s/%s", promptsDir, section.Content)
@@ -613,7 +613,7 @@ func writeGroupedUserPromptChunks(yaml *strings.Builder, chunks []string, delimi
 	i := 0
 	for i < len(chunks) {
 		chunk := chunks[i]
-		
+
 		// Check if this chunk is a runtime-import macro
 		if strings.HasPrefix(chunk, "{{#runtime-import ") && strings.HasSuffix(chunk, "}}") {
 			// Runtime-import macro - write individually (can't group)
@@ -624,7 +624,7 @@ func writeGroupedUserPromptChunks(yaml *strings.Builder, chunks []string, delimi
 			// Start grouping consecutive non-runtime-import chunks
 			groupStart := i
 			groupEnd := i + 1
-			
+
 			// Find consecutive non-runtime-import chunks
 			for groupEnd < len(chunks) {
 				nextChunk := chunks[groupEnd]
@@ -633,10 +633,10 @@ func writeGroupedUserPromptChunks(yaml *strings.Builder, chunks []string, delimi
 				}
 				groupEnd++
 			}
-			
+
 			groupSize := groupEnd - groupStart
 			unifiedPromptLog.Printf("Grouping %d consecutive user prompt chunks starting at index %d", groupSize, groupStart)
-			
+
 			if groupSize == 1 {
 				// Single chunk - write directly without grouping braces
 				writeUserPromptChunk(yaml, chunk, delimiter, indent, isFirstContent)
@@ -647,14 +647,14 @@ func writeGroupedUserPromptChunks(yaml *strings.Builder, chunks []string, delimi
 					redirectOp = ">"
 					*isFirstContent = false
 				}
-				
+
 				yaml.WriteString(indent + "{\n")
 				for j := groupStart; j < groupEnd; j++ {
 					writeUserPromptChunkContent(yaml, chunks[j], delimiter, indent+"  ")
 				}
 				yaml.WriteString(indent + "} " + redirectOp + " \"$GH_AW_PROMPT\"\n")
 			}
-			
+
 			i = groupEnd
 		}
 	}
@@ -667,7 +667,7 @@ func writeUserPromptChunk(yaml *strings.Builder, chunk string, delimiter string,
 		redirectOp = ">"
 		*isFirstContent = false
 	}
-	
+
 	yaml.WriteString(indent + "cat << '" + delimiter + "' " + redirectOp + " \"$GH_AW_PROMPT\"\n")
 	lines := strings.Split(chunk, "\n")
 	for _, line := range lines {
