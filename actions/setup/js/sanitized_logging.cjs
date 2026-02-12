@@ -7,8 +7,12 @@
  * GitHub Actions workflow commands have the format:
  * ::command parameter1={data},parameter2={data}::{command value}
  *
- * By replacing :: with :\u200B: (zero-width space), we prevent the command from being parsed
- * while maintaining readability.
+ * IMPORTANT: Workflow commands are only recognized when :: appears at the start of a line.
+ * This function only neutralizes :: at line boundaries, preserving :: in normal text
+ * (e.g., "12:30", "C++::function", "IPv6 ::1").
+ *
+ * By replacing :: with :\u200B: (zero-width space) only at line starts, we prevent
+ * command injection while maintaining readability and not affecting legitimate uses.
  *
  * @param {string} text - The text to neutralize
  * @returns {string} The neutralized text
@@ -17,9 +21,10 @@ function neutralizeWorkflowCommands(text) {
   if (typeof text !== "string") {
     return String(text);
   }
-  // Replace :: with : followed by zero-width space followed by :
-  // This breaks the workflow command syntax while keeping text readable
-  return text.replace(/::/g, ":\u200B:");
+  // Replace :: only at the start of a line (after start or newline)
+  // This matches GitHub Actions' actual command parsing behavior
+  // Preserves :: in normal text like "12:30", "C++::function", etc.
+  return text.replace(/^::/gm, ":\u200B:").replace(/\n::/g, "\n:\u200B:");
 }
 
 /**
