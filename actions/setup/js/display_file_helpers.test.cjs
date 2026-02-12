@@ -324,6 +324,62 @@ describe("display_file_helpers", () => {
         fs.rmSync(tmpDir, { recursive: true, force: true });
       }
     });
+
+    test("neutralizes workflow commands in file content", () => {
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "display-test-"));
+      const filePath = path.join(tmpDir, "malicious.log");
+      // File content with workflow commands at line start
+      fs.writeFileSync(filePath, "Normal log entry\n::set-output name=hack::value\nAnother line\n::warning::injected");
+
+      const mockCore = { info: vi.fn(), startGroup: vi.fn(), endGroup: vi.fn(), warning: vi.fn() };
+      global.core = mockCore;
+
+      try {
+        displayFileContent(filePath, "malicious.log");
+
+        // Collect all logged lines
+        const loggedLines = mockCore.info.mock.calls.map(call => call[0]);
+
+        // Verify workflow commands were neutralized
+        // Line starting with :: should have zero-width space inserted
+        expect(loggedLines).toContain("Normal log entry");
+        expect(loggedLines).toContain(":\u200B:set-output name=hack::value");
+        expect(loggedLines).toContain("Another line");
+        expect(loggedLines).toContain(":\u200B:warning::injected");
+
+        // Verify original commands are NOT present (would be security issue)
+        expect(loggedLines).not.toContain("::set-output name=hack::value");
+        expect(loggedLines).not.toContain("::warning::injected");
+      } finally {
+        delete global.core;
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+      }
+    });
+
+    test("preserves :: in middle of lines when displaying file content", () => {
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "display-test-"));
+      const filePath = path.join(tmpDir, "code.log");
+      // File content with :: in middle of lines (not workflow commands)
+      fs.writeFileSync(filePath, "IPv6 address ::1\nC++ std::vector\nTimestamp 12:30:45");
+
+      const mockCore = { info: vi.fn(), startGroup: vi.fn(), endGroup: vi.fn(), warning: vi.fn() };
+      global.core = mockCore;
+
+      try {
+        displayFileContent(filePath, "code.log");
+
+        // Collect all logged lines
+        const loggedLines = mockCore.info.mock.calls.map(call => call[0]);
+
+        // Verify :: in middle of line is preserved
+        expect(loggedLines).toContain("IPv6 address ::1");
+        expect(loggedLines).toContain("C++ std::vector");
+        expect(loggedLines).toContain("Timestamp 12:30:45");
+      } finally {
+        delete global.core;
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+      }
+    });
   });
 
   describe("displayDirectory", () => {
