@@ -312,7 +312,7 @@ jobs:
             }
 
             // PR file touches (sensitive paths) - deterministic and bounded
-            for (const it of items.filter(i => i.is_pr)) {
+            for (const it of prItems) {
               const login = it.author;
               if (!login) continue;
               const s = ensureAuthor(login);
