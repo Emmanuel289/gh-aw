@@ -1,37 +1,14 @@
 {
-  "run_date": "2026-02-12T18:26:00Z",
-  "run_id": "21959060330",
-  "total_prs_triaged": 1,
-  "new_prs": 1,
+  "run_date": "2026-02-13T00:41:24Z",
+  "run_id": "21970029815",
+  "total_prs_triaged": 0,
+  "new_prs": 0,
   "re_triaged": 0,
-  "results": [
-    {
-      "number": 15195,
-      "title": "Add configurable file type restrictions to cache-memory and repo-memory",
-      "author": "Copilot",
-      "category": "feature",
-      "subcategory": "security",
-      "risk": "medium",
-      "priority": {
-        "total": 57,
-        "impact": 32,
-        "urgency": 10,
-        "quality": 15
-      },
-      "action": "batch_review",
-      "ci_status": "pending",
-      "draft": true,
-      "files_changed": 85,
-      "total_changes": 2536,
-      "created_at": "2026-02-12T15:45:36Z",
-      "updated_at": "2026-02-12T16:46:43Z",
-      "url": "https://github.com/github/gh-aw/pull/15195"
-    }
-  ],
+  "results": [],
   "statistics": {
     "by_category": {
       "bug": 0,
-      "feature": 1,
+      "feature": 0,
       "docs": 0,
       "test": 0,
       "formatting": 0,
@@ -40,32 +17,26 @@
     },
     "by_risk": {
       "low": 0,
-      "medium": 1,
+      "medium": 0,
       "high": 0
     },
     "by_priority": {
       "high": 0,
-      "medium": 1,
+      "medium": 0,
       "low": 0
     },
     "by_action": {
       "auto_merge": 0,
       "fast_track": 0,
-      "batch_review": 1,
+      "batch_review": 0,
       "defer": 0,
       "close": 0
     }
   },
   "auto_merge_candidates": [],
   "fast_track_needed": [],
-  "batch_review_candidates": [15195],
+  "batch_review_candidates": [],
   "defer_candidates": [],
   "close_candidates": [],
-  "batches": {
-    "batch-memory-security-001": {
-      "category": "feature",
-      "subcategory": "security",
-      "prs": [15195]
-    }
-  }
+  "batches": {}
 }
