@@ -795,7 +795,6 @@ This workflow tests the create-pull-request with default fallback-as-issue behav
 	safeOutputsJobSection := lockContentStr[safeOutputsJobStart:endIdx]
 
 	// Verify permissions in safe_outputs job include issues: write (default behavior)
-	// Verify permissions include issues: write (default behavior)
 	if !strings.Contains(safeOutputsJobSection, "contents: write") {
 		t.Error("Expected contents: write permission in safe_outputs job")
 	}
