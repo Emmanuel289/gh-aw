@@ -158,15 +158,10 @@ func listCachesWithRef(keyPrefix string, ref string, limit int, verbose bool) ([
 	// Call listCaches which already handles the listing
 	output, err := listCaches(keyPrefix, limit, verbose)
 
-	if !verbose {
-		if err != nil {
-			spinner.Stop()
-		} else {
-			spinner.StopWithMessage(fmt.Sprintf("✓ Found %d cache(s)", len(output)))
-		}
-	}
-
 	if err != nil {
+		if !verbose {
+			spinner.Stop()
+		}
 		return nil, err
 	}
 
@@ -179,6 +174,11 @@ func listCachesWithRef(keyPrefix string, ref string, limit int, verbose bool) ([
 			}
 		}
 		output = filtered
+	}
+
+	// Stop spinner with correct count after filtering
+	if !verbose {
+		spinner.StopWithMessage(fmt.Sprintf("✓ Found %d cache(s)", len(output)))
 	}
 
 	cacheListLog.Printf("Found %d caches after filtering", len(output))
