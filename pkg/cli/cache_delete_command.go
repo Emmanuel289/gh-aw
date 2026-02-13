@@ -1,9 +1,11 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/github/gh-aw/pkg/console"
 	"github.com/github/gh-aw/pkg/constants"
@@ -129,8 +131,17 @@ func RunCacheDelete(config CacheDeleteConfig) error {
 		}
 	}
 
-	// Delete caches
+	// Delete caches with throttling protection
 	successCount := 0
+	failedCount := 0
+	
+	// Start spinner for bulk operations
+	var spinner *console.SpinnerWrapper
+	if !config.Verbose && len(cachesToDelete) > 1 {
+		spinner = console.NewSpinner(fmt.Sprintf("Deleting %d cache(s)...", len(cachesToDelete)))
+		spinner.Start()
+	}
+
 	for i, cache := range cachesToDelete {
 		if config.Verbose {
 			fmt.Fprintln(os.Stderr, console.FormatInfoMessage(fmt.Sprintf("[%d/%d] Deleting cache: %s (ID: %d)",
@@ -138,16 +149,45 @@ func RunCacheDelete(config CacheDeleteConfig) error {
 		}
 
 		if err := deleteCache(cache.ID, config.Ref, config.Verbose); err != nil {
-			fmt.Fprintln(os.Stderr, console.FormatWarningMessage(fmt.Sprintf("Failed to delete cache %d: %v", cache.ID, err)))
+			cacheDeleteLog.Printf("Failed to delete cache %d: %v", cache.ID, err)
+			failedCount++
+			
+			// Check for rate limiting
+			if strings.Contains(err.Error(), "rate limit") || strings.Contains(err.Error(), "403") {
+				if spinner != nil {
+					spinner.Stop()
+				}
+				fmt.Fprintln(os.Stderr, console.FormatWarningMessage(fmt.Sprintf("Hit API rate limit after deleting %d cache(s). Stopping.", successCount)))
+				fmt.Fprintln(os.Stderr, console.FormatInfoMessage("Wait a few minutes before retrying, or delete remaining caches individually."))
+				break
+			}
+			
+			if !config.Verbose {
+				// Only show error for non-verbose mode
+				fmt.Fprintln(os.Stderr, console.FormatWarningMessage(fmt.Sprintf("Failed to delete cache %d: %v", cache.ID, err)))
+			}
 			continue
 		}
 
 		successCount++
+		
+		// Add small delay between deletes to avoid rate limiting
+		if i < len(cachesToDelete)-1 && len(cachesToDelete) > 5 {
+			time.Sleep(200 * time.Millisecond)
+		}
+	}
+	
+	if spinner != nil {
+		spinner.Stop()
 	}
 
 	if successCount > 0 {
 		fmt.Fprintln(os.Stderr, console.FormatSuccessMessage(fmt.Sprintf("Successfully deleted %d cache(s)", successCount)))
-	} else {
+	}
+	if failedCount > 0 {
+		fmt.Fprintln(os.Stderr, console.FormatWarningMessage(fmt.Sprintf("Failed to delete %d cache(s)", failedCount)))
+	}
+	if successCount == 0 && failedCount == 0 {
 		fmt.Fprintln(os.Stderr, console.FormatWarningMessage("No caches were deleted"))
 	}
 
@@ -167,11 +207,79 @@ func deleteCache(cacheID int64, ref string, verbose bool) error {
 		args = append(args, "--ref", ref)
 	}
 
+	// Use spinner for single delete operations
+	var spinner *console.SpinnerWrapper
+	if !verbose {
+		spinner = console.NewSpinner(fmt.Sprintf("Deleting cache %d...", cacheID))
+		spinner.Start()
+	}
+
 	_, err := workflow.RunGHCombined("Deleting cache...", args...)
+	
+	if spinner != nil {
+		if err != nil {
+			spinner.Stop()
+		} else {
+			spinner.StopWithMessage(fmt.Sprintf("✓ Deleted cache %d", cacheID))
+		}
+	}
+
 	if err != nil {
 		return fmt.Errorf("gh cache delete failed: %w", err)
 	}
 
 	cacheDeleteLog.Printf("Successfully deleted cache: cacheID=%d", cacheID)
 	return nil
+}
+
+// CacheEntry represents a GitHub Actions cache
+type CacheEntry struct {
+	ID             int64  `json:"id"`
+	Key            string `json:"key"`
+	Ref            string `json:"ref"`
+	SizeInBytes    int64  `json:"size_in_bytes"`
+	CreatedAt      string `json:"created_at"`
+	LastAccessedAt string `json:"last_accessed_at"`
+}
+
+// listCaches retrieves cache entries from GitHub Actions cache API
+func listCaches(keyPrefix string, limit int, verbose bool) ([]CacheEntry, error) {
+	cacheDeleteLog.Printf("Listing caches: keyPrefix=%s, limit=%d", keyPrefix, limit)
+
+	// Use spinner for listing
+	spinner := console.NewSpinner("Searching for caches...")
+	if !verbose {
+		spinner.Start()
+	}
+
+	// Use gh CLI to list caches
+	args := []string{
+		"cache", "list",
+		"--key", keyPrefix,
+		"--limit", fmt.Sprintf("%d", limit),
+		"--json", "id,key,ref,sizeInBytes,createdAt,lastAccessedAt",
+	}
+
+	output, err := workflow.RunGHCombined("Listing caches...", args...)
+	
+	if !verbose {
+		if err != nil {
+			spinner.Stop()
+		} else {
+			spinner.StopWithMessage("✓ Found caches")
+		}
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("gh cache list failed: %w", err)
+	}
+
+	// Parse JSON output
+	var caches []CacheEntry
+	if err := json.Unmarshal(output, &caches); err != nil {
+		return nil, fmt.Errorf("failed to parse cache list: %w", err)
+	}
+
+	cacheDeleteLog.Printf("Found %d caches", len(caches))
+	return caches, nil
 }

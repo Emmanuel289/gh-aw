@@ -10,7 +10,6 @@ import (
 	"github.com/github/gh-aw/pkg/console"
 	"github.com/github/gh-aw/pkg/constants"
 	"github.com/github/gh-aw/pkg/logger"
-	"github.com/github/gh-aw/pkg/workflow"
 	"github.com/spf13/cobra"
 )
 
@@ -72,22 +71,6 @@ type CacheDownloadConfig struct {
 	Limit      int
 	CacheKey   string
 	Verbose    bool
-}
-
-// CacheEntry represents a GitHub Actions cache
-type CacheEntry struct {
-	ID             int64  `json:"id"`
-	Key            string `json:"key"`
-	Ref            string `json:"ref"`
-	SizeInBytes    int64  `json:"size_in_bytes"`
-	CreatedAt      string `json:"created_at"`
-	LastAccessedAt string `json:"last_accessed_at"`
-}
-
-// CacheListResponse represents the response from GitHub Actions cache API
-type CacheListResponse struct {
-	TotalCount int          `json:"total_count"`
-	Caches     []CacheEntry `json:"actions_caches"`
 }
 
 // RunCacheDownload executes the cache download logic
@@ -162,31 +145,4 @@ func RunCacheDownload(config CacheDownloadConfig) error {
 	fmt.Fprintln(os.Stderr, console.FormatSuccessMessage(fmt.Sprintf("Downloaded metadata for %d cache(s) to %s", successCount, config.OutputDir)))
 
 	return nil
-}
-
-// listCaches retrieves cache entries from GitHub Actions cache API
-func listCaches(keyPrefix string, limit int, verbose bool) ([]CacheEntry, error) {
-	cacheDownloadLog.Printf("Listing caches: keyPrefix=%s, limit=%d", keyPrefix, limit)
-
-	// Use gh CLI to list caches
-	args := []string{
-		"cache", "list",
-		"--key", keyPrefix,
-		"--limit", fmt.Sprintf("%d", limit),
-		"--json", "id,key,ref,sizeInBytes,createdAt,lastAccessedAt",
-	}
-
-	output, err := workflow.RunGHCombined("Listing caches...", args...)
-	if err != nil {
-		return nil, fmt.Errorf("gh cache list failed: %w", err)
-	}
-
-	// Parse JSON output
-	var caches []CacheEntry
-	if err := json.Unmarshal(output, &caches); err != nil {
-		return nil, fmt.Errorf("failed to parse cache list: %w", err)
-	}
-
-	cacheDownloadLog.Printf("Found %d caches", len(caches))
-	return caches, nil
 }

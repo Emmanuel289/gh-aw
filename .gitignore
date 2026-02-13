@@ -170,3 +170,7 @@ test-script-mode.lock.yml
 # Test metrics patterns workflow (temporary validation file)
 .github/workflows/test-metrics-patterns.md
 .github/workflows/test-metrics-patterns.lock.yml
+
+# Cache downloads directory
+.github/aw/cache-memory/
+cache-downloads/
