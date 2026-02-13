@@ -200,11 +200,7 @@ func (c *Compiler) buildConsolidatedSafeOutputsJob(data *WorkflowData, mainJobNa
 		}
 		if data.SafeOutputs.CreatePullRequests != nil {
 			// Check fallback-as-issue setting to determine permissions
-			fallbackAsIssue := true // Default
-			if data.SafeOutputs.CreatePullRequests.FallbackAsIssue != nil {
-				fallbackAsIssue = *data.SafeOutputs.CreatePullRequests.FallbackAsIssue
-			}
-			if fallbackAsIssue {
+			if getFallbackAsIssue(data.SafeOutputs.CreatePullRequests) {
 				permissions.Merge(NewPermissionsContentsWriteIssuesWritePRWrite())
 			} else {
 				permissions.Merge(NewPermissionsContentsWritePRWrite())
