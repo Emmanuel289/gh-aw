@@ -165,6 +165,22 @@ sandbox:
       DEBUG_LEVEL: "verbose"
 ```
 
+The `args` field allows you to pass additional command-line arguments to AWF. These arguments are added after standard AWF flags but before the `--` separator:
+
+```bash
+# Without custom args:
+sudo -E awf --tty --env-all --allow-domains example.com -- /usr/local/bin/copilot ...
+
+# With custom args ["--enable-api-proxy", "--verbose"]:
+sudo -E awf --tty --env-all --allow-domains example.com --enable-api-proxy --verbose -- /usr/local/bin/copilot ...
+```
+
+Common use cases for custom args:
+- **Enable experimental features**: `--enable-api-proxy` for API proxying
+- **Adjust logging**: `--verbose`, `--debug` for detailed output
+- **Custom network policies**: `--dns-server 8.8.8.8` for specific DNS servers
+- **Performance tuning**: `--cache-size 1000` to adjust cache settings
+
 ##### Custom Mounts
 
 Add custom container mounts to make host paths available inside the AWF container:
@@ -193,11 +209,11 @@ Custom mounts are useful for:
 |-------|------|-------------|
 | `id` | `string` | Agent identifier: `awf` or `srt` |
 | `command` | `string` | Custom command to replace AWF binary installation |
-| `args` | `string[]` | Additional arguments appended to the command |
+| `args` | `string[]` | Additional arguments appended to the AWF/SRT command arguments (prepended before `--`) |
 | `env` | `object` | Environment variables set on the execution step |
 | `mounts` | `string[]` | Container mounts using syntax `source:destination:mode` |
 
-When `command` is specified, the standard AWF installation is skipped and your custom command is used instead.
+When `command` is specified, the standard AWF installation is skipped and your custom command is used instead. The `args` are added to the command line after all standard AWF/SRT arguments but before the `--` separator that precedes the wrapped agent command.
 
 ### Sandbox Runtime (SRT)
 
