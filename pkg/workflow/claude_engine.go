@@ -328,6 +328,11 @@ func (e *ClaudeEngine) GetExecutionSteps(workflowData *WorkflowData, logFile str
 		awfArgs = append(awfArgs, "--skip-pull")
 		claudeLog.Print("Using --skip-pull since images are pre-downloaded")
 
+		// Enable API proxy for Claude engine (v0.16.5+)
+		// This allows AWF to proxy API requests from the Claude CLI through the firewall
+		awfArgs = append(awfArgs, "--enable-api-proxy")
+		claudeLog.Print("Added --enable-api-proxy for Claude API proxying")
+
 		// Add SSL Bump support for HTTPS content inspection (v0.9.0+)
 		sslBumpArgs := getSSLBumpArgs(firewallConfig)
 		awfArgs = append(awfArgs, sslBumpArgs...)
