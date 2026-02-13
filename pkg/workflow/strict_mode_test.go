@@ -857,7 +857,7 @@ permissions:
 engine: copilot
 network:
   allowed:
-    - "api.example.com"
+    - defaults
 ---
 
 # Test Workflow with github.workflow
@@ -877,7 +877,7 @@ permissions:
 engine: copilot
 network:
   allowed:
-    - "api.example.com"
+    - defaults
 ---
 
 # Complex Expression Test
@@ -896,7 +896,7 @@ permissions:
 engine: copilot
 network:
   allowed:
-    - "api.example.com"
+    - defaults
 ---
 
 # Multiple Expressions
