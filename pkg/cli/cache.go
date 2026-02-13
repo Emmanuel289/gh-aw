@@ -16,18 +16,16 @@ func NewCacheCommand() *cobra.Command {
 		Long: `Manage GitHub Actions caches used by agentic workflows with cache-memory.
 
 When workflows use cache-memory, they store data in GitHub Actions caches with keys
-like 'memory-<workflow>-<run-id>'. This command helps manage these caches by listing,
-downloading, and deleting them.
+like 'memory-<workflow>-<run-id>'. This command helps manage these caches by listing
+and deleting them.
 
 Available subcommands:
   • list       - List cache artifacts for workflows
-  • download   - Download cache artifacts for a workflow
   • delete     - Delete cache artifacts for a workflow
 
 Examples:
   gh aw cache list                           # List all caches in repository
   gh aw cache list my-workflow               # List caches for a workflow
-  gh aw cache download my-workflow           # Download caches for a workflow
   gh aw cache delete my-workflow             # Delete caches for a workflow
   gh aw cache delete my-workflow --all       # Delete all caches for a workflow`,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -37,7 +35,6 @@ Examples:
 
 	// Add subcommands
 	cmd.AddCommand(NewCacheListCommand())
-	cmd.AddCommand(NewCacheDownloadCommand())
 	cmd.AddCommand(NewCacheDeleteCommand())
 
 	return cmd
