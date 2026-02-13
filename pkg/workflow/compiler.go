@@ -268,9 +268,18 @@ func (c *Compiler) validateWorkflowData(workflowData *WorkflowData, markdownPath
 		permissions := NewPermissionsParser(workflowData.Permissions).ToPermissions()
 
 		// Auto-infer compatible toolsets if:
-		// 1. Permissions are specified AND
-		// 2. Toolsets are not explicitly configured
-		if permissions != nil && len(workflowData.ParsedTools.GitHub.Toolset) == 0 && workflowData.Permissions != "" {
+		// 1. Toolsets are not explicitly configured AND
+		// 2. Permissions are explicitly specified in frontmatter (not just defaults)
+		//
+		// Note: applyDefaults() sets default permissions to "contents: read" when none are specified.
+		// To detect if permissions were explicitly specified, we check if they differ from the default.
+		defaultPerms := NewPermissionsContentsRead()
+		defaultYAML := defaultPerms.RenderToYAML()
+		// Normalize indentation for comparison (RenderToYAML uses 6 spaces, stored uses 2)
+		defaultYAML = strings.ReplaceAll(defaultYAML, "      ", "  ")
+		hasExplicitPermissions := workflowData.Permissions != "" && workflowData.Permissions != defaultYAML
+		
+		if len(workflowData.ParsedTools.GitHub.Toolset) == 0 && hasExplicitPermissions {
 			log.Print("Auto-inferring compatible GitHub MCP toolsets from permissions")
 			compatibleToolsets := InferCompatibleToolsets(permissions, workflowData.ParsedTools.GitHub.ReadOnly)
 
