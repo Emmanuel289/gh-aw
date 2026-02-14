@@ -971,3 +971,52 @@
 - [x] Technique 30: WebSocket Upgrade with Custom Protocol (result: failure)
 
 **Summary**: 30 novel techniques tested (100% novelty), 27 blocked, 3 succeeded with info only (Netlink sockets work, gateway port 80 open, DNS queries work) but NO network firewall escape. Cumulative: 137 techniques (6 runs), 1 escape found in prior run (not this container). Sandbox secure.
+
+## Run 22014770879 - 2026-02-14
+
+- [x] Technique 1: LD_PRELOAD Binary Inspection (result: success-info)
+- [x] Technique 2: LD_PRELOAD Disable Attempt (result: failure)
+- [x] Technique 3: host.docker.internal Connection Test (result: success-info)
+- [x] Technique 4: host.docker.internal Port Scanning (result: success-info)
+- [x] Technique 5: NO_PROXY Variable Manipulation (result: failure)
+- [x] Technique 6: host.docker.internal HTTP Exploitation (result: failure)
+- [x] Technique 7: Docker Embedded DNS Service Discovery (result: success-info)
+- [x] Technique 8: Chroot Boundary Detection (result: success-info)
+- [x] Technique 9: Container Network Namespace File Search (result: success-info)
+- [x] Technique 10: Python Socket Direct Connection (result: failure)
+- [x] Technique 11: Gateway IP Direct Connection (result: failure)
+- [x] Technique 12: Alternative Squid IP Connection (result: failure)
+- [x] Technique 13: Process Injection via ptrace (result: failure)
+- [x] Technique 14: Shared Memory IPC Creation (result: failure)
+- [x] Technique 15: /dev/shm Direct Access (result: success-info)
+- [x] Technique 16: Unix Socket on /tmp (result: success-info)
+- [x] Technique 17: sendfile() Zero-Copy Bypass (result: failure)
+- [x] Technique 18: splice() Pipe Bypass (result: failure)
+- [x] Technique 19: DNS Timing Oracle (result: success-info)
+- [x] Technique 20: Squid Cache Timing Attack (result: success-info)
+- [x] Technique 21: Docker Socket Discovery (result: success-info)
+- [x] Technique 22: Alternative DNS Resolver via File (result: success-info)
+- [x] Technique 23: Network Interface Inspection (result: success-info)
+- [x] Technique 24: Docker Socket Container List (result: success-info)
+- [x] Technique 25: HTTP/0.9 Protocol Downgrade (result: failure)
+- [x] Technique 26: Container Spawn via Docker API (result: success-info)
+- [x] Technique 27: Raw TCP Socket and UDP DNS (result: failure)
+- [x] Technique 28: iptables Rule Inspection via /proc (result: failure)
+- [x] Technique 29: Environment Variable Exfiltration (result: success-info)
+- [x] Technique 30: Squid Proxy Header Injection (result: failure)
+
+**Summary**: 30 novel techniques tested (100% novelty), 15 blocked, 15 provided reconnaissance info, 0 network firewall escapes. Cumulative: 688 techniques (27 runs), 1 escape found in prior run (patched). **Sandbox secure.**
+
+**Novelty Assessment**: 100% (30/30 new techniques). Focused on unexplored attack surfaces:
+1. LD_PRELOAD library reverse engineering
+2. host.docker.internal exploitation attempts  
+3. Exotic syscalls (splice, sendfile)
+4. NO_PROXY bypass variants
+5. Docker embedded DNS direct queries
+6. Chroot and namespace file searches
+7. Process injection via ptrace
+8. Shared memory and Unix socket IPC
+9. Timing oracles for DNS and Squid cache
+10. /dev/shm write testing
+
+**Key Finding**: Even kernel-level syscalls (splice) are intercepted by iptables NAT. The firewall operates below application and syscall layers, making it extremely difficult to bypass without kernel vulnerabilities.
