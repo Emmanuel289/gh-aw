@@ -81,8 +81,8 @@ func RunCacheList(config CacheListConfig) error {
 	// Determine cache key pattern to search for
 	keyPattern := config.CacheKey
 	if keyPattern == "" && config.WorkflowID != "" {
-		// Strip .md extension if present
-		workflowID := strings.TrimSuffix(config.WorkflowID, ".md")
+		// Normalize workflow ID (handles paths, .md extension, etc.)
+		workflowID := normalizeWorkflowID(config.WorkflowID)
 		// Default: search for caches with keys matching memory-<workflow>-
 		keyPattern = fmt.Sprintf("memory-%s-", workflowID)
 	}

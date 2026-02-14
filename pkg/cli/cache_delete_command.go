@@ -79,8 +79,14 @@ type CacheDeleteConfig struct {
 func RunCacheDelete(config CacheDeleteConfig) error {
 	cacheDeleteLog.Printf("Starting cache delete: workflow=%s, deleteAll=%t", config.WorkflowID, config.DeleteAll)
 
-	// Strip .md extension if present
-	workflowID := strings.TrimSuffix(config.WorkflowID, ".md")
+	// Normalize workflow ID (handles paths, .md extension, etc.)
+	workflowID := normalizeWorkflowID(config.WorkflowID)
+
+	// Validate that the workflow exists
+	if err := validateWorkflowName(workflowID); err != nil {
+		fmt.Fprintln(os.Stderr, console.FormatErrorMessage(err.Error()))
+		return fmt.Errorf("workflow validation failed: %w", err)
+	}
 
 	// Determine cache key pattern to search for
 	keyPattern := config.CacheKey
