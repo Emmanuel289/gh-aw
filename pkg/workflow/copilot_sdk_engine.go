@@ -241,7 +241,7 @@ func (e *CopilotSDKEngine) ParseLogMetrics(logContent string, verbose bool) LogM
 
 // GetLogParserScriptId returns the script ID for log parsing
 func (e *CopilotSDKEngine) GetLogParserScriptId() string {
-	return "parse-copilot-sdk-logs"
+	return "parse-copilot-log"
 }
 
 // GetLogFileForParsing returns the path to the log file that should be parsed
