@@ -72,8 +72,16 @@ func buildAgenticEngineSecretsMap() map[string]string {
 			// Filter out non-agentic secrets (infrastructure/gateway secrets)
 			// Only include secrets that are specific to the AI engine itself
 			if isAgenticEngineSecret(secret) {
-				secretsMap[secret] = engineName
-				importedStepsValidationLog.Printf("Registered agentic secret: %s (engine: %s)", secret, engineName)
+				_, exists := secretsMap[secret]
+				// Set the secret if:
+				// 1. Not already registered, OR
+				// 2. Current engine is not experimental (prefer stable engines for display names)
+				// This ensures stable error messages when multiple engines share a secret
+				// (e.g., "GitHub Copilot CLI" instead of "GitHub Copilot SDK")
+				if !exists || !engine.IsExperimental() {
+					secretsMap[secret] = engineName
+					importedStepsValidationLog.Printf("Registered agentic secret: %s (engine: %s)", secret, engineName)
+				}
 			}
 		}
 	}
