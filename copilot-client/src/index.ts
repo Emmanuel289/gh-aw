@@ -175,30 +175,39 @@ export async function runCopilotSession(config: CopilotClientConfig): Promise<vo
 }
 
 /**
- * Main entry point - reads config from stdin and runs the session
+ * Main entry point - reads config from environment variable or stdin
  */
 export async function main(): Promise<void> {
-  debug('Reading configuration from stdin');
+  let configJson: string;
   
-  // Read config from stdin
-  const stdinBuffer: Buffer[] = [];
-  
-  await new Promise<void>((resolve, reject) => {
-    process.stdin.on('data', (chunk) => {
-      stdinBuffer.push(chunk);
+  // First check if config is provided via environment variable
+  if (process.env.GH_AW_COPILOT_CONFIG) {
+    debug('Reading configuration from GH_AW_COPILOT_CONFIG environment variable');
+    configJson = process.env.GH_AW_COPILOT_CONFIG;
+  } else {
+    // Fall back to stdin for backward compatibility
+    debug('Reading configuration from stdin');
+    
+    // Read config from stdin
+    const stdinBuffer: Buffer[] = [];
+    
+    await new Promise<void>((resolve, reject) => {
+      process.stdin.on('data', (chunk) => {
+        stdinBuffer.push(chunk);
+      });
+
+      process.stdin.on('end', () => {
+        resolve();
+      });
+
+      process.stdin.on('error', (error) => {
+        reject(error);
+      });
     });
 
-    process.stdin.on('end', () => {
-      resolve();
-    });
-
-    process.stdin.on('error', (error) => {
-      reject(error);
-    });
-  });
-
-  const configJson = Buffer.concat(stdinBuffer).toString('utf-8');
-  debug('Received config:', configJson);
+    configJson = Buffer.concat(stdinBuffer).toString('utf-8');
+    debug('Received config from stdin:', configJson);
+  }
 
   let config: CopilotClientConfig;
   try {

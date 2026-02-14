@@ -5446,21 +5446,27 @@ async function runCopilotSession(config) {
   }
 }
 async function main() {
-  debug("Reading configuration from stdin");
-  const stdinBuffer = [];
-  await new Promise((resolve, reject) => {
-    process.stdin.on("data", (chunk) => {
-      stdinBuffer.push(chunk);
+  let configJson;
+  if (process.env.GH_AW_COPILOT_CONFIG) {
+    debug("Reading configuration from GH_AW_COPILOT_CONFIG environment variable");
+    configJson = process.env.GH_AW_COPILOT_CONFIG;
+  } else {
+    debug("Reading configuration from stdin");
+    const stdinBuffer = [];
+    await new Promise((resolve, reject) => {
+      process.stdin.on("data", (chunk) => {
+        stdinBuffer.push(chunk);
+      });
+      process.stdin.on("end", () => {
+        resolve();
+      });
+      process.stdin.on("error", (error) => {
+        reject(error);
+      });
     });
-    process.stdin.on("end", () => {
-      resolve();
-    });
-    process.stdin.on("error", (error) => {
-      reject(error);
-    });
-  });
-  const configJson = Buffer.concat(stdinBuffer).toString("utf-8");
-  debug("Received config:", configJson);
+    configJson = Buffer.concat(stdinBuffer).toString("utf-8");
+    debug("Received config from stdin:", configJson);
+  }
   let config;
   try {
     config = JSON.parse(configJson);
