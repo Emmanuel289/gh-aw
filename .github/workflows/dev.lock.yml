@@ -169,7 +169,7 @@ jobs:
               allowed_domains: ["defaults"],
               firewall_enabled: false,
               awf_version: "",
-              awmg_version: "",
+              awmg_version: "v0.1.4",
               steps: {
                 firewall: ""
               },
