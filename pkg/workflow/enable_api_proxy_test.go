@@ -73,6 +73,9 @@ func TestEngineAWFEnableApiProxy(t *testing.T) {
 					Enabled: true,
 				},
 			},
+			Features: map[string]any{
+				"mcp-gateway": true,
+			},
 		}
 
 		engine := NewCodexEngine()
@@ -86,6 +89,36 @@ func TestEngineAWFEnableApiProxy(t *testing.T) {
 
 		if !strings.Contains(stepContent, "--enable-api-proxy") {
 			t.Error("Expected Codex AWF command to contain '--enable-api-proxy' flag (supportsLLMGateway: true)")
+		}
+	})
+
+	t.Run("Codex AWF command does not include enable-api-proxy flag when mcp-gateway feature is disabled", func(t *testing.T) {
+		workflowData := &WorkflowData{
+			Name: "test-workflow",
+			EngineConfig: &EngineConfig{
+				ID: "codex",
+			},
+			NetworkPermissions: &NetworkPermissions{
+				Firewall: &FirewallConfig{
+					Enabled: true,
+				},
+			},
+			Features: map[string]any{
+				"mcp-gateway": false,
+			},
+		}
+
+		engine := NewCodexEngine()
+		steps := engine.GetExecutionSteps(workflowData, "test.log")
+
+		if len(steps) == 0 {
+			t.Fatal("Expected at least one execution step")
+		}
+
+		stepContent := strings.Join(steps[0], "\n")
+
+		if strings.Contains(stepContent, "--enable-api-proxy") {
+			t.Error("Expected Codex AWF command to NOT contain '--enable-api-proxy' flag when mcp-gateway feature is disabled")
 		}
 	})
 }

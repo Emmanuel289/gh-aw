@@ -314,7 +314,7 @@ func (c *Compiler) validateStrictMode(frontmatter map[string]any, networkPermiss
 // when network domains are provided (non-wildcard).
 // In strict mode, ALL engines (regardless of LLM gateway support) require that network domains
 // must be defaults or from known ecosystems, and sandbox.agent must be enabled.
-func (c *Compiler) validateStrictFirewall(engineID string, networkPermissions *NetworkPermissions, sandboxConfig *SandboxConfig) error {
+func (c *Compiler) validateStrictFirewall(engineID string, networkPermissions *NetworkPermissions, sandboxConfig *SandboxConfig, frontmatter map[string]any) error {
 	if !c.strictMode {
 		strictModeValidationLog.Printf("Strict mode disabled, skipping firewall validation")
 		return nil
@@ -327,9 +327,19 @@ func (c *Compiler) validateStrictFirewall(engineID string, networkPermissions *N
 		return fmt.Errorf("internal error: failed to get engine '%s': %w", engineID, err)
 	}
 
-	// Check if engine supports LLM gateway
-	supportsLLMGateway := agenticEngine.SupportsLLMGateway()
-	strictModeValidationLog.Printf("Engine '%s' LLM gateway support: %v", engineID, supportsLLMGateway)
+	// Create a minimal WorkflowData to check feature flags
+	// We only need the Features field for isLLMGatewayEnabled
+	workflowData := &WorkflowData{
+		Features: make(map[string]any),
+	}
+	// Extract features from frontmatter if present
+	if features, ok := frontmatter["features"].(map[string]any); ok {
+		workflowData.Features = features
+	}
+
+	// Check if engine supports LLM gateway (considering both engine capability and feature flag)
+	supportsLLMGateway := isLLMGatewayEnabled(agenticEngine, workflowData)
+	strictModeValidationLog.Printf("Engine '%s' LLM gateway support (engine capability + feature flag): %v", engineID, supportsLLMGateway)
 
 	// Check if sandbox.agent: false is set (explicitly disabled)
 	sandboxAgentDisabled := sandboxConfig != nil && sandboxConfig.Agent != nil && sandboxConfig.Agent.Disabled

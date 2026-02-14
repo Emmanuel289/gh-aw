@@ -328,9 +328,9 @@ func (e *ClaudeEngine) GetExecutionSteps(workflowData *WorkflowData, logFile str
 		awfArgs = append(awfArgs, "--skip-pull")
 		claudeLog.Print("Using --skip-pull since images are pre-downloaded")
 
-		// Enable API proxy sidecar if this engine supports LLM gateway
+		// Enable API proxy sidecar if this engine supports LLM gateway AND the mcp-gateway feature flag is enabled
 		// The api-proxy container holds the LLM API keys and proxies requests through the firewall
-		if e.SupportsLLMGateway() {
+		if isLLMGatewayEnabled(e, workflowData) {
 			awfArgs = append(awfArgs, "--enable-api-proxy")
 			claudeLog.Print("Added --enable-api-proxy for LLM API proxying")
 		}

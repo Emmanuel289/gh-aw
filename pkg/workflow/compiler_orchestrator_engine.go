@@ -242,7 +242,7 @@ func (c *Compiler) setupEngineAndImports(result *parser.FrontmatterResult, clean
 
 	// Validate firewall is enabled in strict mode for copilot with network restrictions
 	orchestratorEngineLog.Printf("Validating strict firewall (strict=%v)", c.strictMode)
-	if err := c.validateStrictFirewall(engineSetting, networkPermissions, sandboxConfig); err != nil {
+	if err := c.validateStrictFirewall(engineSetting, networkPermissions, sandboxConfig, result.Frontmatter); err != nil {
 		orchestratorEngineLog.Printf("Strict firewall validation failed: %v", err)
 		c.strictMode = initialStrictModeForFirewall
 		return nil, err

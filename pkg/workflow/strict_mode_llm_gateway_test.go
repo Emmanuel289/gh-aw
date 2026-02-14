@@ -20,7 +20,7 @@ func TestValidateStrictFirewall_LLMGatewaySupport(t *testing.T) {
 			},
 		}
 
-		err := compiler.validateStrictFirewall("codex", networkPerms, nil)
+		err := compiler.validateStrictFirewall("codex", networkPerms, nil, nil)
 		if err == nil {
 			t.Error("Expected error for codex engine with custom domains in strict mode, got nil")
 		}
@@ -40,7 +40,7 @@ func TestValidateStrictFirewall_LLMGatewaySupport(t *testing.T) {
 			},
 		}
 
-		err := compiler.validateStrictFirewall("copilot", networkPerms, nil)
+		err := compiler.validateStrictFirewall("copilot", networkPerms, nil, nil)
 		if err == nil {
 			t.Error("Expected error for copilot engine with custom domains, got nil")
 		}
@@ -60,7 +60,7 @@ func TestValidateStrictFirewall_LLMGatewaySupport(t *testing.T) {
 			},
 		}
 
-		err := compiler.validateStrictFirewall("copilot", networkPerms, nil)
+		err := compiler.validateStrictFirewall("copilot", networkPerms, nil, nil)
 		if err != nil {
 			t.Errorf("Expected no error for copilot engine with 'defaults', got: %v", err)
 		}
@@ -77,7 +77,7 @@ func TestValidateStrictFirewall_LLMGatewaySupport(t *testing.T) {
 			},
 		}
 
-		err := compiler.validateStrictFirewall("copilot", networkPerms, nil)
+		err := compiler.validateStrictFirewall("copilot", networkPerms, nil, nil)
 		if err != nil {
 			t.Errorf("Expected no error for copilot engine with known ecosystem identifiers, got: %v", err)
 		}
@@ -95,7 +95,7 @@ func TestValidateStrictFirewall_LLMGatewaySupport(t *testing.T) {
 			},
 		}
 
-		err := compiler.validateStrictFirewall("copilot", networkPerms, nil)
+		err := compiler.validateStrictFirewall("copilot", networkPerms, nil, nil)
 		if err == nil {
 			t.Fatal("Expected error for individual ecosystem domains in strict mode, got nil")
 		}
@@ -119,7 +119,7 @@ func TestValidateStrictFirewall_LLMGatewaySupport(t *testing.T) {
 			},
 		}
 
-		err := compiler.validateStrictFirewall("codex", networkPerms, nil)
+		err := compiler.validateStrictFirewall("codex", networkPerms, nil, nil)
 		if err != nil {
 			t.Errorf("Expected no error for codex engine with known ecosystem identifiers, got: %v", err)
 		}
@@ -137,7 +137,7 @@ func TestValidateStrictFirewall_LLMGatewaySupport(t *testing.T) {
 			},
 		}
 
-		err := compiler.validateStrictFirewall("codex", networkPerms, nil)
+		err := compiler.validateStrictFirewall("codex", networkPerms, nil, nil)
 		if err == nil {
 			t.Fatal("Expected error for individual ecosystem domains in strict mode, got nil")
 		}
@@ -161,7 +161,7 @@ func TestValidateStrictFirewall_LLMGatewaySupport(t *testing.T) {
 			},
 		}
 
-		err := compiler.validateStrictFirewall("copilot", networkPerms, nil)
+		err := compiler.validateStrictFirewall("copilot", networkPerms, nil, nil)
 		if err == nil {
 			t.Error("Expected error for copilot engine with mixed ecosystems and custom domains, got nil")
 		}
@@ -181,7 +181,7 @@ func TestValidateStrictFirewall_LLMGatewaySupport(t *testing.T) {
 			},
 		}
 
-		err := compiler.validateStrictFirewall("claude", networkPerms, nil)
+		err := compiler.validateStrictFirewall("claude", networkPerms, nil, nil)
 		if err == nil {
 			t.Error("Expected error for claude engine with custom domains, got nil")
 		}
@@ -204,7 +204,7 @@ func TestValidateStrictFirewall_LLMGatewaySupport(t *testing.T) {
 			},
 		}
 
-		err := compiler.validateStrictFirewall("copilot", networkPerms, sandboxConfig)
+		err := compiler.validateStrictFirewall("copilot", networkPerms, sandboxConfig, nil)
 		if err == nil {
 			t.Error("Expected error for copilot engine with sandbox.agent: false, got nil")
 		}
@@ -234,7 +234,7 @@ func TestValidateStrictFirewall_LLMGatewaySupport(t *testing.T) {
 		}
 
 		// sandbox.agent: false is not allowed in strict mode for any engine
-		err := compiler.validateStrictFirewall("codex", networkPerms, sandboxConfig)
+		err := compiler.validateStrictFirewall("codex", networkPerms, sandboxConfig, nil)
 		if err == nil {
 			t.Error("Expected error for sandbox.agent: false in strict mode, got nil")
 		}
@@ -254,7 +254,7 @@ func TestValidateStrictFirewall_LLMGatewaySupport(t *testing.T) {
 			Allowed: []string{"custom-domain.com"},
 		}
 
-		err := compiler.validateStrictFirewall("copilot", networkPerms, nil)
+		err := compiler.validateStrictFirewall("copilot", networkPerms, nil, nil)
 		if err != nil {
 			t.Errorf("Expected no error when strict mode is disabled, got: %v", err)
 		}
@@ -268,7 +268,7 @@ func TestValidateStrictFirewall_LLMGatewaySupport(t *testing.T) {
 			Allowed: []string{"*"},
 		}
 
-		err := compiler.validateStrictFirewall("copilot", networkPerms, nil)
+		err := compiler.validateStrictFirewall("copilot", networkPerms, nil, nil)
 		if err != nil {
 			t.Errorf("Expected no error for wildcard (skips all validation), got: %v", err)
 		}
@@ -282,7 +282,7 @@ func TestValidateStrictFirewall_LLMGatewaySupport(t *testing.T) {
 			Allowed: []string{"custom-domain.com"},
 		}
 
-		err := compiler.validateStrictFirewall("custom", networkPerms, nil)
+		err := compiler.validateStrictFirewall("custom", networkPerms, nil, nil)
 		if err == nil {
 			t.Error("Expected error for custom engine with custom domains, got nil")
 		}
@@ -352,7 +352,7 @@ func TestValidateStrictFirewall_EcosystemSuggestions(t *testing.T) {
 			},
 		}
 
-		err := compiler.validateStrictFirewall("copilot", networkPerms, nil)
+		err := compiler.validateStrictFirewall("copilot", networkPerms, nil, nil)
 		if err == nil {
 			t.Fatal("Expected error for individual ecosystem domain in strict mode, got nil")
 		}
@@ -380,7 +380,7 @@ func TestValidateStrictFirewall_EcosystemSuggestions(t *testing.T) {
 			},
 		}
 
-		err := compiler.validateStrictFirewall("copilot", networkPerms, nil)
+		err := compiler.validateStrictFirewall("copilot", networkPerms, nil, nil)
 		if err == nil {
 			t.Fatal("Expected error for individual ecosystem domains in strict mode, got nil")
 		}
@@ -408,7 +408,7 @@ func TestValidateStrictFirewall_EcosystemSuggestions(t *testing.T) {
 			},
 		}
 
-		err := compiler.validateStrictFirewall("copilot", networkPerms, nil)
+		err := compiler.validateStrictFirewall("copilot", networkPerms, nil, nil)
 		if err == nil {
 			t.Fatal("Expected error for individual ecosystem domains in strict mode, got nil")
 		}
@@ -442,7 +442,7 @@ func TestValidateStrictFirewall_EcosystemSuggestions(t *testing.T) {
 			},
 		}
 
-		err := compiler.validateStrictFirewall("copilot", networkPerms, nil)
+		err := compiler.validateStrictFirewall("copilot", networkPerms, nil, nil)
 		if err == nil {
 			t.Fatal("Expected error for custom domain in strict mode, got nil")
 		}
@@ -464,7 +464,7 @@ func TestValidateStrictFirewall_EcosystemSuggestions(t *testing.T) {
 			},
 		}
 
-		err := compiler.validateStrictFirewall("copilot", networkPerms, nil)
+		err := compiler.validateStrictFirewall("copilot", networkPerms, nil, nil)
 		if err == nil {
 			t.Fatal("Expected error for mixed domains in strict mode, got nil")
 		}
@@ -501,7 +501,7 @@ func TestValidateStrictFirewall_EcosystemSuggestions(t *testing.T) {
 			},
 		}
 
-		err := compiler.validateStrictFirewall("copilot", networkPerms, nil)
+		err := compiler.validateStrictFirewall("copilot", networkPerms, nil, nil)
 		if err != nil {
 			t.Errorf("Expected no error for ecosystem identifiers in strict mode, got: %v", err)
 		}

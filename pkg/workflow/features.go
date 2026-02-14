@@ -74,3 +74,15 @@ func isFeatureEnabled(flag constants.FeatureFlag, workflowData *WorkflowData) bo
 	featuresLog.Printf("Feature not found: %s=false", flagLower)
 	return false
 }
+
+// isLLMGatewayEnabled checks if LLM Gateway support is enabled for the given engine.
+// This requires both the engine to support LLM gateway AND the mcp-gateway feature flag to be enabled.
+func isLLMGatewayEnabled(engine CapabilityProvider, workflowData *WorkflowData) bool {
+	// First check if the engine has the capability
+	if !engine.SupportsLLMGateway() {
+		return false
+	}
+
+	// Then check if the feature flag is enabled
+	return isFeatureEnabled(constants.MCPGatewayFeatureFlag, workflowData)
+}

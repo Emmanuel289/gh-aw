@@ -43,6 +43,13 @@ func TestCollectDockerImages_APIProxyForEnginesWithLLMGateway(t *testing.T) {
 				},
 			}
 
+			// Enable mcp-gateway feature flag for Codex
+			if tt.engine == "codex" && tt.expectAPIProxy {
+				workflowData.Features = map[string]any{
+					"mcp-gateway": true,
+				}
+			}
+
 			images := collectDockerImages(nil, workflowData, ActionModeRelease)
 
 			apiProxyImage := constants.DefaultFirewallRegistry + "/api-proxy:" + awfImageTag

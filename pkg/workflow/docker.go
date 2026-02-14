@@ -105,7 +105,7 @@ func collectDockerImages(tools map[string]any, workflowData *WorkflowData, actio
 			dockerLog.Printf("Added AWF agent container: %s", agentImage)
 		}
 
-		// Add api-proxy sidecar container for engines that support LLM gateway
+		// Add api-proxy sidecar container for engines that support LLM gateway AND have the mcp-gateway feature flag enabled
 		// The api-proxy holds LLM API keys securely and proxies requests through Squid:
 		//   - Port 10000: OpenAI API proxy (for Codex)
 		//   - Port 10001: Anthropic API proxy (for Claude)
@@ -113,7 +113,7 @@ func collectDockerImages(tools map[string]any, workflowData *WorkflowData, actio
 		if workflowData != nil && workflowData.AI != "" {
 			registry := GetGlobalEngineRegistry()
 			engine, err := registry.GetEngine(workflowData.AI)
-			if err == nil && engine.SupportsLLMGateway() {
+			if err == nil && isLLMGatewayEnabled(engine, workflowData) {
 				apiProxyImage := constants.DefaultFirewallRegistry + "/api-proxy:" + awfImageTag
 				if !imageSet[apiProxyImage] {
 					images = append(images, apiProxyImage)

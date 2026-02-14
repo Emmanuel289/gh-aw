@@ -360,7 +360,7 @@ func TestStrictModeFirewallValidation(t *testing.T) {
 			Firewall: nil,
 		}
 
-		err := compiler.validateStrictFirewall("copilot", networkPerms, nil)
+		err := compiler.validateStrictFirewall("copilot", networkPerms, nil, nil)
 		if err == nil {
 			t.Error("Expected error in strict mode when firewall is not enabled")
 		}
@@ -380,7 +380,7 @@ func TestStrictModeFirewallValidation(t *testing.T) {
 			Firewall:          nil,
 		}
 
-		err := compiler.validateStrictFirewall("copilot", networkPerms, nil)
+		err := compiler.validateStrictFirewall("copilot", networkPerms, nil, nil)
 		if err != nil {
 			t.Errorf("Expected no error when allowed is wildcard, got: %v", err)
 		}
@@ -398,7 +398,7 @@ func TestStrictModeFirewallValidation(t *testing.T) {
 			},
 		}
 
-		err := compiler.validateStrictFirewall("copilot", networkPerms, nil)
+		err := compiler.validateStrictFirewall("copilot", networkPerms, nil, nil)
 		if err != nil {
 			t.Errorf("Expected no error when firewall is enabled, got: %v", err)
 		}
@@ -414,7 +414,7 @@ func TestStrictModeFirewallValidation(t *testing.T) {
 			Firewall:          nil,
 		}
 
-		err := compiler.validateStrictFirewall("claude", networkPerms, nil)
+		err := compiler.validateStrictFirewall("claude", networkPerms, nil, nil)
 		if err != nil {
 			t.Errorf("Expected no error for non-copilot engine, got: %v", err)
 		}
@@ -436,7 +436,7 @@ func TestStrictModeFirewallValidation(t *testing.T) {
 			},
 		}
 
-		err := compiler.validateStrictFirewall("copilot", networkPerms, sandboxConfig)
+		err := compiler.validateStrictFirewall("copilot", networkPerms, sandboxConfig, nil)
 		if err == nil {
 			t.Error("Expected error when sandbox.agent is false in strict mode for copilot")
 		}
@@ -463,7 +463,7 @@ func TestStrictModeFirewallValidation(t *testing.T) {
 		}
 
 		// All engines should refuse sandbox.agent: false in strict mode
-		err := compiler.validateStrictFirewall("claude", networkPerms, sandboxConfig)
+		err := compiler.validateStrictFirewall("claude", networkPerms, sandboxConfig, nil)
 		if err == nil {
 			t.Error("Expected error for non-copilot engine with sandbox.agent: false in strict mode")
 		}
@@ -487,7 +487,7 @@ func TestStrictModeFirewallValidation(t *testing.T) {
 			Type: SandboxTypeRuntime,
 		}
 
-		err := compiler.validateStrictFirewall("copilot", networkPerms, sandboxConfig)
+		err := compiler.validateStrictFirewall("copilot", networkPerms, sandboxConfig, nil)
 		if err != nil {
 			t.Errorf("Expected no error when SRT is enabled, got: %v", err)
 		}
@@ -503,7 +503,7 @@ func TestStrictModeFirewallValidation(t *testing.T) {
 			Firewall:          nil,
 		}
 
-		err := compiler.validateStrictFirewall("copilot", networkPerms, nil)
+		err := compiler.validateStrictFirewall("copilot", networkPerms, nil, nil)
 		if err != nil {
 			t.Errorf("Expected no error in non-strict mode, got: %v", err)
 		}
@@ -527,7 +527,7 @@ func TestStrictModeFirewallValidation(t *testing.T) {
 
 		// Even in non-strict mode, sandbox.agent: false should be rejected by validation
 		// (validateStrictFirewall only runs in strict mode, but validateSandboxConfig runs always)
-		err := compiler.validateStrictFirewall("copilot", networkPerms, sandboxConfig)
+		err := compiler.validateStrictFirewall("copilot", networkPerms, sandboxConfig, nil)
 		// validateStrictFirewall only runs in strict mode, so it passes here
 		// The actual rejection happens in validateSandboxConfig
 		if err != nil {
