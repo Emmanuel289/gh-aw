@@ -297,29 +297,34 @@ func TestSupportsLLMGateway(t *testing.T) {
 	registry := NewEngineRegistry()
 
 	tests := []struct {
-		engineID           string
-		expectedLLMGateway bool
-		description        string
+		engineID     string
+		expectedPort int
+		description  string
 	}{
 		{
-			engineID:           "codex",
-			expectedLLMGateway: true,
-			description:        "Codex engine supports LLM gateway",
+			engineID:     "codex",
+			expectedPort: 10001,
+			description:  "Codex engine uses port 10001 for LLM gateway",
 		},
 		{
-			engineID:           "copilot",
-			expectedLLMGateway: false,
-			description:        "Copilot engine does not support LLM gateway",
+			engineID:     "claude",
+			expectedPort: 10000,
+			description:  "Claude engine uses port 10000 for LLM gateway",
 		},
 		{
-			engineID:           "claude",
-			expectedLLMGateway: false,
-			description:        "Claude engine does not support LLM gateway",
+			engineID:     "copilot-sdk",
+			expectedPort: 10002,
+			description:  "Copilot SDK engine uses port 10002 for LLM gateway",
 		},
 		{
-			engineID:           "custom",
-			expectedLLMGateway: false,
-			description:        "Custom engine does not support LLM gateway",
+			engineID:     "copilot",
+			expectedPort: -1,
+			description:  "Copilot engine does not support LLM gateway",
+		},
+		{
+			engineID:     "custom",
+			expectedPort: -1,
+			description:  "Custom engine does not support LLM gateway",
 		},
 	}
 
@@ -330,10 +335,10 @@ func TestSupportsLLMGateway(t *testing.T) {
 				t.Fatalf("Failed to get engine '%s': %v", tt.engineID, err)
 			}
 
-			supportsLLMGateway := engine.SupportsLLMGateway()
-			if supportsLLMGateway != tt.expectedLLMGateway {
-				t.Errorf("Engine '%s': expected SupportsLLMGateway() = %v, got %v",
-					tt.engineID, tt.expectedLLMGateway, supportsLLMGateway)
+			llmGatewayPort := engine.SupportsLLMGateway()
+			if llmGatewayPort != tt.expectedPort {
+				t.Errorf("Engine '%s': expected SupportsLLMGateway() = %d, got %d",
+					tt.engineID, tt.expectedPort, llmGatewayPort)
 			}
 		})
 	}

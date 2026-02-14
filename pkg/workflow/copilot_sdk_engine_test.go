@@ -30,7 +30,7 @@ func TestCopilotSDKEngineCapabilities(t *testing.T) {
 	assert.False(t, engine.SupportsWebSearch())
 	assert.False(t, engine.SupportsFirewall(), "SDK mode doesn't use firewall")
 	assert.False(t, engine.SupportsPlugins(), "SDK mode doesn't support plugins yet")
-	assert.False(t, engine.SupportsLLMGateway())
+	assert.Equal(t, 10002, engine.SupportsLLMGateway(), "Copilot SDK uses port 10002 for LLM gateway")
 }
 
 func TestCopilotSDKEngineGetRequiredSecretNames(t *testing.T) {
