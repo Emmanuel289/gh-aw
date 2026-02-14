@@ -85,7 +85,7 @@ func TestCopilotSDKEngineGetExecutionSteps(t *testing.T) {
 	steps := engine.GetExecutionSteps(workflowData, "/tmp/agent-log.txt")
 
 	// Should have 3 steps: headless start, config, execution
-	assert.Equal(t, 3, len(steps))
+	assert.Len(t, steps, 3)
 
 	// Check first step (start headless)
 	step1 := strings.Join(steps[0], "\n")
