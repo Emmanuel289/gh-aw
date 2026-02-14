@@ -16,7 +16,7 @@ func TestCopilotSDKEngineImplementsCodingAgentEngine(t *testing.T) {
 	assert.Equal(t, "copilot-sdk", engine.GetID())
 	assert.Equal(t, "GitHub Copilot SDK", engine.GetDisplayName())
 	assert.Contains(t, engine.GetDescription(), "SDK")
-	assert.False(t, engine.IsExperimental())
+	assert.True(t, engine.IsExperimental())
 }
 
 func TestCopilotSDKEngineCapabilities(t *testing.T) {

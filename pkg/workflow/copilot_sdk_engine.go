@@ -39,7 +39,7 @@ func NewCopilotSDKEngine() *CopilotSDKEngine {
 			id:                     "copilot-sdk",
 			displayName:            "GitHub Copilot SDK",
 			description:            "Uses GitHub Copilot SDK with headless mode",
-			experimental:           false,
+			experimental:           true,
 			supportsToolsAllowlist: true,
 			supportsHTTPTransport:  true,
 			supportsMaxTurns:       false,
